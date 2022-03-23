@@ -87,6 +87,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -185,6 +186,41 @@ public class SXPBlueprintSearchResultTest {
 		_updateElementInstancesJSON(null, null);
 
 		_assertSearchIgnoreRelevance("[coca cola, folder cola, pepsi cola]");
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage() throws Exception {
+		_setDefaultLocale(LocaleUtil.SPAIN);
+
+		_setUpJournalArticles(
+			new String[] {"cola cola", ""},
+			new String[] {"coca cola es_ES", "pepsi cola es_ES"});
+
+		_setDefaultLocale(LocaleUtil.US);
+
+		_setUpJournalArticles(
+			new String[] {"cola cola", ""},
+			new String[] {"coca cola en_US", "pepsi cola en_US"});
+
+		_updateElementInstancesJSON(
+			new Object[] {
+				HashMapBuilder.<String, Object>put(
+					"boost", 100
+				).build()
+			},
+			new String[] {"Boost Contents for the Current Language"});
+
+		_keywords = "cola";
+
+		_assertSearch(
+			"[coca cola en_US, pepsi cola en_US," +
+				" coca cola es_ES, pepsi cola es_ES]");
+
+		_updateElementInstancesJSON(null, null);
+
+		_assertSearchIgnoreRelevance(
+			"[coca cola en_US, coca cola es_ES," +
+				" pepsi cola en_US, pepsi cola es_ES]");
 	}
 
 	@Test
@@ -1646,6 +1682,11 @@ public class SXPBlueprintSearchResultTest {
 			).withSearchRequestBuilder(
 				searchRequestBuilderConsumer
 			).build());
+	}
+
+	private void _setDefaultLocale(Locale locale) {
+		LocaleUtil.setDefault(
+			locale.getLanguage(), locale.getCountry(), locale.getVariant());
 	}
 
 	private void _setUpJournalArticles(
