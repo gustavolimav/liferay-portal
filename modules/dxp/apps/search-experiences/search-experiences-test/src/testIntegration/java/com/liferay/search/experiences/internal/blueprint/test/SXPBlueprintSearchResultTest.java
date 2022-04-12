@@ -591,9 +591,9 @@ public class SXPBlueprintSearchResultTest {
 		_updateElementInstancesJSON(
 			new Object[] {
 				HashMapBuilder.<String, Object>put(
-					"boost", 100
+					"boost", 90000
 				).put(
-					"factor", 1.2
+					"factor", 3
 				).put(
 					"modifier", "sqrt"
 				).build()
