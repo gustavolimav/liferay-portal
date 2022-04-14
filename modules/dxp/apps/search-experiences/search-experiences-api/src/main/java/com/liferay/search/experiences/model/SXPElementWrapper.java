@@ -54,12 +54,12 @@ public class SXPElementWrapper
 		attributes.put("description", getDescription());
 		attributes.put("elementDefinitionJSON", getElementDefinitionJSON());
 		attributes.put("hidden", isHidden());
+		attributes.put("key", getKey());
 		attributes.put("readOnly", isReadOnly());
 		attributes.put("schemaVersion", getSchemaVersion());
-		attributes.put("version", getVersion());
-		attributes.put("key", getKey());
 		attributes.put("title", getTitle());
 		attributes.put("type", getType());
+		attributes.put("version", getVersion());
 		attributes.put("status", getStatus());
 
 		return attributes;
@@ -134,6 +134,12 @@ public class SXPElementWrapper
 			setHidden(hidden);
 		}
 
+		String key = (String)attributes.get("key");
+
+		if (key != null) {
+			setKey(key);
+		}
+
 		Boolean readOnly = (Boolean)attributes.get("readOnly");
 
 		if (readOnly != null) {
@@ -146,18 +152,6 @@ public class SXPElementWrapper
 			setSchemaVersion(schemaVersion);
 		}
 
-		String version = (String)attributes.get("version");
-
-		if (version != null) {
-			setVersion(version);
-		}
-
-		String key = (String)attributes.get("key");
-
-		if (key != null) {
-			setKey(key);
-		}
-
 		String title = (String)attributes.get("title");
 
 		if (title != null) {
@@ -168,6 +162,12 @@ public class SXPElementWrapper
 
 		if (type != null) {
 			setType(type);
+		}
+
+		String version = (String)attributes.get("version");
+
+		if (version != null) {
+			setVersion(version);
 		}
 
 		Integer status = (Integer)attributes.get("status");
