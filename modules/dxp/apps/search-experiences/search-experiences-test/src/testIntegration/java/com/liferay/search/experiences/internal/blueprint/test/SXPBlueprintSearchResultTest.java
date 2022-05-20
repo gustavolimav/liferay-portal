@@ -243,6 +243,251 @@ public class SXPBlueprintSearchResultTest {
 	}
 
 	@Test
+	public void testBoostContentsForTheCurrentLanguage2() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage3() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage4() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage5() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage6() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage7() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage8() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage9() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage10() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage11() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage12() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage13() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage14() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage15() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage16() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage17() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage18() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage19() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage20() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage21() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage22() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage23() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage24() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage25() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage26() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage27() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage28() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage29() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage30() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage31() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage32() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage33() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage34() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage35() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage36() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage37() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage38() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage39() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage40() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage41() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage42() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage43() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage44() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage45() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage46() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage47() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage48() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage49() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage50() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
 	public void testBoostContentsInACategory() throws Exception {
 		_addAssetCategory("Important", _user);
 
@@ -644,6 +889,256 @@ public class SXPBlueprintSearchResultTest {
 		_updateElementInstancesJSON(null, null);
 
 		_assertSearch("[First Created, Second Created]");
+	}
+
+	@Test
+	public void testBoostFreshness1() throws Exception {
+		testBoostFreshness();
+	}
+
+	@Test
+	public void testBoostFreshness2() throws Exception {
+		testBoostFreshness();
+	}
+
+	@Test
+	public void testBoostFreshness3() throws Exception {
+		testBoostFreshness();
+	}
+
+	@Test
+	public void testBoostFreshness4() throws Exception {
+		testBoostFreshness();
+	}
+
+	@Test
+	public void testBoostFreshness5() throws Exception {
+		testBoostFreshness();
+	}
+
+	@Test
+	public void testBoostFreshness6() throws Exception {
+		testBoostFreshness();
+	}
+
+	@Test
+	public void testBoostFreshness7() throws Exception {
+		testBoostFreshness();
+	}
+
+	@Test
+	public void testBoostFreshness8() throws Exception {
+		testBoostFreshness();
+	}
+
+	@Test
+	public void testBoostFreshness9() throws Exception {
+		testBoostFreshness();
+	}
+
+	@Test
+	public void testBoostFreshness10() throws Exception {
+		testBoostFreshness();
+	}
+
+	@Test
+	public void testBoostFreshness11() throws Exception {
+		testBoostFreshness();
+	}
+
+	@Test
+	public void testBoostFreshness12() throws Exception {
+		testBoostFreshness();
+	}
+
+	@Test
+	public void testBoostFreshness13() throws Exception {
+		testBoostFreshness();
+	}
+
+	@Test
+	public void testBoostFreshness14() throws Exception {
+		testBoostFreshness();
+	}
+
+	@Test
+	public void testBoostFreshness15() throws Exception {
+		testBoostFreshness();
+	}
+
+	@Test
+	public void testBoostFreshness16() throws Exception {
+		testBoostFreshness();
+	}
+
+	@Test
+	public void testBoostFreshness17() throws Exception {
+		testBoostFreshness();
+	}
+
+	@Test
+	public void testBoostFreshness18() throws Exception {
+		testBoostFreshness();
+	}
+
+	@Test
+	public void testBoostFreshness19() throws Exception {
+		testBoostFreshness();
+	}
+
+	@Test
+	public void testBoostFreshness20() throws Exception {
+		testBoostFreshness();
+	}
+
+	@Test
+	public void testBoostFreshness21() throws Exception {
+		testBoostFreshness();
+	}
+
+	@Test
+	public void testBoostFreshness22() throws Exception {
+		testBoostFreshness();
+	}
+
+	@Test
+	public void testBoostFreshness23() throws Exception {
+		testBoostFreshness();
+	}
+
+	@Test
+	public void testBoostFreshness24() throws Exception {
+		testBoostFreshness();
+	}
+
+	@Test
+	public void testBoostFreshness25() throws Exception {
+		testBoostFreshness();
+	}
+
+	@Test
+	public void testBoostFreshness26() throws Exception {
+		testBoostFreshness();
+	}
+
+	@Test
+	public void testBoostFreshness27() throws Exception {
+		testBoostFreshness();
+	}
+
+	@Test
+	public void testBoostFreshness28() throws Exception {
+		testBoostFreshness();
+	}
+
+	@Test
+	public void testBoostFreshness29() throws Exception {
+		testBoostFreshness();
+	}
+
+	@Test
+	public void testBoostFreshness30() throws Exception {
+		testBoostFreshness();
+	}
+
+	@Test
+	public void testBoostFreshness31() throws Exception {
+		testBoostFreshness();
+	}
+
+	@Test
+	public void testBoostFreshness32() throws Exception {
+		testBoostFreshness();
+	}
+
+	@Test
+	public void testBoostFreshness33() throws Exception {
+		testBoostFreshness();
+	}
+
+	@Test
+	public void testBoostFreshness34() throws Exception {
+		testBoostFreshness();
+	}
+
+	@Test
+	public void testBoostFreshness35() throws Exception {
+		testBoostFreshness();
+	}
+
+	@Test
+	public void testBoostFreshness36() throws Exception {
+		testBoostFreshness();
+	}
+
+	@Test
+	public void testBoostFreshness37() throws Exception {
+		testBoostFreshness();
+	}
+
+	@Test
+	public void testBoostFreshness38() throws Exception {
+		testBoostFreshness();
+	}
+
+	@Test
+	public void testBoostFreshness39() throws Exception {
+		testBoostFreshness();
+	}
+
+	@Test
+	public void testBoostFreshness40() throws Exception {
+		testBoostFreshness();
+	}
+
+	@Test
+	public void testBoostFreshness41() throws Exception {
+		testBoostFreshness();
+	}
+
+	@Test
+	public void testBoostFreshness42() throws Exception {
+		testBoostFreshness();
+	}
+
+	@Test
+	public void testBoostFreshness43() throws Exception {
+		testBoostFreshness();
+	}
+
+	@Test
+	public void testBoostFreshness44() throws Exception {
+		testBoostFreshness();
+	}
+
+	@Test
+	public void testBoostFreshness45() throws Exception {
+		testBoostFreshness();
+	}
+
+	@Test
+	public void testBoostFreshness46() throws Exception {
+		testBoostFreshness();
+	}
+
+	@Test
+	public void testBoostFreshness47() throws Exception {
+		testBoostFreshness();
+	}
+
+	@Test
+	public void testBoostFreshness48() throws Exception {
+		testBoostFreshness();
+	}
+
+	@Test
+	public void testBoostFreshness49() throws Exception {
+		testBoostFreshness();
+	}
+
+	@Test
+	public void testBoostFreshness50() throws Exception {
+		testBoostFreshness();
 	}
 
 	@Test
@@ -1169,6 +1664,356 @@ public class SXPBlueprintSearchResultTest {
 		_updateElementInstancesJSON(null, null);
 
 		_assertSearchIgnoreRelevance("[Coca Cola, Pepsi Cola, Sprite]");
+	}
+
+	@Test
+	public void testLimitSearchToContentsCreatedWithinAPeriodOfTime1()
+		throws Exception {
+
+		testLimitSearchToContentsCreatedWithinAPeriodOfTime();
+	}
+
+	@Test
+	public void testLimitSearchToContentsCreatedWithinAPeriodOfTime2()
+		throws Exception {
+
+		testLimitSearchToContentsCreatedWithinAPeriodOfTime();
+	}
+
+	@Test
+	public void testLimitSearchToContentsCreatedWithinAPeriodOfTime3()
+		throws Exception {
+
+		testLimitSearchToContentsCreatedWithinAPeriodOfTime();
+	}
+
+	@Test
+	public void testLimitSearchToContentsCreatedWithinAPeriodOfTime4()
+		throws Exception {
+
+		testLimitSearchToContentsCreatedWithinAPeriodOfTime();
+	}
+
+	@Test
+	public void testLimitSearchToContentsCreatedWithinAPeriodOfTime5()
+		throws Exception {
+
+		testLimitSearchToContentsCreatedWithinAPeriodOfTime();
+	}
+
+	@Test
+	public void testLimitSearchToContentsCreatedWithinAPeriodOfTime6()
+		throws Exception {
+
+		testLimitSearchToContentsCreatedWithinAPeriodOfTime();
+	}
+
+	@Test
+	public void testLimitSearchToContentsCreatedWithinAPeriodOfTime7()
+		throws Exception {
+
+		testLimitSearchToContentsCreatedWithinAPeriodOfTime();
+	}
+
+	@Test
+	public void testLimitSearchToContentsCreatedWithinAPeriodOfTime8()
+		throws Exception {
+
+		testLimitSearchToContentsCreatedWithinAPeriodOfTime();
+	}
+
+	@Test
+	public void testLimitSearchToContentsCreatedWithinAPeriodOfTime9()
+		throws Exception {
+
+		testLimitSearchToContentsCreatedWithinAPeriodOfTime();
+	}
+
+	@Test
+	public void testLimitSearchToContentsCreatedWithinAPeriodOfTime10()
+		throws Exception {
+
+		testLimitSearchToContentsCreatedWithinAPeriodOfTime();
+	}
+
+	@Test
+	public void testLimitSearchToContentsCreatedWithinAPeriodOfTime11()
+		throws Exception {
+
+		testLimitSearchToContentsCreatedWithinAPeriodOfTime();
+	}
+
+	@Test
+	public void testLimitSearchToContentsCreatedWithinAPeriodOfTime12()
+		throws Exception {
+
+		testLimitSearchToContentsCreatedWithinAPeriodOfTime();
+	}
+
+	@Test
+	public void testLimitSearchToContentsCreatedWithinAPeriodOfTime13()
+		throws Exception {
+
+		testLimitSearchToContentsCreatedWithinAPeriodOfTime();
+	}
+
+	@Test
+	public void testLimitSearchToContentsCreatedWithinAPeriodOfTime14()
+		throws Exception {
+
+		testLimitSearchToContentsCreatedWithinAPeriodOfTime();
+	}
+
+	@Test
+	public void testLimitSearchToContentsCreatedWithinAPeriodOfTime15()
+		throws Exception {
+
+		testLimitSearchToContentsCreatedWithinAPeriodOfTime();
+	}
+
+	@Test
+	public void testLimitSearchToContentsCreatedWithinAPeriodOfTime16()
+		throws Exception {
+
+		testLimitSearchToContentsCreatedWithinAPeriodOfTime();
+	}
+
+	@Test
+	public void testLimitSearchToContentsCreatedWithinAPeriodOfTime17()
+		throws Exception {
+
+		testLimitSearchToContentsCreatedWithinAPeriodOfTime();
+	}
+
+	@Test
+	public void testLimitSearchToContentsCreatedWithinAPeriodOfTime18()
+		throws Exception {
+
+		testLimitSearchToContentsCreatedWithinAPeriodOfTime();
+	}
+
+	@Test
+	public void testLimitSearchToContentsCreatedWithinAPeriodOfTime19()
+		throws Exception {
+
+		testLimitSearchToContentsCreatedWithinAPeriodOfTime();
+	}
+
+	@Test
+	public void testLimitSearchToContentsCreatedWithinAPeriodOfTime20()
+		throws Exception {
+
+		testLimitSearchToContentsCreatedWithinAPeriodOfTime();
+	}
+
+	@Test
+	public void testLimitSearchToContentsCreatedWithinAPeriodOfTime21()
+		throws Exception {
+
+		testLimitSearchToContentsCreatedWithinAPeriodOfTime();
+	}
+
+	@Test
+	public void testLimitSearchToContentsCreatedWithinAPeriodOfTime22()
+		throws Exception {
+
+		testLimitSearchToContentsCreatedWithinAPeriodOfTime();
+	}
+
+	@Test
+	public void testLimitSearchToContentsCreatedWithinAPeriodOfTime23()
+		throws Exception {
+
+		testLimitSearchToContentsCreatedWithinAPeriodOfTime();
+	}
+
+	@Test
+	public void testLimitSearchToContentsCreatedWithinAPeriodOfTime24()
+		throws Exception {
+
+		testLimitSearchToContentsCreatedWithinAPeriodOfTime();
+	}
+
+	@Test
+	public void testLimitSearchToContentsCreatedWithinAPeriodOfTime25()
+		throws Exception {
+
+		testLimitSearchToContentsCreatedWithinAPeriodOfTime();
+	}
+
+	@Test
+	public void testLimitSearchToContentsCreatedWithinAPeriodOfTime26()
+		throws Exception {
+
+		testLimitSearchToContentsCreatedWithinAPeriodOfTime();
+	}
+
+	@Test
+	public void testLimitSearchToContentsCreatedWithinAPeriodOfTime27()
+		throws Exception {
+
+		testLimitSearchToContentsCreatedWithinAPeriodOfTime();
+	}
+
+	@Test
+	public void testLimitSearchToContentsCreatedWithinAPeriodOfTime28()
+		throws Exception {
+
+		testLimitSearchToContentsCreatedWithinAPeriodOfTime();
+	}
+
+	@Test
+	public void testLimitSearchToContentsCreatedWithinAPeriodOfTime29()
+		throws Exception {
+
+		testLimitSearchToContentsCreatedWithinAPeriodOfTime();
+	}
+
+	@Test
+	public void testLimitSearchToContentsCreatedWithinAPeriodOfTime30()
+		throws Exception {
+
+		testLimitSearchToContentsCreatedWithinAPeriodOfTime();
+	}
+
+	@Test
+	public void testLimitSearchToContentsCreatedWithinAPeriodOfTime31()
+		throws Exception {
+
+		testLimitSearchToContentsCreatedWithinAPeriodOfTime();
+	}
+
+	@Test
+	public void testLimitSearchToContentsCreatedWithinAPeriodOfTime32()
+		throws Exception {
+
+		testLimitSearchToContentsCreatedWithinAPeriodOfTime();
+	}
+
+	@Test
+	public void testLimitSearchToContentsCreatedWithinAPeriodOfTime33()
+		throws Exception {
+
+		testLimitSearchToContentsCreatedWithinAPeriodOfTime();
+	}
+
+	@Test
+	public void testLimitSearchToContentsCreatedWithinAPeriodOfTime34()
+		throws Exception {
+
+		testLimitSearchToContentsCreatedWithinAPeriodOfTime();
+	}
+
+	@Test
+	public void testLimitSearchToContentsCreatedWithinAPeriodOfTime35()
+		throws Exception {
+
+		testLimitSearchToContentsCreatedWithinAPeriodOfTime();
+	}
+
+	@Test
+	public void testLimitSearchToContentsCreatedWithinAPeriodOfTime36()
+		throws Exception {
+
+		testLimitSearchToContentsCreatedWithinAPeriodOfTime();
+	}
+
+	@Test
+	public void testLimitSearchToContentsCreatedWithinAPeriodOfTime37()
+		throws Exception {
+
+		testLimitSearchToContentsCreatedWithinAPeriodOfTime();
+	}
+
+	@Test
+	public void testLimitSearchToContentsCreatedWithinAPeriodOfTime38()
+		throws Exception {
+
+		testLimitSearchToContentsCreatedWithinAPeriodOfTime();
+	}
+
+	@Test
+	public void testLimitSearchToContentsCreatedWithinAPeriodOfTime39()
+		throws Exception {
+
+		testLimitSearchToContentsCreatedWithinAPeriodOfTime();
+	}
+
+	@Test
+	public void testLimitSearchToContentsCreatedWithinAPeriodOfTime40()
+		throws Exception {
+
+		testLimitSearchToContentsCreatedWithinAPeriodOfTime();
+	}
+
+	@Test
+	public void testLimitSearchToContentsCreatedWithinAPeriodOfTime41()
+		throws Exception {
+
+		testLimitSearchToContentsCreatedWithinAPeriodOfTime();
+	}
+
+	@Test
+	public void testLimitSearchToContentsCreatedWithinAPeriodOfTime42()
+		throws Exception {
+
+		testLimitSearchToContentsCreatedWithinAPeriodOfTime();
+	}
+
+	@Test
+	public void testLimitSearchToContentsCreatedWithinAPeriodOfTime43()
+		throws Exception {
+
+		testLimitSearchToContentsCreatedWithinAPeriodOfTime();
+	}
+
+	@Test
+	public void testLimitSearchToContentsCreatedWithinAPeriodOfTime44()
+		throws Exception {
+
+		testLimitSearchToContentsCreatedWithinAPeriodOfTime();
+	}
+
+	@Test
+	public void testLimitSearchToContentsCreatedWithinAPeriodOfTime45()
+		throws Exception {
+
+		testLimitSearchToContentsCreatedWithinAPeriodOfTime();
+	}
+
+	@Test
+	public void testLimitSearchToContentsCreatedWithinAPeriodOfTime46()
+		throws Exception {
+
+		testLimitSearchToContentsCreatedWithinAPeriodOfTime();
+	}
+
+	@Test
+	public void testLimitSearchToContentsCreatedWithinAPeriodOfTime47()
+		throws Exception {
+
+		testLimitSearchToContentsCreatedWithinAPeriodOfTime();
+	}
+
+	@Test
+	public void testLimitSearchToContentsCreatedWithinAPeriodOfTime48()
+		throws Exception {
+
+		testLimitSearchToContentsCreatedWithinAPeriodOfTime();
+	}
+
+	@Test
+	public void testLimitSearchToContentsCreatedWithinAPeriodOfTime49()
+		throws Exception {
+
+		testLimitSearchToContentsCreatedWithinAPeriodOfTime();
+	}
+
+	@Test
+	public void testLimitSearchToContentsCreatedWithinAPeriodOfTime50()
+		throws Exception {
+
+		testLimitSearchToContentsCreatedWithinAPeriodOfTime();
 	}
 
 	@Test
