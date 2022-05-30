@@ -15,12 +15,8 @@
 package com.liferay.notification.rest.internal.resource.v1_0;
 
 import com.liferay.notification.rest.resource.v1_0.NotificationQueueEntryResource;
-import com.liferay.notification.service.NotificationQueueEntryService;
-import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.PropsUtil;
 
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ServiceScope;
 
 /**
@@ -33,24 +29,4 @@ import org.osgi.service.component.annotations.ServiceScope;
 )
 public class NotificationQueueEntryResourceImpl
 	extends BaseNotificationQueueEntryResourceImpl {
-
-	@Override
-	public void deleteNotificationQueueEntry(Long notificationQueueEntryId)
-		throws Exception {
-
-		_checkFeatureFlag();
-
-		_notificationQueueEntryService.deleteNotificationQueueEntry(
-			notificationQueueEntryId);
-	}
-
-	private void _checkFeatureFlag() throws Exception {
-		if (!GetterUtil.getBoolean(PropsUtil.get("feature.flag.LPS-149050"))) {
-			throw new UnsupportedOperationException();
-		}
-	}
-
-	@Reference
-	private NotificationQueueEntryService _notificationQueueEntryService;
-
 }
