@@ -1605,6 +1605,156 @@ public class SXPBlueprintSearchResultTest {
 	}
 
 	@Test
+	public void testHideHiddenContents1() throws Exception {
+		testHideHiddenContents();
+	}
+
+	@Test
+	public void testHideHiddenContents2() throws Exception {
+		testHideHiddenContents();
+	}
+
+	@Test
+	public void testHideHiddenContents3() throws Exception {
+		testHideHiddenContents();
+	}
+
+	@Test
+	public void testHideHiddenContents4() throws Exception {
+		testHideHiddenContents();
+	}
+
+	@Test
+	public void testHideHiddenContents5() throws Exception {
+		testHideHiddenContents();
+	}
+
+	@Test
+	public void testHideHiddenContents6() throws Exception {
+		testHideHiddenContents();
+	}
+
+	@Test
+	public void testHideHiddenContents7() throws Exception {
+		testHideHiddenContents();
+	}
+
+	@Test
+	public void testHideHiddenContents8() throws Exception {
+		testHideHiddenContents();
+	}
+
+	@Test
+	public void testHideHiddenContents9() throws Exception {
+		testHideHiddenContents();
+	}
+
+	@Test
+	public void testHideHiddenContents10() throws Exception {
+		testHideHiddenContents();
+	}
+
+	@Test
+	public void testHideHiddenContents11() throws Exception {
+		testHideHiddenContents();
+	}
+
+	@Test
+	public void testHideHiddenContents12() throws Exception {
+		testHideHiddenContents();
+	}
+
+	@Test
+	public void testHideHiddenContents13() throws Exception {
+		testHideHiddenContents();
+	}
+
+	@Test
+	public void testHideHiddenContents14() throws Exception {
+		testHideHiddenContents();
+	}
+
+	@Test
+	public void testHideHiddenContents15() throws Exception {
+		testHideHiddenContents();
+	}
+
+	@Test
+	public void testHideHiddenContents16() throws Exception {
+		testHideHiddenContents();
+	}
+
+	@Test
+	public void testHideHiddenContents17() throws Exception {
+		testHideHiddenContents();
+	}
+
+	@Test
+	public void testHideHiddenContents18() throws Exception {
+		testHideHiddenContents();
+	}
+
+	@Test
+	public void testHideHiddenContents19() throws Exception {
+		testHideHiddenContents();
+	}
+
+	@Test
+	public void testHideHiddenContents20() throws Exception {
+		testHideHiddenContents();
+	}
+
+	@Test
+	public void testHideHiddenContents21() throws Exception {
+		testHideHiddenContents();
+	}
+
+	@Test
+	public void testHideHiddenContents22() throws Exception {
+		testHideHiddenContents();
+	}
+
+	@Test
+	public void testHideHiddenContents23() throws Exception {
+		testHideHiddenContents();
+	}
+
+	@Test
+	public void testHideHiddenContents24() throws Exception {
+		testHideHiddenContents();
+	}
+
+	@Test
+	public void testHideHiddenContents25() throws Exception {
+		testHideHiddenContents();
+	}
+
+	@Test
+	public void testHideHiddenContents26() throws Exception {
+		testHideHiddenContents();
+	}
+
+	@Test
+	public void testHideHiddenContents27() throws Exception {
+		testHideHiddenContents();
+	}
+
+	@Test
+	public void testHideHiddenContents28() throws Exception {
+		testHideHiddenContents();
+	}
+
+	@Test
+	public void testHideHiddenContents29() throws Exception {
+		testHideHiddenContents();
+	}
+
+	@Test
+	public void testHideHiddenContents30() throws Exception {
+		testHideHiddenContents();
+	}
+
+	@Test
 	public void testHideTaggedContents() throws Exception {
 		_assetTag = AssetTestUtil.addTag(_group.getGroupId(), "hide");
 
