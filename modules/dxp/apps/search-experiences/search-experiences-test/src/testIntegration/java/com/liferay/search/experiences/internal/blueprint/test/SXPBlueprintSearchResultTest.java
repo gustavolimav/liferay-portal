@@ -33,6 +33,7 @@ import com.liferay.exportimport.kernel.configuration.ExportImportConfigurationPa
 import com.liferay.exportimport.kernel.service.StagingLocalServiceUtil;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.model.JournalFolder;
+import com.liferay.journal.service.JournalArticleLocalService;
 import com.liferay.journal.service.JournalFolderServiceUtil;
 import com.liferay.journal.test.util.JournalTestUtil;
 import com.liferay.petra.string.StringBundler;
@@ -1638,8 +1639,15 @@ public class SXPBlueprintSearchResultTest {
 		_addJournalArticleSleep = 2;
 
 		_setUpJournalArticles(
-			new String[] {"cola cola", "", ""},
-			new String[] {"Coca Cola", "Pepsi Cola", "Sprite"});
+			new String[] {"cola cola", ""},
+			new String[] {"Coca Cola", "Pepsi Cola"});
+
+		JournalArticle journalArticle = _journalArticles.get(0);
+
+		journalArticle.setCreateDate(
+			DateUtil.newDate(System.currentTimeMillis() - Time.DAY));
+
+		_journalArticleLocalService.updateJournalArticle(journalArticle);
 
 		_updateElementInstancesJSON(
 			new Object[] {
@@ -1651,7 +1659,7 @@ public class SXPBlueprintSearchResultTest {
 				).put(
 					"start_date",
 					DateUtil.getDate(
-						new Date(System.currentTimeMillis() - 1000),
+						new Date(System.currentTimeMillis() - Time.HOUR),
 						"yyyyMMddHHmmss", LocaleUtil.US)
 				).build()
 			},
@@ -1659,11 +1667,11 @@ public class SXPBlueprintSearchResultTest {
 				"Limit Search to Contents Created Within a Period of Time"
 			});
 
-		_assertSearchIgnoreRelevance("[Pepsi Cola, Sprite]");
+		_assertSearchIgnoreRelevance("[Pepsi Cola]");
 
 		_updateElementInstancesJSON(null, null);
 
-		_assertSearchIgnoreRelevance("[Coca Cola, Pepsi Cola, Sprite]");
+		_assertSearchIgnoreRelevance("[Coca Cola, Pepsi Cola]");
 	}
 
 	@Test
@@ -3094,6 +3102,9 @@ public class SXPBlueprintSearchResultTest {
 	private static final LocalTime _LOCAL_TIME_17 = LocalTime.of(17, 0, 0);
 
 	private static final LocalTime _LOCAL_TIME_20 = LocalTime.of(20, 0, 0);
+
+	@Inject
+	private static JournalArticleLocalService _journalArticleLocalService;
 
 	private static List<SXPElement> _sxpElements;
 
