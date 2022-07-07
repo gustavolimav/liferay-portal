@@ -243,6 +243,147 @@ public class SXPBlueprintSearchResultTest {
 	}
 
 	@Test
+	public void testBoostContentsForTheCurrentLanguage2() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage3() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage4() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage5() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage6() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage7() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage8() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage9() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage10() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage11() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage12() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage13() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage14() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage15() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage16() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage17() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage18() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage19() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage20() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage21() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage22() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage23() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage25() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage26() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage27() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage28() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage29() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+	@Test
+	public void testBoostContentsForTheCurrentLanguage30() throws Exception {
+		testBoostContentsForTheCurrentLanguage();
+	}
+
+
+	@Test
 	public void testBoostContentsInACategory() throws Exception {
 		_addAssetCategory("Important", _user);
 
