@@ -673,6 +673,100 @@ public class SXPBlueprintSearchResultTest {
 	}
 
 	@Test
+	public void testBoostContentsWithMoreVersions2() throws Exception {
+		_journalArticleBuilder.setTitle(
+			"Article 1.0"
+		).setContent(
+			"Article"
+		).build();
+
+		_journalArticleBuilder.setTitle(
+			"Article 2.0"
+		).build();
+
+		_journalArticles.set(
+			1,
+			JournalTestUtil.updateArticle(
+				_journalArticles.get(1), "Article 2.1"));
+
+		_journalArticles.set(
+			1,
+			JournalTestUtil.updateArticle(
+				_journalArticles.get(1), "Article 2.2"));
+
+		_journalArticles.set(
+			0,
+			JournalTestUtil.updateArticle(
+				_journalArticles.get(0), "Article 1.1")); // ordem importa
+
+		_keywords = "Article";
+
+		_updateElementInstancesJSON(
+			new Object[] {
+				HashMapBuilder.<String, Object>put(
+					"boost", 100
+				).put(
+					"factor", 10
+				).put(
+					"modifier", "sqrt"
+				).build()
+			},
+			new String[] {"Boost Contents With More Versions"});
+
+
+		_assertSearch("[Article 2.2, Article 1.1]");
+
+		_updateElementInstancesJSON(null, null);
+
+		_assertSearch("[Article 1.1, Article 2.2]");
+	}
+
+	@Test
+	public void testBoostContentsWithMoreVersions3() throws Exception {
+		_journalArticleBuilder.setTitle(
+			"Article 1.0"
+		).setContent(
+			"Article"
+		).build();
+
+		_journalArticleBuilder.setTitle(
+			"Article 2.0"
+		).build();
+
+		JournalArticle journalArticle = _journalArticles.get(1);
+
+		journalArticle.setVersion(2.0);
+		_journalArticleLocalService.updateJournalArticle(journalArticle);
+
+		_journalArticles.set(
+			0,
+			JournalTestUtil.updateArticle(
+				_journalArticles.get(0), "Article 1.1"));
+
+
+		_keywords = "Article";
+
+		_updateElementInstancesJSON(
+			new Object[] {
+				HashMapBuilder.<String, Object>put(
+					"boost", 100
+				).put(
+					"factor", 10
+				).put(
+					"modifier", "sqrt"
+				).build()
+			},
+			new String[] {"Boost Contents With More Versions"});
+
+
+		_assertSearch("[Article 2.0, Article 1.1]");
+
+		_updateElementInstancesJSON(null, null);
+
+		_assertSearch("[Article 1.1, Article 2.0]");
+	}
+
+	@Test
 	public void testBoostFreshness() throws Exception {
 		_journalArticleBuilder.setTitle(
 			"First Created"
