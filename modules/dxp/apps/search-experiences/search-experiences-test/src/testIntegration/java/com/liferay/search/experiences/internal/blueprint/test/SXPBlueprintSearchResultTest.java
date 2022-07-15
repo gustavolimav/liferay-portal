@@ -636,103 +636,6 @@ public class SXPBlueprintSearchResultTest {
 			"Article 2.0"
 		).build();
 
-		_journalArticles.set(
-			0,
-			JournalTestUtil.updateArticle(
-				_journalArticles.get(0), "Article 1.1"));
-
-		_journalArticles.set(
-			1,
-			JournalTestUtil.updateArticle(
-				_journalArticles.get(1), "Article 2.1"));
-
-		_journalArticles.set(
-			1,
-			JournalTestUtil.updateArticle(
-				_journalArticles.get(1), "Article 2.2"));
-
-		_updateElementInstancesJSON(
-			new Object[] {
-				HashMapBuilder.<String, Object>put(
-					"boost", 100
-				).put(
-					"factor", 10
-				).put(
-					"modifier", "sqrt"
-				).build()
-			},
-			new String[] {"Boost Contents With More Versions"});
-
-		_keywords = "Article";
-
-		_assertSearch("[Article 2.2, Article 1.1]");
-
-		_updateElementInstancesJSON(null, null);
-
-		_assertSearch("[Article 1.1, Article 2.2]");
-	}
-
-	@Test
-	public void testBoostContentsWithMoreVersions2() throws Exception {
-		_journalArticleBuilder.setTitle(
-			"Article 1.0"
-		).setContent(
-			"Article"
-		).build();
-
-		_journalArticleBuilder.setTitle(
-			"Article 2.0"
-		).build();
-
-		_journalArticles.set(
-			1,
-			JournalTestUtil.updateArticle(
-				_journalArticles.get(1), "Article 2.1"));
-
-		_journalArticles.set(
-			1,
-			JournalTestUtil.updateArticle(
-				_journalArticles.get(1), "Article 2.2"));
-
-		_journalArticles.set(
-			0,
-			JournalTestUtil.updateArticle(
-				_journalArticles.get(0), "Article 1.1")); // ordem importa
-
-		_keywords = "Article";
-
-		_updateElementInstancesJSON(
-			new Object[] {
-				HashMapBuilder.<String, Object>put(
-					"boost", 100
-				).put(
-					"factor", 10
-				).put(
-					"modifier", "sqrt"
-				).build()
-			},
-			new String[] {"Boost Contents With More Versions"});
-
-
-		_assertSearch("[Article 2.2, Article 1.1]");
-
-		_updateElementInstancesJSON(null, null);
-
-		_assertSearch("[Article 1.1, Article 2.2]");
-	}
-
-	@Test
-	public void testBoostContentsWithMoreVersions3() throws Exception {
-		_journalArticleBuilder.setTitle(
-			"Article 1.0"
-		).setContent(
-			"Article"
-		).build();
-
-		_journalArticleBuilder.setTitle(
-			"Article 2.0"
-		).build();
-
 		JournalArticle journalArticle = _journalArticles.get(1);
 
 		journalArticle.setVersion(2.0);
@@ -765,130 +668,6 @@ public class SXPBlueprintSearchResultTest {
 
 		_assertSearch("[Article 1.1, Article 2.0]");
 	}
-
-	@Test
-	public void testBoostContentsWithMoreVersions301() throws Exception {
-		testBoostContentsWithMoreVersions3();
-	}
-
-	@Test
-	public void testBoostContentsWithMoreVersions302() throws Exception {
-		testBoostContentsWithMoreVersions3();
-	}
-
-	@Test
-	public void testBoostContentsWithMoreVersions303() throws Exception {
-		testBoostContentsWithMoreVersions3();
-	}
-	@Test
-	public void testBoostContentsWithMoreVersions304() throws Exception {
-		testBoostContentsWithMoreVersions3();
-	}
-	@Test
-	public void testBoostContentsWithMoreVersions305() throws Exception {
-		testBoostContentsWithMoreVersions3();
-	}
-	@Test
-	public void testBoostContentsWithMoreVersions306() throws Exception {
-		testBoostContentsWithMoreVersions3();
-	}
-	@Test
-	public void testBoostContentsWithMoreVersions307() throws Exception {
-		testBoostContentsWithMoreVersions3();
-	}
-	@Test
-	public void testBoostContentsWithMoreVersions308() throws Exception {
-		testBoostContentsWithMoreVersions3();
-	}
-	@Test
-	public void testBoostContentsWithMoreVersions309() throws Exception {
-		testBoostContentsWithMoreVersions3();
-	}
-	@Test
-	public void testBoostContentsWithMoreVersions310() throws Exception {
-		testBoostContentsWithMoreVersions3();
-	}
-	@Test
-	public void testBoostContentsWithMoreVersions311() throws Exception {
-		testBoostContentsWithMoreVersions3();
-	}
-	@Test
-	public void testBoostContentsWithMoreVersions312() throws Exception {
-		testBoostContentsWithMoreVersions3();
-	}
-	@Test
-	public void testBoostContentsWithMoreVersions313() throws Exception {
-		testBoostContentsWithMoreVersions3();
-	}
-	@Test
-	public void testBoostContentsWithMoreVersions314() throws Exception {
-		testBoostContentsWithMoreVersions3();
-	}
-	@Test
-	public void testBoostContentsWithMoreVersions315() throws Exception {
-		testBoostContentsWithMoreVersions3();
-	}
-	@Test
-	public void testBoostContentsWithMoreVersions316() throws Exception {
-		testBoostContentsWithMoreVersions3();
-	}
-	@Test
-	public void testBoostContentsWithMoreVersions317() throws Exception {
-		testBoostContentsWithMoreVersions3();
-	}
-	@Test
-	public void testBoostContentsWithMoreVersions318() throws Exception {
-		testBoostContentsWithMoreVersions3();
-	}
-	@Test
-	public void testBoostContentsWithMoreVersions319() throws Exception {
-		testBoostContentsWithMoreVersions3();
-	}
-	@Test
-	public void testBoostContentsWithMoreVersions320() throws Exception {
-		testBoostContentsWithMoreVersions3();
-	}
-	@Test
-	public void testBoostContentsWithMoreVersions321() throws Exception {
-		testBoostContentsWithMoreVersions3();
-	}
-	@Test
-	public void testBoostContentsWithMoreVersions322() throws Exception {
-		testBoostContentsWithMoreVersions3();
-	}
-	@Test
-	public void testBoostContentsWithMoreVersions323() throws Exception {
-		testBoostContentsWithMoreVersions3();
-	}
-	@Test
-	public void testBoostContentsWithMoreVersions324() throws Exception {
-		testBoostContentsWithMoreVersions3();
-	}
-	@Test
-	public void testBoostContentsWithMoreVersions325() throws Exception {
-		testBoostContentsWithMoreVersions3();
-	}
-	@Test
-	public void testBoostContentsWithMoreVersions326() throws Exception {
-		testBoostContentsWithMoreVersions3();
-	}
-	@Test
-	public void testBoostContentsWithMoreVersions327() throws Exception {
-		testBoostContentsWithMoreVersions3();
-	}
-	@Test
-	public void testBoostContentsWithMoreVersions328() throws Exception {
-		testBoostContentsWithMoreVersions3();
-	}
-	@Test
-	public void testBoostContentsWithMoreVersions329() throws Exception {
-		testBoostContentsWithMoreVersions3();
-	}
-	@Test
-	public void testBoostContentsWithMoreVersions330() throws Exception {
-		testBoostContentsWithMoreVersions3();
-	}
-
 
 	@Test
 	public void testBoostFreshness() throws Exception {
@@ -2167,6 +1946,178 @@ public class SXPBlueprintSearchResultTest {
 	}
 
 	@Test
+	public void testTextMatchOverMultipleFields_bestFields2() throws Exception {
+		_journalArticleBuilder.setTitle(
+			"coca cola"
+		).build();
+
+		_journalArticleBuilder.setTitle(
+			"coca coca"
+		).setContent(
+			"cola cola"
+		).build();
+
+		_updateElementInstancesJSON(
+			new Object[] {_getTextMatchOverMultipleFields()},
+			new String[] {"Text Match Over Multiple Fields"});
+
+		_keywords = "coca cola";
+
+		_assertSearch(
+			"[coca cola, coca coca]");
+	}
+
+	@Test
+	public void testTextMatchOverMultipleFields_bestFields301() throws Exception {
+		testTextMatchOverMultipleFields_bestFields2();
+	}
+
+	@Test
+	public void testTextMatchOverMultipleFields_bestFields302() throws Exception {
+		testTextMatchOverMultipleFields_bestFields2();
+	}
+
+	@Test
+	public void testTextMatchOverMultipleFields_bestFields303() throws Exception {
+		testTextMatchOverMultipleFields_bestFields2();
+	}
+
+	@Test
+	public void testTextMatchOverMultipleFields_bestFields304() throws Exception {
+		testTextMatchOverMultipleFields_bestFields2();
+	}
+
+	@Test
+	public void testTextMatchOverMultipleFields_bestFields305() throws Exception {
+		testTextMatchOverMultipleFields_bestFields2();
+	}
+
+	@Test
+	public void testTextMatchOverMultipleFields_bestFields306() throws Exception {
+		testTextMatchOverMultipleFields_bestFields2();
+	}
+
+	@Test
+	public void testTextMatchOverMultipleFields_bestFields307() throws Exception {
+		testTextMatchOverMultipleFields_bestFields2();
+	}
+
+	@Test
+	public void testTextMatchOverMultipleFields_bestFields308() throws Exception {
+		testTextMatchOverMultipleFields_bestFields2();
+	}
+
+	@Test
+	public void testTextMatchOverMultipleFields_bestFields309() throws Exception {
+		testTextMatchOverMultipleFields_bestFields2();
+	}
+
+	@Test
+	public void testTextMatchOverMultipleFields_bestFields310() throws Exception {
+		testTextMatchOverMultipleFields_bestFields2();
+	}
+
+	@Test
+	public void testTextMatchOverMultipleFields_bestFields311() throws Exception {
+		testTextMatchOverMultipleFields_bestFields2();
+	}
+
+	@Test
+	public void testTextMatchOverMultipleFields_bestFields312() throws Exception {
+		testTextMatchOverMultipleFields_bestFields2();
+	}
+
+	@Test
+	public void testTextMatchOverMultipleFields_bestFields313() throws Exception {
+		testTextMatchOverMultipleFields_bestFields2();
+	}
+
+	@Test
+	public void testTextMatchOverMultipleFields_bestFields314() throws Exception {
+		testTextMatchOverMultipleFields_bestFields2();
+	}
+
+	@Test
+	public void testTextMatchOverMultipleFields_bestFields315() throws Exception {
+		testTextMatchOverMultipleFields_bestFields2();
+	}
+
+	@Test
+	public void testTextMatchOverMultipleFields_bestFields316() throws Exception {
+		testTextMatchOverMultipleFields_bestFields2();
+	}
+
+	@Test
+	public void testTextMatchOverMultipleFields_bestFields317() throws Exception {
+		testTextMatchOverMultipleFields_bestFields2();
+	}
+
+	@Test
+	public void testTextMatchOverMultipleFields_bestFields318() throws Exception {
+		testTextMatchOverMultipleFields_bestFields2();
+	}
+
+	@Test
+	public void testTextMatchOverMultipleFields_bestFields319() throws Exception {
+		testTextMatchOverMultipleFields_bestFields2();
+	}
+
+	@Test
+	public void testTextMatchOverMultipleFields_bestFields320() throws Exception {
+		testTextMatchOverMultipleFields_bestFields2();
+	}
+
+	@Test
+	public void testTextMatchOverMultipleFields_bestFields321() throws Exception {
+		testTextMatchOverMultipleFields_bestFields2();
+	}
+
+	@Test
+	public void testTextMatchOverMultipleFields_bestFields322() throws Exception {
+		testTextMatchOverMultipleFields_bestFields2();
+	}
+
+	@Test
+	public void testTextMatchOverMultipleFields_bestFields323() throws Exception {
+		testTextMatchOverMultipleFields_bestFields2();
+	}
+
+	@Test
+	public void testTextMatchOverMultipleFields_bestFields324() throws Exception {
+		testTextMatchOverMultipleFields_bestFields2();
+	}
+
+	@Test
+	public void testTextMatchOverMultipleFields_bestFields325() throws Exception {
+		testTextMatchOverMultipleFields_bestFields2();
+	}
+
+	@Test
+	public void testTextMatchOverMultipleFields_bestFields326() throws Exception {
+		testTextMatchOverMultipleFields_bestFields2();
+	}
+
+	@Test
+	public void testTextMatchOverMultipleFields_bestFields327() throws Exception {
+		testTextMatchOverMultipleFields_bestFields2();
+	}
+
+	@Test
+	public void testTextMatchOverMultipleFields_bestFields328() throws Exception {
+		testTextMatchOverMultipleFields_bestFields2();
+	}
+	
+	@Test
+	public void testTextMatchOverMultipleFields_bestFields329() throws Exception {
+		testTextMatchOverMultipleFields_bestFields2();
+	}
+
+	@Test
+	public void testTextMatchOverMultipleFields_bestFields330() throws Exception {
+		testTextMatchOverMultipleFields_bestFields2();
+	}
+
+	@Test
 	public void testTextMatchOverMultipleFields_boolPrefix() throws Exception {
 		_journalArticleBuilder.setTitle(
 			"lorem ipsum sit"
@@ -2331,6 +2282,49 @@ public class SXPBlueprintSearchResultTest {
 		_assertSearchIgnoreRelevance(
 			"[amet, lorem ipsum dolor, lorem ipsum sit, nunquis]");
 	}
+
+//	@Test
+//	public void testTextMatchOverMultipleFields_mostFields2() throws Exception {
+//		_journalArticleBuilder.setTitle(
+//			"amet"
+//		).setContent(
+//			"ipsum sit sit"
+//		).build();
+//
+//		_journalArticleBuilder.setTitle(
+//			"lorem ipsum dolor"
+//		).setContent(
+//			"ipsum sit"
+//		).build();
+//
+//		_journalArticleBuilder.setTitle(
+//			"lorem ipsum sit"
+//		).setContent(
+//			"ipsum sit sit"
+//		).build();
+//
+//		_journalArticleBuilder.setTitle(
+//			"nunquis"
+//		).setContent(
+//			"non-lorem ipsum sit"
+//		).build();
+//
+//		Map<String, Object> textMatchOverMultipleFields =
+//			_getTextMatchOverMultipleFields();
+//
+//		textMatchOverMultipleFields.replace("fuzziness", "0");
+//		textMatchOverMultipleFields.replace("operator", "and");
+//		textMatchOverMultipleFields.replace("type", "most_fields");
+//
+//		_updateElementInstancesJSON(
+//			new Object[]{textMatchOverMultipleFields},
+//			new String[]{"Text Match Over Multiple Fields"});
+//
+//		_keywords = "sit lorem";
+//
+//		_assertSearch("[lorem ipsum sit, nunquis]");
+//
+//	}
 
 	@Test
 	public void testTextMatchOverMultipleFields_phrase() throws Exception {
