@@ -117,6 +117,154 @@ public class MultiMatchQueryTest extends BaseIndexingTestCase {
 	}
 
 	@Test
+	public void testMultiMatchQueryCrossField01() throws Exception {
+		testMultiMatchQueryCrossField();
+	}
+
+	@Test
+	public void testMultiMatchQueryCrossField02() throws Exception {
+		testMultiMatchQueryCrossField();
+	}
+
+	@Test
+	public void testMultiMatchQueryCrossField03() throws Exception {
+		testMultiMatchQueryCrossField();
+	}
+
+	@Test
+	public void testMultiMatchQueryCrossField04() throws Exception {
+		testMultiMatchQueryCrossField();
+	}
+
+	@Test
+	public void testMultiMatchQueryCrossField05() throws Exception {
+		testMultiMatchQueryCrossField();
+	}
+
+	@Test
+	public void testMultiMatchQueryCrossField06() throws Exception {
+		testMultiMatchQueryCrossField();
+	}
+
+	@Test
+	public void testMultiMatchQueryCrossField07() throws Exception {
+		testMultiMatchQueryCrossField();
+	}
+
+	@Test
+	public void testMultiMatchQueryCrossField08() throws Exception {
+		testMultiMatchQueryCrossField();
+	}
+
+	@Test
+	public void testMultiMatchQueryCrossField09() throws Exception {
+		testMultiMatchQueryCrossField();
+	}
+
+	@Test
+	public void testMultiMatchQueryCrossField10() throws Exception {
+		testMultiMatchQueryCrossField();
+	}
+
+	@Test
+	public void testMultiMatchQueryCrossField11() throws Exception {
+		testMultiMatchQueryCrossField();
+	}
+
+	@Test
+	public void testMultiMatchQueryCrossField12() throws Exception {
+		testMultiMatchQueryCrossField();
+	}
+
+	@Test
+	public void testMultiMatchQueryCrossField13() throws Exception {
+		testMultiMatchQueryCrossField();
+	}
+
+	@Test
+	public void testMultiMatchQueryCrossField14() throws Exception {
+		testMultiMatchQueryCrossField();
+	}
+
+	@Test
+	public void testMultiMatchQueryCrossField15() throws Exception {
+		testMultiMatchQueryCrossField();
+	}
+
+	@Test
+	public void testMultiMatchQueryCrossField16() throws Exception {
+		testMultiMatchQueryCrossField();
+	}
+
+	@Test
+	public void testMultiMatchQueryCrossField17() throws Exception {
+		testMultiMatchQueryCrossField();
+	}
+
+	@Test
+	public void testMultiMatchQueryCrossField18() throws Exception {
+		testMultiMatchQueryCrossField();
+	}
+
+	@Test
+	public void testMultiMatchQueryCrossField19() throws Exception {
+		testMultiMatchQueryCrossField();
+	}
+
+	@Test
+	public void testMultiMatchQueryCrossField20() throws Exception {
+		testMultiMatchQueryCrossField();
+	}@Test
+	public void testMultiMatchQueryCrossField21() throws Exception {
+		testMultiMatchQueryCrossField();
+	}
+
+	@Test
+	public void testMultiMatchQueryCrossField22() throws Exception {
+		testMultiMatchQueryCrossField();
+	}
+
+	@Test
+	public void testMultiMatchQueryCrossField23() throws Exception {
+		testMultiMatchQueryCrossField();
+	}
+
+	@Test
+	public void testMultiMatchQueryCrossField24() throws Exception {
+		testMultiMatchQueryCrossField();
+	}
+
+	@Test
+	public void testMultiMatchQueryCrossField25() throws Exception {
+		testMultiMatchQueryCrossField();
+	}
+
+	@Test
+	public void testMultiMatchQueryCrossField26() throws Exception {
+		testMultiMatchQueryCrossField();
+	}
+
+	@Test
+	public void testMultiMatchQueryCrossField27() throws Exception {
+		testMultiMatchQueryCrossField();
+	}
+
+	@Test
+	public void testMultiMatchQueryCrossField28() throws Exception {
+		testMultiMatchQueryCrossField();
+	}
+
+	@Test
+	public void testMultiMatchQueryCrossField29() throws Exception {
+		testMultiMatchQueryCrossField();
+	}
+
+	@Test
+	public void testMultiMatchQueryCrossField30() throws Exception {
+		testMultiMatchQueryCrossField();
+	}
+
+	@Test
 	public void testMultiMatchQueryDefault() {
 		_indexUserDocuments("alpha", "omega", "userName1");
 
@@ -167,6 +315,154 @@ public class MultiMatchQueryTest extends BaseIndexingTestCase {
 		List<String> expected = Arrays.asList("userName1", "userName2");
 
 		_assertSearch(expected, multiMatchQuery);
+	}
+
+	@Test
+	public void testMultiMatchQueryTieBreaker01() throws Exception {
+		testMultiMatchQueryTieBreaker();
+	}
+
+	@Test
+	public void testMultiMatchQueryTieBreaker02() throws Exception {
+		testMultiMatchQueryTieBreaker();
+	}
+
+	@Test
+	public void testMultiMatchQueryTieBreaker03() throws Exception {
+		testMultiMatchQueryTieBreaker();
+	}
+
+	@Test
+	public void testMultiMatchQueryTieBreaker04() throws Exception {
+		testMultiMatchQueryTieBreaker();
+	}
+
+	@Test
+	public void testMultiMatchQueryTieBreaker05() throws Exception {
+		testMultiMatchQueryTieBreaker();
+	}
+
+	@Test
+	public void testMultiMatchQueryTieBreaker06() throws Exception {
+		testMultiMatchQueryTieBreaker();
+	}
+
+	@Test
+	public void testMultiMatchQueryTieBreaker07() throws Exception {
+		testMultiMatchQueryTieBreaker();
+	}
+
+	@Test
+	public void testMultiMatchQueryTieBreaker08() throws Exception {
+		testMultiMatchQueryTieBreaker();
+	}
+
+	@Test
+	public void testMultiMatchQueryTieBreaker09() throws Exception {
+		testMultiMatchQueryTieBreaker();
+	}
+
+	@Test
+	public void testMultiMatchQueryTieBreaker10() throws Exception {
+		testMultiMatchQueryTieBreaker();
+	}
+
+	@Test
+	public void testMultiMatchQueryTieBreaker11() throws Exception {
+		testMultiMatchQueryTieBreaker();
+	}
+
+	@Test
+	public void testMultiMatchQueryTieBreaker12() throws Exception {
+		testMultiMatchQueryTieBreaker();
+	}
+
+	@Test
+	public void testMultiMatchQueryTieBreaker13() throws Exception {
+		testMultiMatchQueryTieBreaker();
+	}
+
+	@Test
+	public void testMultiMatchQueryTieBreaker14() throws Exception {
+		testMultiMatchQueryTieBreaker();
+	}
+
+	@Test
+	public void testMultiMatchQueryTieBreaker15() throws Exception {
+		testMultiMatchQueryTieBreaker();
+	}
+
+	@Test
+	public void testMultiMatchQueryTieBreaker16() throws Exception {
+		testMultiMatchQueryTieBreaker();
+	}
+
+	@Test
+	public void testMultiMatchQueryTieBreaker17() throws Exception {
+		testMultiMatchQueryTieBreaker();
+	}
+
+	@Test
+	public void testMultiMatchQueryTieBreaker18() throws Exception {
+		testMultiMatchQueryTieBreaker();
+	}
+
+	@Test
+	public void testMultiMatchQueryTieBreaker19() throws Exception {
+		testMultiMatchQueryTieBreaker();
+	}
+
+	@Test
+	public void testMultiMatchQueryTieBreaker20() throws Exception {
+		testMultiMatchQueryTieBreaker();
+	}@Test
+	public void testMultiMatchQueryTieBreaker21() throws Exception {
+		testMultiMatchQueryTieBreaker();
+	}
+
+	@Test
+	public void testMultiMatchQueryTieBreaker22() throws Exception {
+		testMultiMatchQueryTieBreaker();
+	}
+
+	@Test
+	public void testMultiMatchQueryTieBreaker23() throws Exception {
+		testMultiMatchQueryTieBreaker();
+	}
+
+	@Test
+	public void testMultiMatchQueryTieBreaker24() throws Exception {
+		testMultiMatchQueryTieBreaker();
+	}
+
+	@Test
+	public void testMultiMatchQueryTieBreaker25() throws Exception {
+		testMultiMatchQueryTieBreaker();
+	}
+
+	@Test
+	public void testMultiMatchQueryTieBreaker26() throws Exception {
+		testMultiMatchQueryTieBreaker();
+	}
+
+	@Test
+	public void testMultiMatchQueryTieBreaker27() throws Exception {
+		testMultiMatchQueryTieBreaker();
+	}
+
+	@Test
+	public void testMultiMatchQueryTieBreaker28() throws Exception {
+		testMultiMatchQueryTieBreaker();
+	}
+
+	@Test
+	public void testMultiMatchQueryTieBreaker29() throws Exception {
+		testMultiMatchQueryTieBreaker();
+	}
+
+	@Test
+	public void testMultiMatchQueryTieBreaker30() throws Exception {
+		testMultiMatchQueryTieBreaker();
 	}
 
 	@Override
