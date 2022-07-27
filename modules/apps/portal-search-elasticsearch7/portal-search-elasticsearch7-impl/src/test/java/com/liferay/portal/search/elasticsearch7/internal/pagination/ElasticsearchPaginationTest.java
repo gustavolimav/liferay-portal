@@ -21,6 +21,7 @@ import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import org.junit.ClassRule;
 import org.junit.Rule;
+import org.junit.Test;
 
 /**
  * @author Preston Crary
@@ -31,6 +32,156 @@ public class ElasticsearchPaginationTest extends BasePaginationTestCase {
 	@Rule
 	public static final LiferayUnitTestRule liferayUnitTestRule =
 		LiferayUnitTestRule.INSTANCE;
+
+	@Test
+	public void testMiddleOne01() throws Exception {
+		testMiddleOne();
+	}
+
+	@Test
+	public void testMiddleOne02() throws Exception {
+		testMiddleOne();
+	}
+
+	@Test
+	public void testMiddleOne03() throws Exception {
+		testMiddleOne();
+	}
+
+	@Test
+	public void testMiddleOne04() throws Exception {
+		testMiddleOne();
+	}
+
+	@Test
+	public void testMiddleOne05() throws Exception {
+		testMiddleOne();
+	}
+
+	@Test
+	public void testMiddleOne06() throws Exception {
+		testMiddleOne();
+	}
+
+	@Test
+	public void testMiddleOne07() throws Exception {
+		testMiddleOne();
+	}
+
+	@Test
+	public void testMiddleOne08() throws Exception {
+		testMiddleOne();
+	}
+
+	@Test
+	public void testMiddleOne09() throws Exception {
+		testMiddleOne();
+	}
+
+	@Test
+	public void testMiddleOne10() throws Exception {
+		testMiddleOne();
+	}
+
+	@Test
+	public void testMiddleOne11() throws Exception {
+		testMiddleOne();
+	}
+
+	@Test
+	public void testMiddleOne12() throws Exception {
+		testMiddleOne();
+	}
+
+	@Test
+	public void testMiddleOne13() throws Exception {
+		testMiddleOne();
+	}
+
+	@Test
+	public void testMiddleOne14() throws Exception {
+		testMiddleOne();
+	}
+
+	@Test
+	public void testMiddleOne15() throws Exception {
+		testMiddleOne();
+	}
+
+	@Test
+	public void testMiddleOne16() throws Exception {
+		testMiddleOne();
+	}
+
+	@Test
+	public void testMiddleOne17() throws Exception {
+		testMiddleOne();
+	}
+
+	@Test
+	public void testMiddleOne18() throws Exception {
+		testMiddleOne();
+	}
+
+	@Test
+	public void testMiddleOne19() throws Exception {
+		testMiddleOne();
+	}
+
+	@Test
+	public void testMiddleOne20() throws Exception {
+		testMiddleOne();
+	}
+
+	@Test
+	public void testMiddleOne21() throws Exception {
+		testMiddleOne();
+	}
+
+	@Test
+	public void testMiddleOne22() throws Exception {
+		testMiddleOne();
+	}
+
+	@Test
+	public void testMiddleOne23() throws Exception {
+		testMiddleOne();
+	}
+
+	@Test
+	public void testMiddleOne24() throws Exception {
+		testMiddleOne();
+	}
+
+	@Test
+	public void testMiddleOne25() throws Exception {
+		testMiddleOne();
+	}
+
+	@Test
+	public void testMiddleOne26() throws Exception {
+		testMiddleOne();
+	}
+
+	@Test
+	public void testMiddleOne27() throws Exception {
+		testMiddleOne();
+	}
+
+	@Test
+	public void testMiddleOne28() throws Exception {
+		testMiddleOne();
+	}
+
+	@Test
+	public void testMiddleOne29() throws Exception {
+		testMiddleOne();
+	}
+
+	@Test
+	public void testMiddleOne30() throws Exception {
+		testMiddleOne();
+	}
 
 	@Override
 	protected IndexingFixture createIndexingFixture() {
