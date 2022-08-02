@@ -487,6 +487,12 @@ public class SXPBlueprintSuggestionsContributorTest {
 		).when(
 			_suggestionsContributorConfiguration
 		).getSize();
+
+		Mockito.doReturn(
+			"test"
+		).when(
+			_suggestionsContributorConfiguration
+		).getDisplayGroupName();
 	}
 
 	private void _setUpSuggestionsContributorResultsBuilderFactory(
