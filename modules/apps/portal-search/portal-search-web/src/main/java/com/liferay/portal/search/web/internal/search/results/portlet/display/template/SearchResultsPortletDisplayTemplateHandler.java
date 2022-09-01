@@ -103,6 +103,13 @@ public class SearchResultsPortletDisplayTemplateHandler
 			SearchResultSummaryDisplayContext.class,
 			PortletDisplayTemplateConstants.ENTRY, "getCreatorUserName()");
 		templateVariableGroup.addVariable(
+			"document-modified-by-user-name",
+			SearchResultSummaryDisplayContext.class,
+			PortletDisplayTemplateConstants.ENTRY, "getModifiedByUserName()");
+		templateVariableGroup.addVariable(
+			"document-modified-date", SearchResultSummaryDisplayContext.class,
+			PortletDisplayTemplateConstants.ENTRY, "getCreationDateString()");
+		templateVariableGroup.addVariable(
 			"document-title", SearchResultSummaryDisplayContext.class,
 			PortletDisplayTemplateConstants.ENTRY, "getHighlightedTitle()");
 		templateVariableGroup.addCollectionVariable(
