@@ -15,7 +15,6 @@
 package com.liferay.portal.search.web.internal.facet.folder.display.context;
 
 import com.liferay.portal.search.web.internal.facet.folder.configuration.FolderFacetPortletInstanceConfiguration;
-import com.liferay.portal.search.web.internal.facet.folder.display.context.FolderSearchFacetTermDisplayContext;
 
 import java.io.Serializable;
 

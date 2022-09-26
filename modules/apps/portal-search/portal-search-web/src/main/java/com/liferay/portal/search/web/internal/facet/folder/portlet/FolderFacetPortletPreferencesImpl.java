@@ -36,8 +36,7 @@ public class FolderFacetPortletPreferencesImpl
 	@Override
 	public int getFrequencyThreshold() {
 		return _portletPreferencesHelper.getInteger(
-			PREFERENCE_KEY_FREQUENCY_THRESHOLD,
-			1);
+			PREFERENCE_KEY_FREQUENCY_THRESHOLD, 1);
 	}
 
 	@Override
@@ -55,15 +54,13 @@ public class FolderFacetPortletPreferencesImpl
 	@Override
 	public String getParameterName() {
 		return _portletPreferencesHelper.getString(
-			PREFERENCE_KEY_PARAMETER_NAME,
-			"folder");
+			PREFERENCE_KEY_PARAMETER_NAME, "folder");
 	}
 
 	@Override
 	public boolean isFrequenciesVisible() {
 		return _portletPreferencesHelper.getBoolean(
-			PREFERENCE_KEY_FREQUENCIES_VISIBLE,
-			true);
+			PREFERENCE_KEY_FREQUENCIES_VISIBLE, true);
 	}
 
 	private final PortletPreferencesHelper _portletPreferencesHelper;

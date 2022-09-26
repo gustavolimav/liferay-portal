@@ -23,10 +23,10 @@ taglib uri="http://liferay.com/tld/template" prefix="liferay-template" %>
 
 <%@ page import="com.liferay.portal.kernel.util.Constants" %><%@
 page import="com.liferay.portal.search.web.internal.facet.category.configuration.CategoryFacetPortletInstanceConfiguration" %><%@
-page import="com.liferay.portal.search.web.internal.facet.category.portlet.CategoryFacetPortletPreferences" %><%@
-page import="com.liferay.portal.search.web.internal.facet.category.portlet.CategoryFacetPortletPreferencesImpl" %><%@
 page import="com.liferay.portal.search.web.internal.facet.category.display.context.AssetCategoriesSearchFacetDisplayContext" %><%@
 page import="com.liferay.portal.search.web.internal.facet.category.display.context.AssetCategoriesSearchFacetTermDisplayContext" %><%@
+page import="com.liferay.portal.search.web.internal.facet.category.portlet.CategoryFacetPortletPreferences" %><%@
+page import="com.liferay.portal.search.web.internal.facet.category.portlet.CategoryFacetPortletPreferencesImpl" %><%@
 page import="com.liferay.portal.search.web.internal.util.PortletPreferencesJspUtil" %>
 
 <portlet:defineObjects />

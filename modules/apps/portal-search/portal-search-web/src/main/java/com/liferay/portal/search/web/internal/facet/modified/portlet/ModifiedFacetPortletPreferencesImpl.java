@@ -44,8 +44,7 @@ public class ModifiedFacetPortletPreferencesImpl
 	@Override
 	public String getParameterName() {
 		return _portletPreferencesHelper.getString(
-			PREFERENCE_KEY_PARAMETER_NAME,
-			"modified");
+			PREFERENCE_KEY_PARAMETER_NAME, "modified");
 	}
 
 	@Override
@@ -71,8 +70,7 @@ public class ModifiedFacetPortletPreferencesImpl
 	@Override
 	public String getRangesString() {
 		return _portletPreferencesHelper.getString(
-			PREFERENCE_KEY_RANGES,
-			StringPool.BLANK);
+			PREFERENCE_KEY_RANGES, StringPool.BLANK);
 	}
 
 	private JSONArray _getDefaultRangesJSONArray() {

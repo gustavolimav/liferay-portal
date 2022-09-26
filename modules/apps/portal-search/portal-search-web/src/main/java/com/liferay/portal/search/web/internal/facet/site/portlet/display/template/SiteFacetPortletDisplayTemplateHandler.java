@@ -20,9 +20,9 @@ import com.liferay.portal.kernel.template.TemplateHandler;
 import com.liferay.portal.kernel.template.TemplateVariableGroup;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
+import com.liferay.portal.search.web.internal.facet.site.constants.SiteFacetPortletKeys;
 import com.liferay.portal.search.web.internal.facet.site.display.context.ScopeSearchFacetDisplayContext;
 import com.liferay.portal.search.web.internal.facet.site.display.context.ScopeSearchFacetTermDisplayContext;
-import com.liferay.portal.search.web.internal.facet.site.constants.SiteFacetPortletKeys;
 import com.liferay.portlet.display.template.constants.PortletDisplayTemplateConstants;
 
 import java.util.List;

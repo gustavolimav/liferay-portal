@@ -25,10 +25,10 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.search.web.internal.facet.folder.display.context.FolderSearchFacetDisplayContext;
-import com.liferay.portal.search.web.internal.facet.folder.display.context.FolderSearchFacetTermDisplayContext;
 import com.liferay.portal.search.web.internal.facet.folder.FolderTitleLookup;
 import com.liferay.portal.search.web.internal.facet.folder.configuration.FolderFacetPortletInstanceConfiguration;
+import com.liferay.portal.search.web.internal.facet.folder.display.context.FolderSearchFacetDisplayContext;
+import com.liferay.portal.search.web.internal.facet.folder.display.context.FolderSearchFacetTermDisplayContext;
 
 import java.util.ArrayList;
 import java.util.Collections;

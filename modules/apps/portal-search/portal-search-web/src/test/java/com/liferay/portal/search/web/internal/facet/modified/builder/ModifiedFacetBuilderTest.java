@@ -30,7 +30,6 @@ import com.liferay.portal.search.facet.modified.ModifiedFacetFactory;
 import com.liferay.portal.search.filter.FilterBuilders;
 import com.liferay.portal.search.internal.facet.modified.ModifiedFacetFactoryImpl;
 import com.liferay.portal.search.internal.filter.FilterBuildersImpl;
-import com.liferay.portal.search.web.internal.facet.modified.builder.ModifiedFacetBuilder;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 import com.liferay.portal.util.DateFormatFactoryImpl;
 

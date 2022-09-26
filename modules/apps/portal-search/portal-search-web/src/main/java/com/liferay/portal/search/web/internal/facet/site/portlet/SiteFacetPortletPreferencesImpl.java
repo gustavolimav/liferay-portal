@@ -54,8 +54,7 @@ public class SiteFacetPortletPreferencesImpl
 	@Override
 	public boolean isFrequenciesVisible() {
 		return _portletPreferencesHelper.getBoolean(
-			PREFERENCE_KEY_FREQUENCIES_VISIBLE,
-			true);
+			PREFERENCE_KEY_FREQUENCIES_VISIBLE, true);
 	}
 
 	private final PortletPreferencesHelper _portletPreferencesHelper;

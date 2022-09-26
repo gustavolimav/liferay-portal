@@ -26,7 +26,7 @@ import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClass
 	scope = ExtendedObjectClassDefinition.Scope.PORTLET_INSTANCE
 )
 @Meta.OCD(
-	id = "com.liferay.portal.search.web.internal.custom.facet.configuration.CustomFacetPortletInstanceConfiguration",
+	id = "com.liferay.portal.search.web.internal.facet.custom.configuration.CustomFacetPortletInstanceConfiguration",
 	localization = "content/Language",
 	name = "custom-facet-portlet-instance-configuration-name"
 )

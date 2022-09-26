@@ -19,8 +19,8 @@ import com.liferay.portal.kernel.portlet.ConfigurationAction;
 import com.liferay.portal.kernel.portlet.DefaultConfigurationAction;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.search.web.internal.facet.folder.display.context.builder.FolderSearchFacetDisplayContextBuilder;
 import com.liferay.portal.search.web.internal.facet.folder.constants.FolderFacetPortletKeys;
+import com.liferay.portal.search.web.internal.facet.folder.display.context.builder.FolderSearchFacetDisplayContextBuilder;
 
 import javax.portlet.PortletConfig;
 import javax.portlet.RenderRequest;

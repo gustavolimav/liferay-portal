@@ -30,10 +30,10 @@ import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.search.web.internal.facet.modified.builder.DateRangeFactory;
-import com.liferay.portal.search.web.internal.facet.modified.display.context.ModifiedFacetDisplayContext;
-import com.liferay.portal.search.web.internal.facet.modified.display.context.ModifiedFacetTermDisplayContext;
 import com.liferay.portal.search.web.internal.facet.modified.configuration.ModifiedFacetPortletInstanceConfiguration;
 import com.liferay.portal.search.web.internal.facet.modified.display.context.ModifiedFacetCalendarDisplayContext;
+import com.liferay.portal.search.web.internal.facet.modified.display.context.ModifiedFacetDisplayContext;
+import com.liferay.portal.search.web.internal.facet.modified.display.context.ModifiedFacetTermDisplayContext;
 
 import java.io.Serializable;
 

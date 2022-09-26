@@ -24,9 +24,9 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.search.web.internal.facet.user.configuration.UserFacetPortletInstanceConfiguration;
 import com.liferay.portal.search.web.internal.facet.user.display.context.UserSearchFacetDisplayContext;
 import com.liferay.portal.search.web.internal.facet.user.display.context.UserSearchFacetTermDisplayContext;
-import com.liferay.portal.search.web.internal.facet.user.configuration.UserFacetPortletInstanceConfiguration;
 
 import java.util.ArrayList;
 import java.util.Collections;

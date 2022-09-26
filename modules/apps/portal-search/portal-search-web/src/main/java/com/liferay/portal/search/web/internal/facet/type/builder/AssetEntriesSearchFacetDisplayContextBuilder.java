@@ -31,9 +31,9 @@ import com.liferay.portal.kernel.util.SortedArrayList;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.search.web.internal.facet.type.configuration.TypeFacetPortletInstanceConfiguration;
 import com.liferay.portal.search.web.internal.facet.type.display.context.AssetEntriesSearchFacetDisplayContext;
 import com.liferay.portal.search.web.internal.facet.type.display.context.AssetEntriesSearchFacetTermDisplayContext;
-import com.liferay.portal.search.web.internal.facet.type.configuration.TypeFacetPortletInstanceConfiguration;
 
 import java.io.Serializable;
 

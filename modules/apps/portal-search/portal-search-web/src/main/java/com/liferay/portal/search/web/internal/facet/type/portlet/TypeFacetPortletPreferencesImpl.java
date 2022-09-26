@@ -52,8 +52,7 @@ public class TypeFacetPortletPreferencesImpl
 	@Override
 	public Optional<String[]> getAssetTypesArray() {
 		Optional<String> assetTypesOptional =
-			_portletPreferencesHelper.getString(
-				PREFERENCE_KEY_ASSET_TYPES);
+			_portletPreferencesHelper.getString(PREFERENCE_KEY_ASSET_TYPES);
 
 		return assetTypesOptional.map(StringUtil::split);
 	}
@@ -61,8 +60,7 @@ public class TypeFacetPortletPreferencesImpl
 	@Override
 	public String getAssetTypesString() {
 		return _portletPreferencesHelper.getString(
-			PREFERENCE_KEY_ASSET_TYPES,
-			StringPool.BLANK);
+			PREFERENCE_KEY_ASSET_TYPES, StringPool.BLANK);
 	}
 
 	@Override
@@ -123,8 +121,7 @@ public class TypeFacetPortletPreferencesImpl
 	@Override
 	public boolean isFrequenciesVisible() {
 		return _portletPreferencesHelper.getBoolean(
-			PREFERENCE_KEY_FREQUENCIES_VISIBLE,
-			true);
+			PREFERENCE_KEY_FREQUENCIES_VISIBLE, true);
 	}
 
 	protected String[] getAllAssetTypes(long companyId) {

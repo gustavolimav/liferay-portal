@@ -27,8 +27,8 @@ import com.liferay.portal.kernel.util.PropertiesParamUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.search.web.internal.facet.modified.builder.DateRangeFactory;
-import com.liferay.portal.search.web.internal.facet.modified.display.context.builder.ModifiedFacetDisplayContextBuilder;
 import com.liferay.portal.search.web.internal.facet.modified.constants.ModifiedFacetPortletKeys;
+import com.liferay.portal.search.web.internal.facet.modified.display.context.builder.ModifiedFacetDisplayContextBuilder;
 
 import java.text.ParseException;
 

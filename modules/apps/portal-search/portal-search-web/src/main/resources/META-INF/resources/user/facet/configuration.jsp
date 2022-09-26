@@ -24,9 +24,9 @@ taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %>
 
 <%@ page import="com.liferay.portal.kernel.util.Constants" %><%@
 page import="com.liferay.portal.kernel.util.WebKeys" %><%@
+page import="com.liferay.portal.search.web.internal.facet.user.configuration.UserFacetPortletInstanceConfiguration" %><%@
 page import="com.liferay.portal.search.web.internal.facet.user.display.context.UserSearchFacetDisplayContext" %><%@
 page import="com.liferay.portal.search.web.internal.facet.user.display.context.UserSearchFacetTermDisplayContext" %><%@
-page import="com.liferay.portal.search.web.internal.facet.user.configuration.UserFacetPortletInstanceConfiguration" %><%@
 page import="com.liferay.portal.search.web.internal.facet.user.portlet.UserFacetPortletPreferences" %><%@
 page import="com.liferay.portal.search.web.internal.facet.user.portlet.UserFacetPortletPreferencesImpl" %><%@
 page import="com.liferay.portal.search.web.internal.util.PortletPreferencesJspUtil" %>

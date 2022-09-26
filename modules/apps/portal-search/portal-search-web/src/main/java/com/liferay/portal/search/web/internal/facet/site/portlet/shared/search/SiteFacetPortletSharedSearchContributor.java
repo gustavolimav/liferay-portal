@@ -15,9 +15,9 @@
 package com.liferay.portal.search.web.internal.facet.site.portlet.shared.search;
 
 import com.liferay.portal.search.facet.site.SiteFacetSearchContributor;
-import com.liferay.portal.search.web.internal.facet.site.portlet.SiteFacetPortletPreferencesImpl;
 import com.liferay.portal.search.web.internal.facet.site.constants.SiteFacetPortletKeys;
 import com.liferay.portal.search.web.internal.facet.site.portlet.SiteFacetPortletPreferences;
+import com.liferay.portal.search.web.internal.facet.site.portlet.SiteFacetPortletPreferencesImpl;
 import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchContributor;
 import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchSettings;
 

@@ -14,7 +14,6 @@
 
 package com.liferay.portal.search.web.internal.facet.modified.builder;
 
-import com.liferay.portal.search.web.internal.facet.modified.builder.DateRangeFactory;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 import com.liferay.portal.util.DateFormatFactoryImpl;
 
