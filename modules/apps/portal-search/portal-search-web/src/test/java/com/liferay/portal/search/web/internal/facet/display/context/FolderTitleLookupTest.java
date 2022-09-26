@@ -26,6 +26,9 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.search.web.internal.facet.folder.FolderSearcher;
+import com.liferay.portal.search.web.internal.facet.folder.FolderTitleLookup;
+import com.liferay.portal.search.web.internal.facet.folder.FolderTitleLookupImpl;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 import com.liferay.portal.util.PropsImpl;
 

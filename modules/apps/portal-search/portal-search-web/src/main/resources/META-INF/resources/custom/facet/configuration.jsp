@@ -23,11 +23,11 @@ taglib uri="http://liferay.com/tld/template" prefix="liferay-template" %><%@
 taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %>
 
 <%@ page import="com.liferay.portal.kernel.util.Constants" %><%@
-page import="com.liferay.portal.search.web.internal.custom.facet.configuration.CustomFacetPortletInstanceConfiguration" %><%@
-page import="com.liferay.portal.search.web.internal.custom.facet.display.context.CustomFacetDisplayContext" %><%@
-page import="com.liferay.portal.search.web.internal.custom.facet.display.context.CustomFacetTermDisplayContext" %><%@
-page import="com.liferay.portal.search.web.internal.custom.facet.portlet.CustomFacetPortletPreferences" %><%@
-page import="com.liferay.portal.search.web.internal.custom.facet.portlet.CustomFacetPortletPreferencesImpl" %><%@
+page import="com.liferay.portal.search.web.internal.facet.custom.configuration.CustomFacetPortletInstanceConfiguration" %><%@
+page import="com.liferay.portal.search.web.internal.facet.custom.context.CustomFacetDisplayContext" %><%@
+page import="com.liferay.portal.search.web.internal.facet.custom.context.CustomFacetTermDisplayContext" %><%@
+page import="com.liferay.portal.search.web.internal.facet.custom.portlet.CustomFacetPortletPreferences" %><%@
+page import="com.liferay.portal.search.web.internal.facet.custom.portlet.CustomFacetPortletPreferencesImpl" %><%@
 page import="com.liferay.portal.search.web.internal.util.PortletPreferencesJspUtil" %>
 
 <liferay-frontend:defineObjects />

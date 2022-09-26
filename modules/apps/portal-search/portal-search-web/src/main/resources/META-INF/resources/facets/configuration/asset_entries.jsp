@@ -1,4 +1,5 @@
-<%--
+<%@ page
+	import="com.liferay.portal.search.web.internal.facet.type.AssetEntriesSearchFacet" %><%--
 /**
  * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
  *

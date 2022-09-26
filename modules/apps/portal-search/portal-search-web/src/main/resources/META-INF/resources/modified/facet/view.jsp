@@ -27,10 +27,10 @@ taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %>
 page import="com.liferay.portal.kernel.util.HashMapBuilder" %><%@
 page import="com.liferay.portal.kernel.util.HtmlUtil" %><%@
 page import="com.liferay.portal.kernel.util.WebKeys" %><%@
-page import="com.liferay.portal.search.web.internal.modified.facet.configuration.ModifiedFacetPortletInstanceConfiguration" %><%@
-page import="com.liferay.portal.search.web.internal.modified.facet.display.context.ModifiedFacetCalendarDisplayContext" %><%@
-page import="com.liferay.portal.search.web.internal.modified.facet.display.context.ModifiedFacetDisplayContext" %><%@
-page import="com.liferay.portal.search.web.internal.modified.facet.display.context.ModifiedFacetTermDisplayContext" %>
+page import="com.liferay.portal.search.web.internal.facet.modified.configuration.ModifiedFacetPortletInstanceConfiguration" %><%@
+page import="com.liferay.portal.search.web.internal.facet.modified.display.context.ModifiedFacetCalendarDisplayContext" %><%@
+page import="com.liferay.portal.search.web.internal.facet.modified.display.context.ModifiedFacetDisplayContext" %><%@
+page import="com.liferay.portal.search.web.internal.facet.modified.display.context.ModifiedFacetTermDisplayContext" %>
 
 <portlet:defineObjects />
 
