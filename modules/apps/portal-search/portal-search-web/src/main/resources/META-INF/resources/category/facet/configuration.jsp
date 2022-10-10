@@ -25,7 +25,6 @@ taglib uri="http://liferay.com/tld/template" prefix="liferay-template" %>
 page import="com.liferay.portal.search.web.internal.category.facet.configuration.CategoryFacetPortletInstanceConfiguration" %><%@
 page import="com.liferay.portal.search.web.internal.category.facet.portlet.CategoryFacetPortletPreferences" %><%@
 page import="com.liferay.portal.search.web.internal.category.facet.portlet.CategoryFacetPortletPreferencesImpl" %><%@
-page import="com.liferay.portal.search.web.internal.facet.display.context.BucketDisplayContext" %><%@
 page import="com.liferay.portal.search.web.internal.facet.display.context.CategorySearchFacetDisplayContext" %><%@
 page import="com.liferay.portal.search.web.internal.util.PortletPreferencesJspUtil" %>
 
@@ -59,7 +58,7 @@ CategoryFacetPortletPreferences categoryFacetPortletPreferences = new CategoryFa
 			>
 				<div class="display-template">
 					<liferay-template:template-selector
-						className="<%= BucketDisplayContext.class.getName() %>"
+						className="<%= CategorySearchFacetDisplayContext.class.getName() %>"
 						displayStyle="<%= categoryFacetPortletInstanceConfiguration.displayStyle() %>"
 						displayStyleGroupId="<%= categorySearchFacetDisplayContext.getDisplayStyleGroupId() %>"
 						refreshURL="<%= configurationRenderURL %>"

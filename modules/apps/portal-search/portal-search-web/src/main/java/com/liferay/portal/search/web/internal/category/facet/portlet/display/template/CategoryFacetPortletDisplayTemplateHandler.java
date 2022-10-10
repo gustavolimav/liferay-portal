@@ -47,7 +47,7 @@ public class CategoryFacetPortletDisplayTemplateHandler
 
 	@Override
 	public String getClassName() {
-		return BucketDisplayContext.class.getName();
+		return CategorySearchFacetDisplayContext.class.getName();
 	}
 
 	@Override

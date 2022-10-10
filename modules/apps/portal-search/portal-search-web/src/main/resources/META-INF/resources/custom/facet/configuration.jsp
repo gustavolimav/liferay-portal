@@ -27,7 +27,6 @@ page import="com.liferay.portal.search.web.internal.custom.facet.configuration.C
 page import="com.liferay.portal.search.web.internal.custom.facet.display.context.CustomFacetDisplayContext" %><%@
 page import="com.liferay.portal.search.web.internal.custom.facet.portlet.CustomFacetPortletPreferences" %><%@
 page import="com.liferay.portal.search.web.internal.custom.facet.portlet.CustomFacetPortletPreferencesImpl" %><%@
-page import="com.liferay.portal.search.web.internal.facet.display.context.BucketDisplayContext" %><%@
 page import="com.liferay.portal.search.web.internal.util.PortletPreferencesJspUtil" %>
 
 <liferay-frontend:defineObjects />
@@ -64,7 +63,7 @@ CustomFacetPortletPreferences customFacetPortletPreferences = new CustomFacetPor
 			>
 				<div class="display-template">
 					<liferay-template:template-selector
-						className="<%= BucketDisplayContext.class.getName() %>"
+						className="<%= CustomFacetDisplayContext.class.getName() %>"
 						displayStyle="<%= customFacetPortletInstanceConfiguration.displayStyle() %>"
 						displayStyleGroupId="<%= customFacetDisplayContext.getDisplayStyleGroupId() %>"
 						refreshURL="<%= configurationRenderURL %>"

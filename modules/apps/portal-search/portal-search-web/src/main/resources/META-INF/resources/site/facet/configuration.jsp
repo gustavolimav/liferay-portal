@@ -23,7 +23,6 @@ taglib uri="http://liferay.com/tld/template" prefix="liferay-template" %>
 
 <%@ page import="com.liferay.portal.kernel.util.Constants" %><%@
 page import="com.liferay.portal.kernel.util.WebKeys" %><%@
-page import="com.liferay.portal.search.web.internal.facet.display.context.BucketDisplayContext" %><%@
 page import="com.liferay.portal.search.web.internal.facet.display.context.SiteSearchFacetDisplayContext" %><%@
 page import="com.liferay.portal.search.web.internal.site.facet.configuration.SiteFacetPortletInstanceConfiguration" %><%@
 page import="com.liferay.portal.search.web.internal.site.facet.portlet.SiteFacetPortletPreferences" %><%@
@@ -60,7 +59,7 @@ SiteFacetPortletPreferences siteFacetPortletPreferences = new SiteFacetPortletPr
 			>
 				<div class="display-template">
 					<liferay-template:template-selector
-						className="<%= BucketDisplayContext.class.getName() %>"
+						className="<%= SiteSearchFacetDisplayContext.class.getName() %>"
 						displayStyle="<%= siteFacetPortletInstanceConfiguration.displayStyle() %>"
 						displayStyleGroupId="<%= siteSearchFacetDisplayContext.getDisplayStyleGroupId() %>"
 						refreshURL="<%= configurationRenderURL %>"

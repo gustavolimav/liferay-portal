@@ -27,7 +27,6 @@ taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %>
 page import="com.liferay.portal.kernel.util.Constants" %><%@
 page import="com.liferay.portal.kernel.util.WebKeys" %><%@
 page import="com.liferay.portal.search.asset.SearchableAssetClassNamesProvider" %><%@
-page import="com.liferay.portal.search.web.internal.facet.display.context.BucketDisplayContext" %><%@
 page import="com.liferay.portal.search.web.internal.facet.display.context.TypeSearchFacetDisplayContext" %><%@
 page import="com.liferay.portal.search.web.internal.type.facet.configuration.TypeFacetPortletInstanceConfiguration" %><%@
 page import="com.liferay.portal.search.web.internal.type.facet.portlet.TypeFacetPortletPreferences" %><%@
@@ -71,7 +70,7 @@ TypeFacetPortletPreferences typeFacetPortletPreferences = new com.liferay.portal
 			>
 				<div class="display-template">
 					<liferay-template:template-selector
-						className="<%= BucketDisplayContext.class.getName() %>"
+						className="<%= TypeSearchFacetDisplayContext.class.getName() %>"
 						displayStyle="<%= typeFacetPortletInstanceConfiguration.displayStyle() %>"
 						displayStyleGroupId="<%= typeSearchFacetDisplayContext.getDisplayStyleGroupId() %>"
 						refreshURL="<%= configurationRenderURL %>"

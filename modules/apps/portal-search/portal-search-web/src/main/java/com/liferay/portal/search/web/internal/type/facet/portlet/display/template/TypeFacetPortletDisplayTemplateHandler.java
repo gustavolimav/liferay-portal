@@ -48,7 +48,7 @@ public class TypeFacetPortletDisplayTemplateHandler
 
 	@Override
 	public String getClassName() {
-		return BucketDisplayContext.class.getName();
+		return TypeSearchFacetDisplayContext.class.getName();
 	}
 
 	@Override
