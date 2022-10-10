@@ -29,6 +29,7 @@ page import="com.liferay.portal.search.web.internal.facet.display.context.Bucket
 page import="com.liferay.portal.search.web.internal.facet.display.context.CategorySearchFacetDisplayContext" %><%@
 page import="com.liferay.portal.search.web.internal.util.PortletPreferencesJspUtil" %>
 
+
 <portlet:defineObjects />
 
 <%
@@ -59,7 +60,7 @@ CategoryFacetPortletPreferences categoryFacetPortletPreferences = new CategoryFa
 			>
 				<div class="display-template">
 					<liferay-template:template-selector
-						className="<%= BucketDisplayContext.class.getName() %>"
+						className="<%= CategorySearchFacetDisplayContext.class.getName() %>"
 						displayStyle="<%= categoryFacetPortletInstanceConfiguration.displayStyle() %>"
 						displayStyleGroupId="<%= categorySearchFacetDisplayContext.getDisplayStyleGroupId() %>"
 						refreshURL="<%= configurationRenderURL %>"

@@ -60,7 +60,7 @@ TagFacetPortletPreferences tagFacetPortletPreferences = new TagFacetPortletPrefe
 			>
 				<div class="display-template">
 					<liferay-template:template-selector
-						className="<%= BucketDisplayContext.class.getName() %>"
+						className="<%= TagSearchFacetDisplayContext.class.getName() %>"
 						displayStyle="<%= tagFacetPortletInstanceConfiguration.displayStyle() %>"
 						displayStyleGroupId="<%= tagSearchFacetDisplayContext.getDisplayStyleGroupId() %>"
 						refreshURL="<%= configurationRenderURL %>"

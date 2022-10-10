@@ -60,7 +60,7 @@ FolderFacetPortletPreferences folderFacetPortletPreferences = new FolderFacetPor
 			>
 				<div class="display-template">
 					<liferay-template:template-selector
-						className="<%= BucketDisplayContext.class.getName() %>"
+						className="<%= FolderSearchFacetDisplayContext.class.getName() %>"
 						displayStyle="<%= folderFacetPortletInstanceConfiguration.displayStyle() %>"
 						displayStyleGroupId="<%= folderSearchFacetDisplayContext.getDisplayStyleGroupId() %>"
 						refreshURL="<%= configurationRenderURL %>"

@@ -65,7 +65,7 @@ UserFacetPortletPreferences userFacetPortletPreferences = new UserFacetPortletPr
 			>
 				<div class="display-template">
 					<liferay-template:template-selector
-						className="<%= BucketDisplayContext.class.getName() %>"
+						className="<%= UserSearchFacetDisplayContext.class.getName() %>"
 						displayStyle="<%= userFacetPortletInstanceConfiguration.displayStyle() %>"
 						displayStyleGroupId="<%= userSearchFacetDisplayContext.getDisplayStyleGroupId() %>"
 						refreshURL="<%= configurationRenderURL %>"

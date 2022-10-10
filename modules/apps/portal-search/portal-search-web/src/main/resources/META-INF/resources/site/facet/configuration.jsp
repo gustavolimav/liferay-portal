@@ -60,7 +60,7 @@ SiteFacetPortletPreferences siteFacetPortletPreferences = new SiteFacetPortletPr
 			>
 				<div class="display-template">
 					<liferay-template:template-selector
-						className="<%= BucketDisplayContext.class.getName() %>"
+						className="<%= SiteSearchFacetDisplayContext.class.getName() %>"
 						displayStyle="<%= siteFacetPortletInstanceConfiguration.displayStyle() %>"
 						displayStyleGroupId="<%= siteSearchFacetDisplayContext.getDisplayStyleGroupId() %>"
 						refreshURL="<%= configurationRenderURL %>"

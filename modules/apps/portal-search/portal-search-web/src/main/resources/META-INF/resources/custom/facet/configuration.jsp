@@ -64,7 +64,7 @@ CustomFacetPortletPreferences customFacetPortletPreferences = new CustomFacetPor
 			>
 				<div class="display-template">
 					<liferay-template:template-selector
-						className="<%= BucketDisplayContext.class.getName() %>"
+						className="<%= CustomFacetDisplayContext.class.getName() %>"
 						displayStyle="<%= customFacetPortletInstanceConfiguration.displayStyle() %>"
 						displayStyleGroupId="<%= customFacetDisplayContext.getDisplayStyleGroupId() %>"
 						refreshURL="<%= configurationRenderURL %>"

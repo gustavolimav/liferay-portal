@@ -48,7 +48,7 @@ public class CustomFacetPortletDisplayTemplateHandler
 
 	@Override
 	public String getClassName() {
-		return BucketDisplayContext.class.getName();
+		return CustomFacetDisplayContext.class.getName();
 	}
 
 	@Override
