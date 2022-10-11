@@ -20,15 +20,15 @@ import com.liferay.portal.kernel.util.DefaultLayoutPrototypesUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.search.web.constants.SearchBarPortletKeys;
 import com.liferay.portal.search.web.constants.SearchResultsPortletKeys;
-import com.liferay.portal.search.web.internal.category.facet.constants.CategoryFacetPortletKeys;
-import com.liferay.portal.search.web.internal.folder.facet.constants.FolderFacetPortletKeys;
-import com.liferay.portal.search.web.internal.modified.facet.constants.ModifiedFacetPortletKeys;
+import com.liferay.portal.search.web.internal.facet.category.constants.CategoryFacetPortletKeys;
+import com.liferay.portal.search.web.internal.facet.folder.constants.FolderFacetPortletKeys;
+import com.liferay.portal.search.web.internal.facet.modified.constants.ModifiedFacetPortletKeys;
+import com.liferay.portal.search.web.internal.facet.site.constants.SiteFacetPortletKeys;
+import com.liferay.portal.search.web.internal.facet.tag.constants.TagFacetPortletKeys;
+import com.liferay.portal.search.web.internal.facet.type.constants.TypeFacetPortletKeys;
+import com.liferay.portal.search.web.internal.facet.user.constants.UserFacetPortletKeys;
 import com.liferay.portal.search.web.internal.search.options.constants.SearchOptionsPortletKeys;
-import com.liferay.portal.search.web.internal.site.facet.constants.SiteFacetPortletKeys;
 import com.liferay.portal.search.web.internal.suggestions.constants.SuggestionsPortletKeys;
-import com.liferay.portal.search.web.internal.tag.facet.constants.TagFacetPortletKeys;
-import com.liferay.portal.search.web.internal.type.facet.constants.TypeFacetPortletKeys;
-import com.liferay.portal.search.web.internal.user.facet.constants.UserFacetPortletKeys;
 import com.liferay.portal.search.web.layout.prototype.SearchLayoutPrototypeCustomizer;
 
 /**

@@ -27,10 +27,11 @@ taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %>
 page import="com.liferay.portal.kernel.util.Constants" %><%@
 page import="com.liferay.portal.kernel.util.WebKeys" %><%@
 page import="com.liferay.portal.search.asset.SearchableAssetClassNamesProvider" %><%@
-page import="com.liferay.portal.search.web.internal.facet.display.context.AssetEntriesSearchFacetDisplayContext" %><%@
-page import="com.liferay.portal.search.web.internal.facet.display.context.AssetEntriesSearchFacetTermDisplayContext" %><%@
-page import="com.liferay.portal.search.web.internal.type.facet.configuration.TypeFacetPortletInstanceConfiguration" %><%@
-page import="com.liferay.portal.search.web.internal.type.facet.portlet.TypeFacetPortletPreferences" %><%@
+page import="com.liferay.portal.search.web.internal.facet.type.configuration.TypeFacetPortletInstanceConfiguration" %><%@
+page import="com.liferay.portal.search.web.internal.facet.type.display.context.AssetEntriesSearchFacetDisplayContext" %><%@
+page import="com.liferay.portal.search.web.internal.facet.type.display.context.AssetEntriesSearchFacetTermDisplayContext" %><%@
+page import="com.liferay.portal.search.web.internal.facet.type.portlet.TypeFacetPortletPreferences" %><%@
+page import="com.liferay.portal.search.web.internal.facet.type.portlet.TypeFacetPortletPreferencesImpl" %><%@
 page import="com.liferay.portal.search.web.internal.util.PortletPreferencesJspUtil" %>
 
 <liferay-frontend:defineObjects />
@@ -48,7 +49,7 @@ ObjectDefinitionLocalService objectDefinitionLocalService = (ObjectDefinitionLoc
 
 SearchableAssetClassNamesProvider searchableAssetClassNamesProvider = (SearchableAssetClassNamesProvider)request.getAttribute(SearchableAssetClassNamesProvider.class.getName());
 
-TypeFacetPortletPreferences typeFacetPortletPreferences = new com.liferay.portal.search.web.internal.type.facet.portlet.TypeFacetPortletPreferencesImpl(objectDefinitionLocalService, java.util.Optional.of(portletPreferences), searchableAssetClassNamesProvider);
+TypeFacetPortletPreferences typeFacetPortletPreferences = new TypeFacetPortletPreferencesImpl(objectDefinitionLocalService, java.util.Optional.of(portletPreferences), searchableAssetClassNamesProvider);
 %>
 
 <liferay-portlet:actionURL portletConfiguration="<%= true %>" var="configurationActionURL" />

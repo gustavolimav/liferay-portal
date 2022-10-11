@@ -23,8 +23,10 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.search.web.internal.facet.display.context.builder.AssetTagsSearchFacetDisplayContextBuilder;
-import com.liferay.portal.search.web.internal.tag.facet.configuration.TagFacetPortletInstanceConfiguration;
+import com.liferay.portal.search.web.internal.facet.tag.builder.AssetTagsSearchFacetDisplayContextBuilder;
+import com.liferay.portal.search.web.internal.facet.tag.configuration.TagFacetPortletInstanceConfiguration;
+import com.liferay.portal.search.web.internal.facet.tag.display.context.AssetTagsSearchFacetDisplayContext;
+import com.liferay.portal.search.web.internal.facet.tag.display.context.AssetTagsSearchFacetTermDisplayContext;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.Collections;

@@ -26,9 +26,9 @@ taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %>
 page import="com.liferay.portal.kernel.util.HashMapBuilder" %><%@
 page import="com.liferay.portal.kernel.util.HtmlUtil" %><%@
 page import="com.liferay.portal.kernel.util.WebKeys" %><%@
-page import="com.liferay.portal.search.web.internal.facet.display.context.FolderSearchFacetDisplayContext" %><%@
-page import="com.liferay.portal.search.web.internal.facet.display.context.FolderSearchFacetTermDisplayContext" %><%@
-page import="com.liferay.portal.search.web.internal.folder.facet.configuration.FolderFacetPortletInstanceConfiguration" %>
+page import="com.liferay.portal.search.web.internal.facet.folder.configuration.FolderFacetPortletInstanceConfiguration" %><%@
+page import="com.liferay.portal.search.web.internal.facet.folder.display.context.FolderSearchFacetDisplayContext" %><%@
+page import="com.liferay.portal.search.web.internal.facet.folder.display.context.FolderSearchFacetTermDisplayContext" %>
 
 <portlet:defineObjects />
 
