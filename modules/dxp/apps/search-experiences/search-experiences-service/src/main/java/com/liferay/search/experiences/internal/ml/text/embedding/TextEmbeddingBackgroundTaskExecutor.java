@@ -51,6 +51,7 @@ import com.liferay.search.experiences.configuration.SemanticSearchConfiguration;
 import com.liferay.search.experiences.internal.search.spi.model.index.contributor.JournalArticleTextEmbeddingModelDocumentContributor;
 
 import java.io.IOException;
+import java.io.Serializable;
 
 import java.util.Arrays;
 import java.util.List;
@@ -79,7 +80,23 @@ public class TextEmbeddingBackgroundTaskExecutor
 	public BackgroundTaskResult execute(BackgroundTask backgroundTask)
 		throws Exception {
 
-		return null; // implement
+		Map<String, Serializable> taskContextMap =
+			backgroundTask.getTaskContextMap();
+
+		String indexName = (String)taskContextMap.get("indexName");
+		long companyId = GetterUtil.getLong(taskContextMap.get("companyId")); // companyId is needed to get the configuration
+
+		try {
+			_indexTextEmbbeding(companyId, indexName);
+		}
+		catch (IOException ioException) {
+			_log.error(
+				StringBundler.concat(
+					"Unable to index assetVocabularyCategoryIds values in ",
+					"index ", indexName, ". A full reindex may be necessary."), ioException);
+		}
+
+		return BackgroundTaskResult.SUCCESS;
 	}
 
 	@Override

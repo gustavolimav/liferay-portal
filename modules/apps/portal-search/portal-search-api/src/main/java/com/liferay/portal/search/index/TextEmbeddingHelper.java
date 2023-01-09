@@ -15,12 +15,16 @@
 package com.liferay.portal.search.index;
 
 import aQute.bnd.annotation.ProviderType;
+import com.liferay.portal.kernel.backgroundtask.BackgroundTask;
+import com.liferay.portal.kernel.backgroundtask.BackgroundTaskResult;
 
 /**
  * @author Gustavo Lima
  */
 @ProviderType
 public interface TextEmbeddingHelper {
+
+	public BackgroundTaskResult execute(BackgroundTask backgroundTask) throws Exception;
 
 	public void index(long[] companyIds);
 
