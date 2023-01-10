@@ -36,7 +36,10 @@ import org.osgi.service.component.annotations.Reference;
 	configurationPid = "com.liferay.search.experiences.configuration.SemanticSearchConfiguration",
 	enabled = false,
 	property = "indexer.class.name=com.liferay.wiki.model.WikiPage",
-	service = ModelDocumentContributor.class
+	service = {
+		ModelDocumentContributor.class,
+		WikiPageTextEmbeddingModelDocumentContributor.class
+	}
 )
 public class WikiPageTextEmbeddingModelDocumentContributor
 	extends BaseTextEmbeddingModelDocumentContributor

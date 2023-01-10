@@ -14,8 +14,14 @@
 
 package com.liferay.search.experiences.internal.ml.text.embedding;
 
+import com.liferay.blogs.model.BlogsEntry;
+import com.liferay.blogs.service.BlogsEntryLocalService;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.service.JournalArticleLocalService;
+import com.liferay.knowledge.base.model.KBArticle;
+import com.liferay.knowledge.base.service.KBArticleLocalService;
+import com.liferay.message.boards.model.MBMessage;
+import com.liferay.message.boards.service.MBMessageLocalService;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTask;
@@ -23,6 +29,7 @@ import com.liferay.portal.kernel.backgroundtask.BackgroundTaskExecutor;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskResult;
 import com.liferay.portal.kernel.backgroundtask.BaseBackgroundTaskExecutor;
 import com.liferay.portal.kernel.backgroundtask.display.BackgroundTaskDisplay;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
@@ -32,6 +39,7 @@ import com.liferay.portal.kernel.search.DocumentImpl;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Hits;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.search.document.DocumentBuilder;
 import com.liferay.portal.search.document.DocumentBuilderFactory;
 import com.liferay.portal.search.engine.adapter.SearchEngineAdapter;
@@ -44,19 +52,29 @@ import com.liferay.portal.search.hits.SearchHits;
 import com.liferay.portal.search.index.TextEmbeddingHelper;
 import com.liferay.portal.search.query.BooleanQuery;
 import com.liferay.portal.search.query.Queries;
+import com.liferay.portal.search.script.Script;
 import com.liferay.portal.search.script.ScriptBuilder;
 import com.liferay.portal.search.script.ScriptType;
 import com.liferay.portal.search.script.Scripts;
 import com.liferay.search.experiences.configuration.SemanticSearchConfiguration;
+import com.liferay.search.experiences.internal.search.spi.model.index.contributor.BlogsEntryTextEmbeddingModelDocumentContributor;
 import com.liferay.search.experiences.internal.search.spi.model.index.contributor.JournalArticleTextEmbeddingModelDocumentContributor;
+import com.liferay.search.experiences.internal.search.spi.model.index.contributor.KBArticleTextEmbeddingModelDocumentContributor;
+import com.liferay.search.experiences.internal.search.spi.model.index.contributor.MBMessageTextEmbeddingModelDocumentContributor;
+import com.liferay.search.experiences.internal.search.spi.model.index.contributor.WikiPageTextEmbeddingModelDocumentContributor;
+import com.liferay.wiki.model.WikiPage;
+import com.liferay.wiki.service.WikiPageLocalService;
 
 import java.io.IOException;
 import java.io.Serializable;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.osgi.framework.BundleContext;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -65,11 +83,15 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	enabled = false, immediate = true,
-	property = "background.task.executor.class.name=com.liferay.search.experiences.internal.ml.text.embedding.TextEmbeddingBackgroundTaskExecutor", // use that string to call background task
+	property = "background.task.executor.class.name=com.liferay.search.experiences.internal.ml.text.embedding.TextEmbeddingBackgroundTaskExecutor",
 	service = {BackgroundTaskExecutor.class, TextEmbeddingHelper.class}
 )
 public class TextEmbeddingBackgroundTaskExecutor
 	extends BaseBackgroundTaskExecutor implements TextEmbeddingHelper {
+
+	// com.liferay.search.experiences.internal.
+	// ml.text.embedding.TextEmbeddingBackgroundTaskExecutor
+	// use that string to call background task
 
 	@Override
 	public BackgroundTaskExecutor clone() {
@@ -84,7 +106,9 @@ public class TextEmbeddingBackgroundTaskExecutor
 			backgroundTask.getTaskContextMap();
 
 		String indexName = (String)taskContextMap.get("indexName");
-		long companyId = GetterUtil.getLong(taskContextMap.get("companyId")); // companyId is needed to get the configuration
+		long companyId = GetterUtil.getLong(taskContextMap.get("companyId"));
+
+		// companyId is needed to get the configuration
 
 		try {
 			_indexTextEmbbeding(companyId, indexName);
@@ -92,8 +116,9 @@ public class TextEmbeddingBackgroundTaskExecutor
 		catch (IOException ioException) {
 			_log.error(
 				StringBundler.concat(
-					"Unable to index assetVocabularyCategoryIds values in ",
-					"index ", indexName, ". A full reindex may be necessary."), ioException);
+					"Unable to index textEmbedding values in index ", indexName,
+					". A full reindex may be necessary."),
+				ioException);
 		}
 
 		return BackgroundTaskResult.SUCCESS;
@@ -106,7 +131,7 @@ public class TextEmbeddingBackgroundTaskExecutor
 		return null;
 	}
 
-	public void index(long[] companyIds) { // created to dosent need to use background task
+	public void index(long[] companyIds) {
 		String[] indexNames = _getIndexNames(companyIds);
 
 		for (int i = 0; i < companyIds.length; i++) {
@@ -118,10 +143,71 @@ public class TextEmbeddingBackgroundTaskExecutor
 			catch (IOException ioException) {
 				_log.error(
 					StringBundler.concat(
-						"Unable to index assetVocabularyCategoryIds values in ",
-						"index ", indexName,
-						". A full reindex may be necessary."),
+						"Unable to index textEmbedding values in index ",
+						indexName, ". A full reindex may be necessary."),
 					ioException);
+			}
+		}
+	}
+
+	private void _contribute(
+		String entryClassName, long entryClassPK, String uid, Long groupId,
+		Document portalKernelDocument) {
+
+		if (entryClassName.equals(BlogsEntry.class.getName())) {
+			try {
+				BlogsEntry blogsEntry =
+					_blogsEntryLocalService.getBlogsEntryByUuidAndGroupId(
+						uid, groupId);
+
+				if (blogsEntry != null) {
+					_blogsEntryTextEmbeddingModelDocumentContributor.contribute(
+						portalKernelDocument, blogsEntry);
+				}
+			}
+			catch (PortalException portalException) {
+				_log.error(portalException);
+			}
+		}
+		else if (entryClassName.equals(JournalArticle.class.getName())) {
+			try {
+				JournalArticle journalArticle =
+					_journalArticleLocalService.getLatestArticle(entryClassPK);
+
+				if (journalArticle != null) {
+					_journalArticleTextEmbeddingModelDocumentContributor.
+						contribute(portalKernelDocument, journalArticle);
+				}
+			}
+			catch (PortalException portalException) {
+				_log.error(portalException);
+			}
+		}
+		else if (entryClassName.equals(KBArticle.class.getName())) {
+			KBArticle kbArticle = _kbArticleLocalService.fetchLatestKBArticle(
+				entryClassPK, WorkflowConstants.STATUS_APPROVED);
+
+			if (kbArticle != null) {
+				_kbArticleTextEmbeddingModelDocumentContributor.contribute(
+					portalKernelDocument, kbArticle);
+			}
+		}
+		else if (entryClassName.equals(MBMessage.class.getName())) {
+			MBMessage mbMessage = _mbMessageLocalService.fetchMBMessage(
+				entryClassPK);
+
+			if (mbMessage != null) {
+				_mbMessageTextEmbeddingModelDocumentContributor.contribute(
+					portalKernelDocument, mbMessage);
+			}
+		}
+		else if (entryClassName.equals(WikiPage.class.getName())) {
+			WikiPage wikiPage = _wikiPageLocalService.fetchWikiPage(
+				entryClassPK);
+
+			if (wikiPage != null) {
+				_wikiPageTextEmbeddingModelDocumentContributor.contribute(
+					portalKernelDocument, wikiPage);
 			}
 		}
 	}
@@ -130,8 +216,10 @@ public class TextEmbeddingBackgroundTaskExecutor
 		BooleanQuery booleanQueryLang = _queries.booleanQuery();
 
 		if (false) {
-			_realBooleanQueryLang(booleanQueryLang);
+			_realBooleanQueryLang(booleanQueryLang); // remove if false
 		}
+
+		// just to test
 
 		booleanQueryLang.addShouldQueryClauses(_queries.exists("title_en_US"));
 
@@ -158,7 +246,7 @@ public class TextEmbeddingBackgroundTaskExecutor
 
 		searchSearchRequest.setIndexNames(indexName);
 		searchSearchRequest.setQuery(_createQuery(companyId));
-		searchSearchRequest.setSize(100);
+		searchSearchRequest.setSize(10000);
 		searchSearchRequest.setSelectedFieldNames(
 			Field.UID, Field.ENTRY_CLASS_NAME, Field.ENTRY_CLASS_PK);
 		searchSearchRequest.setStart(start);
@@ -171,6 +259,30 @@ public class TextEmbeddingBackgroundTaskExecutor
 			companyId);
 
 		return _semanticSearchConfiguration.assetEntryClassNames();
+	}
+
+	private HashMap<String, String> _getFieldsToReindexHashMap(
+		Document portalKernelDocument) {
+
+		List<String> languageIds = Arrays.asList(
+			_semanticSearchConfiguration.languageIds());
+
+		HashMap<String, String> fieldsToReindexHashMap = new HashMap<>();
+
+		for (String lang : languageIds) {
+			String textEmbedding256 = "text_embedding_256_" + lang;
+			String textEmbedding512 = "text_embedding_512_" + lang;
+			String textEmbedding768 = "text_embedding_768_" + lang;
+
+			fieldsToReindexHashMap.put(
+				textEmbedding256, portalKernelDocument.get(textEmbedding256));
+			fieldsToReindexHashMap.put(
+				textEmbedding512, portalKernelDocument.get(textEmbedding512));
+			fieldsToReindexHashMap.put(
+				textEmbedding768, portalKernelDocument.get(textEmbedding768));
+		}
+
+		return fieldsToReindexHashMap;
 	}
 
 	private String _getIndexName(long companyId) {
@@ -187,6 +299,35 @@ public class TextEmbeddingBackgroundTaskExecutor
 		return indexNames;
 	}
 
+	private Script _getScript(ScriptBuilder scriptBuilder, Document document) {
+		HashMap<String, String> fieldsToReindexHashMap =
+			_getFieldsToReindexHashMap(document);
+
+		StringBuilder irOrCode = new StringBuilder();
+
+		for (Map.Entry<String, String> entry :
+				fieldsToReindexHashMap.entrySet()) {
+
+			if (entry.getValue() != null) {
+				irOrCode.append("ctx._source.");
+				irOrCode.append(entry.getKey());
+				irOrCode.append(" = ");
+				irOrCode.append("'");
+				irOrCode.append(entry.getValue());
+				irOrCode.append("'");
+				irOrCode.append(";");
+			}
+		}
+
+		return scriptBuilder.idOrCode(
+			irOrCode.toString()
+		).language(
+			"painless"
+		).scriptType(
+			ScriptType.INLINE
+		).build();
+	}
+
 	private SemanticSearchConfiguration _getSemanticSearchConfiguration(
 		long companyId) {
 
@@ -200,22 +341,15 @@ public class TextEmbeddingBackgroundTaskExecutor
 	}
 
 	private UpdateDocumentRequest _getUpdateDocumentRequest(
-		String indexName, DocumentBuilder documentBuilder,
-		String uidFieldValueString) {
+		String indexName, String uid, DocumentBuilder documentBuilder,
+		Document document) {
 
 		UpdateDocumentRequest updateDocumentRequest = new UpdateDocumentRequest(
-			indexName, uidFieldValueString, documentBuilder.build());
+			indexName, uid, documentBuilder.build());
 
 		ScriptBuilder scriptBuilder = _scripts.builder();
 
-		updateDocumentRequest.setScript(
-			scriptBuilder.idOrCode(
-				"ctx._source.title_en_US = 'testing'"
-			).language(
-				"painless"
-			).scriptType(
-				ScriptType.INLINE
-			).build());
+		updateDocumentRequest.setScript(_getScript(scriptBuilder, document));
 
 		return updateDocumentRequest;
 	}
@@ -248,34 +382,7 @@ public class TextEmbeddingBackgroundTaskExecutor
 
 			_updateDocuments(indexName, searchSearchResponse);
 
-			// Atualizar com
-			// https://github.com/BryanEngler/liferay-portal/commit/a0f92fcd2a6411d344e7df3a7914a0959d5afe23#diff-0da039c1beb53f09192459b461092e1993275ad0a3a933e6cddb1150e9c65000
-
 			start += searchSearchRequest.getSize();
-		}
-	}
-
-	private void _journalArticle(
-		com.liferay.portal.search.document.Field entryClassPKField,
-		Object entryClassNameDocumentFieldValue) {
-
-		if (entryClassNameDocumentFieldValue.equals(
-				JournalArticle.class.getName())) {
-
-			Document portalKernelDocument = new DocumentImpl();
-
-			List<JournalArticle> journalArticles =
-				_journalArticleLocalService.getArticlesByResourcePrimKey(
-					GetterUtil.getLong(entryClassPKField.getValue()));
-
-			for (JournalArticle journalArticle : journalArticles) {
-				String articleId = journalArticle.getArticleId();
-
-				if (articleId.equals(entryClassPKField.getValue())) {
-					_journalArticleTextEmbeddingModelDocumentContributor.
-						contribute(portalKernelDocument, journalArticle);
-				}
-			}
 		}
 	}
 
@@ -306,26 +413,28 @@ public class TextEmbeddingBackgroundTaskExecutor
 			com.liferay.portal.search.document.Document portalSearchDocument =
 				hit.getDocument();
 
-			Map<String, com.liferay.portal.search.document.Field> fields =
-				portalSearchDocument.getFields();
+			String entryClassName = portalSearchDocument.getString(
+				Field.ENTRY_CLASS_NAME);
+			long entryClassPK = portalSearchDocument.getLong(
+				Field.ENTRY_CLASS_PK);
+			String uid = portalSearchDocument.getString(Field.UID);
+			Long groupId = portalSearchDocument.getLong(Field.GROUP_ID);
 
-			com.liferay.portal.search.document.Field entryClassNameField =
-				fields.get(Field.ENTRY_CLASS_NAME);
-			com.liferay.portal.search.document.Field entryClassPKField =
-				fields.get(Field.ENTRY_CLASS_PK);
-			com.liferay.portal.search.document.Field uidField = fields.get(
-				Field.UID);
+			Document portalKernelDocument = new DocumentImpl();
 
-			_journalArticle(entryClassPKField, entryClassNameField.getValue());
+			_contribute(
+				entryClassName, entryClassPK, uid, groupId,
+				portalKernelDocument);
 
-			DocumentBuilder documentBuilder = _documentBuilderFactory.builder();
+			// it just accepts portalSearchDocument and not portalKernelDocument
+			// is that the expected?
 
-			String uidFieldValueString = GetterUtil.getString(
-				uidField.getValue());
+			DocumentBuilder documentBuilder = _documentBuilderFactory.builder(
+				portalSearchDocument);
 
 			bulkDocumentRequest.addBulkableDocumentRequest(
 				_getUpdateDocumentRequest(
-					indexName, documentBuilder, uidFieldValueString));
+					indexName, uid, documentBuilder, portalKernelDocument));
 		}
 
 		_searchEngineAdapter.execute(bulkDocumentRequest);
@@ -333,6 +442,13 @@ public class TextEmbeddingBackgroundTaskExecutor
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		TextEmbeddingBackgroundTaskExecutor.class);
+
+	@Reference
+	private BlogsEntryLocalService _blogsEntryLocalService;
+
+	@Reference
+	private BlogsEntryTextEmbeddingModelDocumentContributor
+		_blogsEntryTextEmbeddingModelDocumentContributor;
 
 	@Reference
 	private ConfigurationProvider _configurationProvider;
@@ -344,6 +460,24 @@ public class TextEmbeddingBackgroundTaskExecutor
 	private JournalArticleLocalService _journalArticleLocalService;
 
 	@Reference
+	private JournalArticleTextEmbeddingModelDocumentContributor
+		_journalArticleTextEmbeddingModelDocumentContributor;
+
+	@Reference
+	private KBArticleLocalService _kbArticleLocalService;
+
+	@Reference
+	private KBArticleTextEmbeddingModelDocumentContributor
+		_kbArticleTextEmbeddingModelDocumentContributor;
+
+	@Reference
+	private MBMessageLocalService _mbMessageLocalService;
+
+	@Reference
+	private MBMessageTextEmbeddingModelDocumentContributor
+		_mbMessageTextEmbeddingModelDocumentContributor;
+
+	@Reference
 	private Queries _queries;
 
 	@Reference
@@ -352,10 +486,13 @@ public class TextEmbeddingBackgroundTaskExecutor
 	@Reference
 	private SearchEngineAdapter _searchEngineAdapter;
 
-	@Reference
-	private JournalArticleTextEmbeddingModelDocumentContributor
-		_journalArticleTextEmbeddingModelDocumentContributor; // test it
-
 	private volatile SemanticSearchConfiguration _semanticSearchConfiguration;
+
+	@Reference
+	private WikiPageLocalService _wikiPageLocalService;
+
+	@Reference
+	private WikiPageTextEmbeddingModelDocumentContributor
+		_wikiPageTextEmbeddingModelDocumentContributor;
 
 }

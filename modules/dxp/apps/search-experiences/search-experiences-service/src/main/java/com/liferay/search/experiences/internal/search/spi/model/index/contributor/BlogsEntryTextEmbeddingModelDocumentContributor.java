@@ -37,7 +37,10 @@ import org.osgi.service.component.annotations.Reference;
 	configurationPid = "com.liferay.search.experiences.configuration.SemanticSearchConfiguration",
 	enabled = false,
 	property = "indexer.class.name=com.liferay.blogs.model.BlogsEntry",
-	service = ModelDocumentContributor.class
+	service = {
+		BlogsEntryTextEmbeddingModelDocumentContributor.class,
+		ModelDocumentContributor.class
+	}
 )
 public class BlogsEntryTextEmbeddingModelDocumentContributor
 	extends BaseTextEmbeddingModelDocumentContributor
