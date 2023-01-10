@@ -38,7 +38,6 @@ import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.DocumentImpl;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Hits;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.search.document.DocumentBuilder;
 import com.liferay.portal.search.document.DocumentBuilderFactory;
@@ -73,8 +72,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.osgi.framework.BundleContext;
-import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -89,10 +86,6 @@ import org.osgi.service.component.annotations.Reference;
 public class TextEmbeddingBackgroundTaskExecutor
 	extends BaseBackgroundTaskExecutor implements TextEmbeddingHelper {
 
-	// com.liferay.search.experiences.internal.
-	// ml.text.embedding.TextEmbeddingBackgroundTaskExecutor
-	// use that string to call background task
-
 	@Override
 	public BackgroundTaskExecutor clone() {
 		return this;
@@ -105,20 +98,33 @@ public class TextEmbeddingBackgroundTaskExecutor
 		Map<String, Serializable> taskContextMap =
 			backgroundTask.getTaskContextMap();
 
-		String indexName = (String)taskContextMap.get("indexName");
-		long companyId = GetterUtil.getLong(taskContextMap.get("companyId"));
+		long[] companyIds = (long[])taskContextMap.get("companyIds");
 
-		// companyId is needed to get the configuration
+		for (long companyId : companyIds) {
+			String indexName = _getIndexName(companyId);
 
-		try {
-			_indexTextEmbbeding(companyId, indexName);
-		}
-		catch (IOException ioException) {
-			_log.error(
-				StringBundler.concat(
-					"Unable to index textEmbedding values in index ", indexName,
-					". A full reindex may be necessary."),
-				ioException);
+			try {
+				if (_log.isInfoEnabled()) {
+					_log.info(
+						StringBundler.concat(
+							"Start reindexing company ", companyId,
+							" for text embedding"));
+				}
+
+				_indexTextEmbbeding(companyId, indexName);
+			}
+			catch (IOException ioException) {
+				_log.error(
+					StringBundler.concat(
+						"Unable to index textEmbedding values in index ",
+						indexName, ". A full reindex may be necessary."),
+					ioException);
+			}
+			finally {
+				if (_log.isInfoEnabled()) {
+					_log.info("Finished reindexing company " + companyId);
+				}
+			}
 		}
 
 		return BackgroundTaskResult.SUCCESS;
@@ -129,25 +135,6 @@ public class TextEmbeddingBackgroundTaskExecutor
 		BackgroundTask backgroundTask) {
 
 		return null;
-	}
-
-	public void index(long[] companyIds) {
-		String[] indexNames = _getIndexNames(companyIds);
-
-		for (int i = 0; i < companyIds.length; i++) {
-			String indexName = indexNames[i];
-
-			try {
-				_indexTextEmbbeding(companyIds[i], indexName);
-			}
-			catch (IOException ioException) {
-				_log.error(
-					StringBundler.concat(
-						"Unable to index textEmbedding values in index ",
-						indexName, ". A full reindex may be necessary."),
-					ioException);
-			}
-		}
 	}
 
 	private void _contribute(
@@ -215,17 +202,21 @@ public class TextEmbeddingBackgroundTaskExecutor
 	private BooleanQuery _createQuery(long companyId) {
 		BooleanQuery booleanQueryLang = _queries.booleanQuery();
 
-		if (false) {
-			_realBooleanQueryLang(booleanQueryLang); // remove if false
+		SemanticSearchConfiguration semanticSearchConfiguration =
+			_getSemanticSearchConfiguration(companyId);
+
+		for (String lang : semanticSearchConfiguration.languageIds()) {
+			booleanQueryLang.addShouldQueryClauses(
+				_queries.exists("text_embedding_256_" + lang));
+			booleanQueryLang.addShouldQueryClauses(
+				_queries.exists("text_embedding_512_" + lang));
+			booleanQueryLang.addShouldQueryClauses(
+				_queries.exists("text_embedding_768_" + lang));
 		}
-
-		// just to test
-
-		booleanQueryLang.addShouldQueryClauses(_queries.exists("title_en_US"));
 
 		BooleanQuery booleanQueryClassName = _queries.booleanQuery();
 
-		for (String name : _getClassNames(companyId)) {
+		for (String name : semanticSearchConfiguration.assetEntryClassNames()) {
 			booleanQueryClassName.addShouldQueryClauses(
 				_queries.term("entryClassName", name));
 		}
@@ -254,78 +245,8 @@ public class TextEmbeddingBackgroundTaskExecutor
 		return searchSearchRequest;
 	}
 
-	private String[] _getClassNames(long companyId) {
-		_semanticSearchConfiguration = _getSemanticSearchConfiguration(
-			companyId);
-
-		return _semanticSearchConfiguration.assetEntryClassNames();
-	}
-
-	private HashMap<String, String> _getFieldsToReindexHashMap(
-		Document portalKernelDocument) {
-
-		List<String> languageIds = Arrays.asList(
-			_semanticSearchConfiguration.languageIds());
-
-		HashMap<String, String> fieldsToReindexHashMap = new HashMap<>();
-
-		for (String lang : languageIds) {
-			String textEmbedding256 = "text_embedding_256_" + lang;
-			String textEmbedding512 = "text_embedding_512_" + lang;
-			String textEmbedding768 = "text_embedding_768_" + lang;
-
-			fieldsToReindexHashMap.put(
-				textEmbedding256, portalKernelDocument.get(textEmbedding256));
-			fieldsToReindexHashMap.put(
-				textEmbedding512, portalKernelDocument.get(textEmbedding512));
-			fieldsToReindexHashMap.put(
-				textEmbedding768, portalKernelDocument.get(textEmbedding768));
-		}
-
-		return fieldsToReindexHashMap;
-	}
-
 	private String _getIndexName(long companyId) {
 		return "liferay-" + companyId;
-	}
-
-	private String[] _getIndexNames(long[] companyIds) {
-		String[] indexNames = new String[companyIds.length];
-
-		for (int i = 0; i < companyIds.length; i++) {
-			indexNames[i] = _getIndexName(companyIds[i]);
-		}
-
-		return indexNames;
-	}
-
-	private Script _getScript(ScriptBuilder scriptBuilder, Document document) {
-		HashMap<String, String> fieldsToReindexHashMap =
-			_getFieldsToReindexHashMap(document);
-
-		StringBuilder irOrCode = new StringBuilder();
-
-		for (Map.Entry<String, String> entry :
-				fieldsToReindexHashMap.entrySet()) {
-
-			if (entry.getValue() != null) {
-				irOrCode.append("ctx._source.");
-				irOrCode.append(entry.getKey());
-				irOrCode.append(" = ");
-				irOrCode.append("'");
-				irOrCode.append(entry.getValue());
-				irOrCode.append("'");
-				irOrCode.append(";");
-			}
-		}
-
-		return scriptBuilder.idOrCode(
-			irOrCode.toString()
-		).language(
-			"painless"
-		).scriptType(
-			ScriptType.INLINE
-		).build();
 	}
 
 	private SemanticSearchConfiguration _getSemanticSearchConfiguration(
@@ -341,31 +262,22 @@ public class TextEmbeddingBackgroundTaskExecutor
 	}
 
 	private UpdateDocumentRequest _getUpdateDocumentRequest(
-		String indexName, String uid, DocumentBuilder documentBuilder,
-		Document document) {
+		String indexName, String uid, DocumentBuilder documentBuilder) {
 
-		UpdateDocumentRequest updateDocumentRequest = new UpdateDocumentRequest(
+		return new UpdateDocumentRequest(
 			indexName, uid, documentBuilder.build());
-
-		ScriptBuilder scriptBuilder = _scripts.builder();
-
-		updateDocumentRequest.setScript(_getScript(scriptBuilder, document));
-
-		return updateDocumentRequest;
 	}
 
 	private void _indexTextEmbbeding(long companyId, String indexName)
 		throws IOException {
 
-		if (_log.isInfoEnabled()) {
-			_log.info(
-				"Started indexing of the Text Embbeding field for index " +
-					indexName);
-		}
+		_searchAfter(companyId, indexName); // to be implemented by joshua cords
+	}
 
+	private void _searchAfter(long companyId, String indexName) {
 		int start = 0;
 
-		while (true) { // implement searchAfter following kibana annotation
+		while (true) {
 			SearchSearchRequest searchSearchRequest = _createSearchRequest(
 				companyId, indexName, start);
 
@@ -383,20 +295,10 @@ public class TextEmbeddingBackgroundTaskExecutor
 			_updateDocuments(indexName, searchSearchResponse);
 
 			start += searchSearchRequest.getSize();
-		}
-	}
 
-	private void _realBooleanQueryLang(BooleanQuery booleanQueryLang) {
-		List<String> languageIds = Arrays.asList(
-			_semanticSearchConfiguration.languageIds());
-
-		for (String lang : languageIds) {
-			booleanQueryLang.addShouldQueryClauses(
-				_queries.exists("text_embedding_256_" + lang));
-			booleanQueryLang.addShouldQueryClauses(
-				_queries.exists("text_embedding_512_" + lang));
-			booleanQueryLang.addShouldQueryClauses(
-				_queries.exists("text_embedding_768_" + lang));
+			if (documents.length < 10000) {
+				break;
+			}
 		}
 	}
 
@@ -420,22 +322,19 @@ public class TextEmbeddingBackgroundTaskExecutor
 			String uid = portalSearchDocument.getString(Field.UID);
 			Long groupId = portalSearchDocument.getLong(Field.GROUP_ID);
 
-			Document portalKernelDocument = new DocumentImpl();
+			// ask Bryan: portalKernelDocument x portalSearchDocument
 
 			_contribute(
-				entryClassName, entryClassPK, uid, groupId,
-				portalKernelDocument);
+				entryClassName, entryClassPK, uid, groupId, new DocumentImpl());
 
 			// it just accepts portalSearchDocument and not portalKernelDocument
 			// is that the expected?
 
-			DocumentBuilder documentBuilder = _documentBuilderFactory.builder(
-				portalSearchDocument);
-
 			bulkDocumentRequest.addBulkableDocumentRequest(
 				_getUpdateDocumentRequest(
-					indexName, uid, documentBuilder, portalKernelDocument));
-		}
+					indexName, uid,
+					_documentBuilderFactory.builder(portalSearchDocument)));
+}
 
 		_searchEngineAdapter.execute(bulkDocumentRequest);
 	}
@@ -481,12 +380,7 @@ public class TextEmbeddingBackgroundTaskExecutor
 	private Queries _queries;
 
 	@Reference
-	private Scripts _scripts;
-
-	@Reference
 	private SearchEngineAdapter _searchEngineAdapter;
-
-	private volatile SemanticSearchConfiguration _semanticSearchConfiguration;
 
 	@Reference
 	private WikiPageLocalService _wikiPageLocalService;

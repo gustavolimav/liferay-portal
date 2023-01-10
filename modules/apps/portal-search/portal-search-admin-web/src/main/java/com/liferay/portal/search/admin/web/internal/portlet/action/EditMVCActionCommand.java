@@ -19,19 +19,23 @@ import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 import com.liferay.portal.instances.service.PortalInstancesLocalService;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTask;
+import com.liferay.portal.kernel.backgroundtask.BackgroundTaskManager;
 import com.liferay.portal.kernel.backgroundtask.constants.BackgroundTaskConstants;
 import com.liferay.portal.kernel.messaging.Destination;
 import com.liferay.portal.kernel.messaging.DestinationNames;
 import com.liferay.portal.kernel.messaging.MessageBus;
 import com.liferay.portal.kernel.messaging.MessageListener;
+import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.search.IndexWriterHelper;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -107,7 +111,7 @@ public class EditMVCActionCommand extends BaseMVCActionCommand {
 			_reindexIndexReindexer(actionRequest);
 		}
 		else if (cmd.equals("reindexTextEmbeddings")) {
-			_reindexTextEmbeddings(actionRequest); //create background task in this method
+			_reindexTextEmbeddings(actionRequest);
 		}
 
 		String redirect = ParamUtil.getString(actionRequest, "redirect");
@@ -245,8 +249,27 @@ public class EditMVCActionCommand extends BaseMVCActionCommand {
 
 	private void _reindexTextEmbeddings(ActionRequest actionRequest)
 		throws Exception {
-		_textEmbeddingHelper.index(ParamUtil.getLongValues(actionRequest, "companyIds"));
+
+		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
+
+		BackgroundTask backgroundTask =
+			_backgroundTaskManager.addBackgroundTask(
+				themeDisplay.getUserId(), CompanyConstants.SYSTEM,
+				"reindexTextEmbeddings",
+				"com.liferay.search.experiences.internal.ml.text.embedding." +
+					"TextEmbeddingBackgroundTaskExecutor",
+				HashMapBuilder.<String, Serializable>put(
+					"companyIds",
+					ParamUtil.getLongValues(actionRequest, "companyIds")
+				).build(),
+				new ServiceContext());
+
+		_textEmbeddingHelper.execute(backgroundTask);
 	}
+
+	@Reference
+	private BackgroundTaskManager _backgroundTaskManager;
 
 	@Reference
 	private IndexWriterHelper _indexWriterHelper;
