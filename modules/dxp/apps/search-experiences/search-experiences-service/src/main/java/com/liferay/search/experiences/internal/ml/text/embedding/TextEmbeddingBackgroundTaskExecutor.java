@@ -38,6 +38,7 @@ import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.DocumentImpl;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Hits;
+import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.search.document.DocumentBuilder;
 import com.liferay.portal.search.document.DocumentBuilderFactory;
@@ -51,10 +52,6 @@ import com.liferay.portal.search.hits.SearchHits;
 import com.liferay.portal.search.index.TextEmbeddingHelper;
 import com.liferay.portal.search.query.BooleanQuery;
 import com.liferay.portal.search.query.Queries;
-import com.liferay.portal.search.script.Script;
-import com.liferay.portal.search.script.ScriptBuilder;
-import com.liferay.portal.search.script.ScriptType;
-import com.liferay.portal.search.script.Scripts;
 import com.liferay.search.experiences.configuration.SemanticSearchConfiguration;
 import com.liferay.search.experiences.internal.search.spi.model.index.contributor.BlogsEntryTextEmbeddingModelDocumentContributor;
 import com.liferay.search.experiences.internal.search.spi.model.index.contributor.JournalArticleTextEmbeddingModelDocumentContributor;
@@ -65,12 +62,8 @@ import com.liferay.wiki.model.WikiPage;
 import com.liferay.wiki.service.WikiPageLocalService;
 
 import java.io.IOException;
-import java.io.Serializable;
 
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -92,18 +85,11 @@ public class TextEmbeddingBackgroundTaskExecutor
 	}
 
 	@Override
-	public BackgroundTaskResult execute(BackgroundTask backgroundTask)
-		throws Exception {
+	public BackgroundTaskResult execute(BackgroundTask backgroundTask) {
+		_companyLocalService.forEachCompanyId(
+			companyId -> {
+				String indexName = _getIndexName(companyId);
 
-		Map<String, Serializable> taskContextMap =
-			backgroundTask.getTaskContextMap();
-
-		long[] companyIds = (long[])taskContextMap.get("companyIds");
-
-		for (long companyId : companyIds) {
-			String indexName = _getIndexName(companyId);
-
-			try {
 				if (_log.isInfoEnabled()) {
 					_log.info(
 						StringBundler.concat(
@@ -111,21 +97,22 @@ public class TextEmbeddingBackgroundTaskExecutor
 							" for text embedding"));
 				}
 
-				_indexTextEmbbeding(companyId, indexName);
-			}
-			catch (IOException ioException) {
-				_log.error(
-					StringBundler.concat(
-						"Unable to index textEmbedding values in index ",
-						indexName, ". A full reindex may be necessary."),
-					ioException);
-			}
-			finally {
-				if (_log.isInfoEnabled()) {
-					_log.info("Finished reindexing company " + companyId);
+			try {
+					_indexTextEmbbeding(companyId, indexName);
 				}
-			}
-		}
+				catch (IOException ioException) {
+					_log.error(
+						StringBundler.concat(
+							"Unable to index textEmbedding values in index ",
+							indexName, ". A full reindex may be necessary."),
+						ioException);
+				}
+				finally {
+					if (_log.isInfoEnabled()) {
+						_log.info("Finished reindexing company " + companyId);
+					}
+				}
+			});
 
 		return BackgroundTaskResult.SUCCESS;
 	}
@@ -334,7 +321,7 @@ public class TextEmbeddingBackgroundTaskExecutor
 				_getUpdateDocumentRequest(
 					indexName, uid,
 					_documentBuilderFactory.builder(portalSearchDocument)));
-}
+		}
 
 		_searchEngineAdapter.execute(bulkDocumentRequest);
 	}
@@ -348,6 +335,9 @@ public class TextEmbeddingBackgroundTaskExecutor
 	@Reference
 	private BlogsEntryTextEmbeddingModelDocumentContributor
 		_blogsEntryTextEmbeddingModelDocumentContributor;
+
+	@Reference
+	private CompanyLocalService _companyLocalService;
 
 	@Reference
 	private ConfigurationProvider _configurationProvider;

@@ -35,7 +35,6 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
-import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -259,11 +258,7 @@ public class EditMVCActionCommand extends BaseMVCActionCommand {
 				"reindexTextEmbeddings",
 				"com.liferay.search.experiences.internal.ml.text.embedding." +
 					"TextEmbeddingBackgroundTaskExecutor",
-				HashMapBuilder.<String, Serializable>put(
-					"companyIds",
-					ParamUtil.getLongValues(actionRequest, "companyIds")
-				).build(),
-				new ServiceContext());
+				new HashMap<>(), new ServiceContext());
 
 		_textEmbeddingHelper.execute(backgroundTask);
 	}
