@@ -41,7 +41,6 @@ import com.liferay.portal.kernel.search.Hits;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.search.document.DocumentBuilder;
-import com.liferay.portal.search.document.DocumentBuilderFactory;
 import com.liferay.portal.search.engine.adapter.SearchEngineAdapter;
 import com.liferay.portal.search.engine.adapter.document.BulkDocumentRequest;
 import com.liferay.portal.search.engine.adapter.document.UpdateDocumentRequest;
@@ -50,6 +49,7 @@ import com.liferay.portal.search.engine.adapter.search.SearchSearchResponse;
 import com.liferay.portal.search.hits.SearchHit;
 import com.liferay.portal.search.hits.SearchHits;
 import com.liferay.portal.search.index.TextEmbeddingHelper;
+import com.liferay.portal.search.legacy.document.DocumentBuilderFactory;
 import com.liferay.portal.search.query.BooleanQuery;
 import com.liferay.portal.search.query.Queries;
 import com.liferay.search.experiences.configuration.SemanticSearchConfiguration;
@@ -97,7 +97,7 @@ public class TextEmbeddingBackgroundTaskExecutor
 							" for text embedding"));
 				}
 
-			try {
+				try {
 					_indexTextEmbbeding(companyId, indexName);
 				}
 				catch (IOException ioException) {
@@ -309,18 +309,16 @@ public class TextEmbeddingBackgroundTaskExecutor
 			String uid = portalSearchDocument.getString(Field.UID);
 			Long groupId = portalSearchDocument.getLong(Field.GROUP_ID);
 
-			// ask Bryan: portalKernelDocument x portalSearchDocument
+			DocumentImpl portalKernelDocumentImpl = new DocumentImpl();
 
 			_contribute(
-				entryClassName, entryClassPK, uid, groupId, new DocumentImpl());
-
-			// it just accepts portalSearchDocument and not portalKernelDocument
-			// is that the expected?
+				entryClassName, entryClassPK, uid, groupId,
+				portalKernelDocumentImpl);
 
 			bulkDocumentRequest.addBulkableDocumentRequest(
 				_getUpdateDocumentRequest(
 					indexName, uid,
-					_documentBuilderFactory.builder(portalSearchDocument)));
+					_documentBuilderFactory.builder(portalKernelDocumentImpl)));
 		}
 
 		_searchEngineAdapter.execute(bulkDocumentRequest);
