@@ -90,15 +90,27 @@ public class TextEmbeddingBackgroundTaskExecutor
 			companyId -> {
 				String indexName = _getIndexName(companyId);
 
-				if (_log.isInfoEnabled()) {
-					_log.info(
-						StringBundler.concat(
-							"Start reindexing company ", companyId,
-							" for text embedding"));
-				}
-
 				try {
-					_indexTextEmbbeding(companyId, indexName);
+					_semanticSearchConfiguration =
+						_getSemanticSearchConfiguration(companyId);
+
+					if (_semanticSearchConfiguration.textEmbeddingsEnabled()) {
+						if (_log.isInfoEnabled()) {
+							_log.info(
+								StringBundler.concat(
+									"Start reindexing company ", companyId,
+									" for text embedding"));
+						}
+
+						_indexTextEmbbeding(companyId, indexName);
+					}
+					else {
+						if (_log.isInfoEnabled()) {
+							_log.info(
+								"text embedding is disabled for company " +
+									companyId);
+						}
+					}
 				}
 				catch (IOException ioException) {
 					_log.error(
@@ -189,10 +201,7 @@ public class TextEmbeddingBackgroundTaskExecutor
 	private BooleanQuery _createQuery(long companyId) {
 		BooleanQuery booleanQueryLang = _queries.booleanQuery();
 
-		SemanticSearchConfiguration semanticSearchConfiguration =
-			_getSemanticSearchConfiguration(companyId);
-
-		for (String lang : semanticSearchConfiguration.languageIds()) {
+		for (String lang : _semanticSearchConfiguration.languageIds()) {
 			booleanQueryLang.addShouldQueryClauses(
 				_queries.exists("text_embedding_256_" + lang));
 			booleanQueryLang.addShouldQueryClauses(
@@ -203,16 +212,19 @@ public class TextEmbeddingBackgroundTaskExecutor
 
 		BooleanQuery booleanQueryClassName = _queries.booleanQuery();
 
-		for (String name : semanticSearchConfiguration.assetEntryClassNames()) {
+		for (String name :
+				_semanticSearchConfiguration.assetEntryClassNames()) {
+
 			booleanQueryClassName.addShouldQueryClauses(
 				_queries.term("entryClassName", name));
 		}
 
 		BooleanQuery finalBooleanQuery = _queries.booleanQuery();
 
-		finalBooleanQuery.addMustQueryClauses(booleanQueryLang);
-
 		finalBooleanQuery.addFilterQueryClauses(booleanQueryClassName);
+		finalBooleanQuery.addMustQueryClauses(booleanQueryLang);
+		finalBooleanQuery.addMustQueryClauses(
+			_queries.term("companyId", companyId));
 
 		return finalBooleanQuery;
 	}
@@ -224,9 +236,9 @@ public class TextEmbeddingBackgroundTaskExecutor
 
 		searchSearchRequest.setIndexNames(indexName);
 		searchSearchRequest.setQuery(_createQuery(companyId));
-		searchSearchRequest.setSize(10000);
 		searchSearchRequest.setSelectedFieldNames(
 			Field.UID, Field.ENTRY_CLASS_NAME, Field.ENTRY_CLASS_PK);
+		searchSearchRequest.setSize(10000);
 		searchSearchRequest.setStart(start);
 
 		return searchSearchRequest;
@@ -369,6 +381,8 @@ public class TextEmbeddingBackgroundTaskExecutor
 
 	@Reference
 	private SearchEngineAdapter _searchEngineAdapter;
+
+	private volatile SemanticSearchConfiguration _semanticSearchConfiguration;
 
 	@Reference
 	private WikiPageLocalService _wikiPageLocalService;
