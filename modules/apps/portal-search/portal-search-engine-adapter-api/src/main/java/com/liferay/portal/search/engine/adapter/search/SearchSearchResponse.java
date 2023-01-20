@@ -39,6 +39,10 @@ public class SearchSearchResponse extends BaseSearchResponse {
 		return _hits;
 	}
 
+	public String getPidId() {
+		return _pidId;
+	}
+
 	public String getScrollId() {
 		return _scrollId;
 	}
@@ -51,6 +55,10 @@ public class SearchSearchResponse extends BaseSearchResponse {
 		_hits = hits;
 	}
 
+	public void setPidId(String pidId) {
+		_pidId = pidId;
+	}
+
 	public void setScrollId(String scrollId) {
 		_scrollId = scrollId;
 	}
@@ -61,6 +69,7 @@ public class SearchSearchResponse extends BaseSearchResponse {
 
 	private final List<GroupByResponse> _groupByResponses = new ArrayList<>();
 	private Hits _hits;
+	private String _pidId;
 	private String _scrollId;
 	private SearchHits _searchHits;
 

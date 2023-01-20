@@ -21,6 +21,7 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.search.elasticsearch7.internal.connection.ElasticsearchClientResolver;
 import com.liferay.portal.search.elasticsearch7.internal.groupby.GroupByTranslator;
 import com.liferay.portal.search.elasticsearch7.internal.highlight.HighlightTranslator;
 import com.liferay.portal.search.elasticsearch7.internal.highlight.HighlighterTranslator;
@@ -36,10 +37,18 @@ import com.liferay.portal.search.sort.SortFieldTranslator;
 import com.liferay.portal.search.stats.StatsRequest;
 import com.liferay.portal.search.stats.StatsRequestBuilder;
 
+import java.io.IOException;
+
 import java.util.List;
 import java.util.Map;
 
+import org.elasticsearch.action.search.OpenPointInTimeRequest;
+import org.elasticsearch.action.search.OpenPointInTimeResponse;
 import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.core.TimeValue;
+import org.elasticsearch.search.builder.PointInTimeBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
 
@@ -72,6 +81,8 @@ public class SearchSearchRequestAssemblerImpl
 		_setStoredFields(searchSourceBuilder, searchSearchRequest);
 		_setTrackScores(searchSourceBuilder, searchSearchRequest);
 		_setVersion(searchSourceBuilder, searchSearchRequest);
+		_setSearchAfter(searchSourceBuilder, searchSearchRequest);
+		_setPit(searchSourceBuilder, searchSearchRequest);
 
 		searchRequest.source(searchSourceBuilder);
 	}
@@ -182,6 +193,46 @@ public class SearchSearchRequestAssemblerImpl
 		}
 	}
 
+	private void _setPit(
+		SearchSourceBuilder searchSourceBuilder,
+		SearchSearchRequest searchSearchRequest) {
+
+		if ((searchSearchRequest.getPitID() == null) &&
+			searchSearchRequest.isPit()) {
+
+			OpenPointInTimeRequest request = new OpenPointInTimeRequest();
+
+			request.indices(searchSearchRequest.getIndexNames());
+
+			request.keepAlive(
+				TimeValue.timeValueMinutes(
+					searchSearchRequest.getPointInTimeReference()));
+
+			RestHighLevelClient restHighLevelClient =
+				_elasticsearchClientResolver.getRestHighLevelClient(
+					searchSearchRequest.getConnectionId(),
+					searchSearchRequest.isPreferLocalCluster());
+
+			try {
+				OpenPointInTimeResponse openResponse =
+					restHighLevelClient.openPointInTime(
+						request, RequestOptions.DEFAULT);
+
+				String pointInTimeId = openResponse.getPointInTimeId();
+
+				searchSourceBuilder.pointInTimeBuilder(
+					new PointInTimeBuilder(pointInTimeId));
+			}
+			catch (IOException ioException) {
+				ioException.printStackTrace();
+			}
+		}
+		else if (searchSearchRequest.getPitID() != null) {
+			searchSourceBuilder.pointInTimeBuilder(
+				new PointInTimeBuilder(searchSearchRequest.getPitID()));
+		}
+	}
+
 	private void _setPreference(
 		SearchRequest searchRequest, SearchSearchRequest searchSearchRequest) {
 
@@ -189,6 +240,16 @@ public class SearchSearchRequestAssemblerImpl
 
 		if (!Validator.isBlank(preference)) {
 			searchRequest.preference(preference);
+		}
+	}
+
+	private void _setSearchAfter(
+		SearchSourceBuilder searchSourceBuilder,
+		SearchSearchRequest searchSearchRequest) {
+
+		if (searchSearchRequest.getSearchAfter() != null) {
+			searchSourceBuilder.searchAfter(
+				new Object[] {searchSearchRequest.getSearchAfter()});
 		}
 	}
 
@@ -255,6 +316,9 @@ public class SearchSearchRequestAssemblerImpl
 	@Reference
 	private CommonSearchSourceBuilderAssembler
 		_commonSearchSourceBuilderAssembler;
+
+	@Reference
+	private ElasticsearchClientResolver _elasticsearchClientResolver;
 
 	@Reference
 	private GroupByRequestFactory _groupByRequestFactory;

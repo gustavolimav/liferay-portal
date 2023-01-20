@@ -52,6 +52,7 @@ import com.liferay.portal.search.index.TextEmbeddingHelper;
 import com.liferay.portal.search.legacy.document.DocumentBuilderFactory;
 import com.liferay.portal.search.query.BooleanQuery;
 import com.liferay.portal.search.query.Queries;
+import com.liferay.portal.search.sort.Sorts;
 import com.liferay.search.experiences.configuration.SemanticSearchConfiguration;
 import com.liferay.search.experiences.internal.search.spi.model.index.contributor.BlogsEntryTextEmbeddingModelDocumentContributor;
 import com.liferay.search.experiences.internal.search.spi.model.index.contributor.JournalArticleTextEmbeddingModelDocumentContributor;
@@ -230,7 +231,7 @@ public class TextEmbeddingBackgroundTaskExecutor
 	}
 
 	private SearchSearchRequest _createSearchRequest(
-		long companyId, String indexName, int start) {
+		long companyId, String indexName) {
 
 		SearchSearchRequest searchSearchRequest = new SearchSearchRequest();
 
@@ -238,8 +239,12 @@ public class TextEmbeddingBackgroundTaskExecutor
 		searchSearchRequest.setQuery(_createQuery(companyId));
 		searchSearchRequest.setSelectedFieldNames(
 			Field.UID, Field.ENTRY_CLASS_NAME, Field.ENTRY_CLASS_PK);
-		searchSearchRequest.setSize(10000);
-		searchSearchRequest.setStart(start);
+		searchSearchRequest.setSize(10);
+
+		// how can I add sorts?
+
+		searchSearchRequest.setPointInTimeReference(1);
+		searchSearchRequest.setPit(true);
 
 		return searchSearchRequest;
 	}
@@ -274,12 +279,10 @@ public class TextEmbeddingBackgroundTaskExecutor
 	}
 
 	private void _searchAfter(long companyId, String indexName) {
-		int start = 0;
+		SearchSearchRequest searchSearchRequest = _createSearchRequest(
+			companyId, indexName);
 
 		while (true) {
-			SearchSearchRequest searchSearchRequest = _createSearchRequest(
-				companyId, indexName, start);
-
 			SearchSearchResponse searchSearchResponse =
 				_searchEngineAdapter.execute(searchSearchRequest);
 
@@ -293,11 +296,9 @@ public class TextEmbeddingBackgroundTaskExecutor
 
 			_updateDocuments(indexName, searchSearchResponse);
 
-			start += searchSearchRequest.getSize();
-
-			if (documents.length < 10000) {
-				break;
-			}
+			searchSearchRequest.setPitID(searchSearchResponse.getPidId());
+			searchSearchRequest.setSearchAfter(
+				documents[documents.length - 1].get(Field.MODIFIED_DATE));
 		}
 	}
 
@@ -383,6 +384,7 @@ public class TextEmbeddingBackgroundTaskExecutor
 	private SearchEngineAdapter _searchEngineAdapter;
 
 	private volatile SemanticSearchConfiguration _semanticSearchConfiguration;
+	private Sorts _sorts;
 
 	@Reference
 	private WikiPageLocalService _wikiPageLocalService;
