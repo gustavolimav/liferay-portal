@@ -31,7 +31,10 @@ import org.osgi.service.component.annotations.Reference;
 	configurationPid = "com.liferay.search.experiences.configuration.SemanticSearchConfiguration",
 	enabled = false,
 	property = "indexer.class.name=com.liferay.knowledge.base.model.KBArticle",
-	service = ModelDocumentContributor.class
+	service = {
+		KBArticleTextEmbeddingModelDocumentContributor.class,
+		ModelDocumentContributor.class
+	}
 )
 public class KBArticleTextEmbeddingModelDocumentContributor
 	extends BaseTextEmbeddingModelDocumentContributor<KBArticle>

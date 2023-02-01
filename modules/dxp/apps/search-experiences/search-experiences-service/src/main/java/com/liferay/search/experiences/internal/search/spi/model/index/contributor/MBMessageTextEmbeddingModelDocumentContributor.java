@@ -31,7 +31,10 @@ import org.osgi.service.component.annotations.Reference;
 	configurationPid = "com.liferay.search.experiences.configuration.SemanticSearchConfiguration",
 	enabled = false,
 	property = "indexer.class.name=com.liferay.message.boards.model.MBMessage",
-	service = ModelDocumentContributor.class
+	service = {
+		MBMessageTextEmbeddingModelDocumentContributor.class,
+		ModelDocumentContributor.class
+	}
 )
 public class MBMessageTextEmbeddingModelDocumentContributor
 	extends BaseTextEmbeddingModelDocumentContributor<MBMessage>

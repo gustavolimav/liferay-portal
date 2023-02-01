@@ -37,8 +37,14 @@ import org.osgi.service.component.annotations.Reference;
 @Component(
 	configurationPid = "com.liferay.search.experiences.configuration.SemanticSearchConfiguration",
 	enabled = false,
-	property = "indexer.class.name=com.liferay.journal.model.JournalArticle",
-	service = ModelDocumentContributor.class
+	property = {
+		"indexer.class.name=com.liferay.journal.model.JournalArticle",
+		"text.embedding.contributor=true"
+	},
+	service = {
+		JournalArticleTextEmbeddingModelDocumentContributor.class,
+		ModelDocumentContributor.class
+	}
 )
 public class JournalArticleTextEmbeddingModelDocumentContributor
 	extends BaseTextEmbeddingModelDocumentContributor<JournalArticle>

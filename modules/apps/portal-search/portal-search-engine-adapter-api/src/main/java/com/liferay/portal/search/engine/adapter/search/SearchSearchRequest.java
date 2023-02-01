@@ -98,12 +98,24 @@ public class SearchSearchRequest
 		return _locale;
 	}
 
+	public String getPitID() {
+		return _pitID;
+	}
+
+	public int getPointInTimeReference() {
+		return _pointInTimeReference;
+	}
+
 	public String getPreference() {
 		return _preference;
 	}
 
 	public Boolean getScoreEnabled() {
 		return _scoreEnabled;
+	}
+
+	public String getSearchAfter() {
+		return _searchAfter;
 	}
 
 	public String[] getSelectedFieldNames() {
@@ -157,6 +169,10 @@ public class SearchSearchRequest
 
 	public boolean isLuceneSyntax() {
 		return _luceneSyntax;
+	}
+
+	public boolean isPit() {
+		return _pit;
 	}
 
 	public boolean isScoreEnabled() {
@@ -242,12 +258,28 @@ public class SearchSearchRequest
 		_luceneSyntax = luceneSyntax;
 	}
 
+	public void setPit(boolean pit) {
+		_pit = pit;
+	}
+
+	public void setPitID(String pitID) {
+		_pitID = pitID;
+	}
+
+	public void setPointInTimeReference(int pointInTimeReference) {
+		_pointInTimeReference = pointInTimeReference;
+	}
+
 	public void setPreference(String preference) {
 		_preference = preference;
 	}
 
 	public void setScoreEnabled(boolean scoreEnabled) {
 		_scoreEnabled = scoreEnabled;
+	}
+
+	public void setSearchAfter(String searchAfter) {
+		_searchAfter = searchAfter;
 	}
 
 	public void setSelectedFieldNames(String... selectedFieldNames) {
@@ -303,8 +335,12 @@ public class SearchSearchRequest
 	private com.liferay.portal.kernel.search.Sort[] _legacySorts = {};
 	private Locale _locale;
 	private boolean _luceneSyntax;
+	private boolean _pit;
+	private String _pitID;
+	private int _pointInTimeReference;
 	private String _preference;
 	private Boolean _scoreEnabled;
+	private String _searchAfter;
 	private String[] _selectedFieldNames;
 	private Integer _size;
 	private List<Sort> _sorts = new ArrayList<>();

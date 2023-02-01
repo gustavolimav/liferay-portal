@@ -18,16 +18,20 @@ import com.liferay.osgi.service.tracker.collections.map.ServiceReferenceMapperFa
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 import com.liferay.portal.instances.service.PortalInstancesLocalService;
+import com.liferay.portal.kernel.backgroundtask.BackgroundTask;
+import com.liferay.portal.kernel.backgroundtask.BackgroundTaskManager;
 import com.liferay.portal.kernel.backgroundtask.constants.BackgroundTaskConstants;
 import com.liferay.portal.kernel.messaging.Destination;
 import com.liferay.portal.kernel.messaging.DestinationNames;
 import com.liferay.portal.kernel.messaging.MessageBus;
 import com.liferay.portal.kernel.messaging.MessageListener;
+import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.search.IndexWriterHelper;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
@@ -39,6 +43,7 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.uuid.PortalUUID;
 import com.liferay.portal.search.admin.web.internal.constants.SearchAdminPortletKeys;
 import com.liferay.portal.search.admin.web.internal.util.DictionaryReindexer;
+import com.liferay.portal.search.index.TextEmbeddingHelper;
 import com.liferay.portal.search.spi.reindexer.IndexReindexer;
 
 import java.io.Serializable;
@@ -103,6 +108,9 @@ public class EditMVCActionCommand extends BaseMVCActionCommand {
 		}
 		else if (cmd.equals("reindexIndexReindexer")) {
 			_reindexIndexReindexer(actionRequest);
+		}
+		else if (cmd.equals("reindexTextEmbeddings")) {
+			_reindexTextEmbeddings(actionRequest);
 		}
 
 		String redirect = ParamUtil.getString(actionRequest, "redirect");
@@ -238,6 +246,26 @@ public class EditMVCActionCommand extends BaseMVCActionCommand {
 		}
 	}
 
+	private void _reindexTextEmbeddings(ActionRequest actionRequest)
+		throws Exception {
+
+		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
+
+		BackgroundTask backgroundTask =
+			_backgroundTaskManager.addBackgroundTask(
+				themeDisplay.getUserId(), CompanyConstants.SYSTEM,
+				"reindexTextEmbeddings",
+				"com.liferay.search.experiences.internal.ml.text.embedding." +
+					"TextEmbeddingBackgroundTaskExecutor",
+				new HashMap<>(), new ServiceContext());
+
+		_textEmbeddingHelper.execute(backgroundTask);
+	}
+
+	@Reference
+	private BackgroundTaskManager _backgroundTaskManager;
+
 	@Reference
 	private IndexWriterHelper _indexWriterHelper;
 
@@ -251,5 +279,8 @@ public class EditMVCActionCommand extends BaseMVCActionCommand {
 	private PortalUUID _portalUUID;
 
 	private ServiceTrackerMap<String, IndexReindexer> _serviceTrackerMap;
+
+	@Reference
+	private TextEmbeddingHelper _textEmbeddingHelper;
 
 }

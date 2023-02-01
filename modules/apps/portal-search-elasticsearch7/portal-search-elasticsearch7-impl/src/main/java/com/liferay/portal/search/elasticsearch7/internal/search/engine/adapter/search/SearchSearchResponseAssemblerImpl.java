@@ -34,7 +34,6 @@ import com.liferay.portal.search.engine.adapter.search.SearchSearchResponse;
 import com.liferay.portal.search.geolocation.GeoBuilders;
 import com.liferay.portal.search.highlight.HighlightFieldBuilderFactory;
 import com.liferay.portal.search.hits.SearchHitBuilderFactory;
-import com.liferay.portal.search.hits.SearchHits;
 import com.liferay.portal.search.hits.SearchHitsBuilderFactory;
 import com.liferay.portal.search.searcher.SearchTimeValue;
 
@@ -60,6 +59,15 @@ public class SearchSearchResponseAssemblerImpl
 			   PipelineAggregationResultTranslatorFactory,
 			   SearchSearchResponseAssembler {
 
+	public void _setPidId(
+		SearchResponse searchResponse,
+		SearchSearchResponse searchSearchResponse) {
+
+		if (searchResponse.pointInTimeId() != null) {
+			searchSearchResponse.setPidId(searchResponse.pointInTimeId());
+		}
+	}
+
 	@Override
 	public void assemble(
 		SearchSourceBuilder searchRequestBuilder, SearchResponse searchResponse,
@@ -77,6 +85,7 @@ public class SearchSearchResponseAssemblerImpl
 		_setSearchHits(
 			searchResponse, searchSearchResponse, searchSearchRequest);
 		_setSearchTimeValue(searchResponse, searchSearchResponse);
+		_setPidId(searchResponse, searchSearchResponse);
 
 		_searchResponseTranslator.populate(
 			searchSearchResponse, searchResponse, searchSearchRequest);
