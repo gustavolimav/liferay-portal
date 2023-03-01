@@ -48,15 +48,11 @@ public class BaseOrderValidatorExceptionMapper
 		List<CommerceOrderValidatorResult> commerceOrderValidatorResults =
 			commerceOrderValidatorException.getCommerceOrderValidatorResults();
 
-		Stream<CommerceOrderValidatorResult>
-			commerceOrderValidatorResultsStream =
-				commerceOrderValidatorResults.stream();
-
-		String commerceOrderValidatorExceptionSimpleName =
-			CommerceOrderValidatorException.class.getSimpleName();
+		Stream<CommerceOrderValidatorResult> stream =
+			commerceOrderValidatorResults.stream();
 
 		return new Problem(
-			commerceOrderValidatorResultsStream.filter(
+			stream.filter(
 				CommerceOrderValidatorResult::hasMessageResult
 			).map(
 				CommerceOrderValidatorResult::getLocalizedMessage
@@ -64,8 +60,8 @@ public class BaseOrderValidatorExceptionMapper
 				Collectors.joining(StringPool.COMMA_AND_SPACE)
 			),
 			Response.Status.BAD_REQUEST,
-			commerceOrderValidatorExceptionSimpleName,
-			commerceOrderValidatorExceptionSimpleName);
+			CommerceOrderValidatorException.class.getSimpleName(),
+			CommerceOrderValidatorException.class.getSimpleName());
 	}
 
 }
