@@ -44,6 +44,12 @@ public interface ElasticsearchConfiguration {
 	public OperationMode operationMode();
 
 	@Meta.AD(
+		deflt = "10000", description = "max-result-window-help",
+		name = "max-result-window", required = false
+	)
+	public int maxResultWindow();
+
+	@Meta.AD(
 		deflt = "false", description = "production-mode-enabled-help",
 		name = "production-mode-enabled", required = false
 	)
