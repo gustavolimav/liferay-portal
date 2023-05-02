@@ -377,20 +377,20 @@ public class ElasticsearchIndexSearcher extends BaseIndexSearcher {
 		List<com.liferay.portal.search.sort.Sort> sorts =
 			searchRequest.getSorts();
 
-		if ((kernelSearchSorts == null) && sorts.isEmpty()) {
-
-			// GL: if remove sorts from the request while using search after
-			// almost every page will return the same results
-
-			ScoreSort score = _sorts.score();
-
-			score.setSortOrder(SortOrder.DESC);
-
-			searchSearchRequest.addSorts(score, _sorts.field("_shard_doc"));
-		}
-
-		searchSearchRequest.setSorts(sorts);
 		searchSearchRequest.setSorts(kernelSearchSorts);
+		searchSearchRequest.setSorts(sorts);
+
+//		if ((kernelSearchSorts == null) && sorts.isEmpty()) {
+//
+//			// GL: if remove sorts from the request while using search after
+//			// almost every page will return the same results
+//
+//			ScoreSort score = _sorts.score();
+//
+//			score.setSortOrder(SortOrder.DESC);
+//
+//			searchSearchRequest.addSorts(score, _sorts.field("_shard_doc"));
+//		}
 
 		return searchSearchRequest;
 	}
@@ -669,7 +669,10 @@ public class ElasticsearchIndexSearcher extends BaseIndexSearcher {
 			throw runtimeException;
 		}
 		finally {
-			_closePointInTime(searchSearchRequest.getPointInTime());
+			PointInTime pointInTime = searchSearchRequest.getPointInTime();
+
+			_searchEngineAdapter.execute(new ClosePointInTimeRequest(
+				pointInTime.getPointInTimeId()));
 		}
 
 		_populateResponse(searchSearchResponse, searchResponseBuilder);
