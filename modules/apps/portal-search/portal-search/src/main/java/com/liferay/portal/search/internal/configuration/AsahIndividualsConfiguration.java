@@ -18,7 +18,7 @@ import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClass
 @Meta.OCD(
 	id = "com.liferay.portal.search.internal.configuration.AsahIndividualsConfiguration",
 	localization = "content/Language",
-	name = "asah-search-keywords-configuration-name"
+	name = "asah-search-individuals-configuration-name" // TODO: Create LK
 )
 public interface AsahIndividualsConfiguration {
 

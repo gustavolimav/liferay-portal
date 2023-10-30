@@ -38,9 +38,9 @@ public class AsahRecentlyViewedIndividualsContributor
 			suggestionsContributorConfiguration) {
 
 		return getSuggestionsContributorResults(
-			_analyticsSettingsManager, searchContext,
-			"rangeKey,contentType,page,size,sort", _suggestionBuilderFactory,
-			suggestionsContributorConfiguration,
+			_analyticsSettingsManager, "recent-assets", "individuals",
+			searchContext, "rangeKey,contentType,page,size,sort",
+			_suggestionBuilderFactory, suggestionsContributorConfiguration,
 			_suggestionsContributorResultsBuilderFactory);
 	}
 

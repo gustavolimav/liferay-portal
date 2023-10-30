@@ -38,8 +38,8 @@ public class AsahTopKeywordsSuggestionsContributor
 			suggestionsContributorConfiguration) {
 
 		return getSuggestionsContributorResults(
-			_analyticsSettingsManager, searchContext,
-			"counts,desc,lastModifiedDate,desc,keywords,asc",
+			_analyticsSettingsManager, "search-keywords", "pages",
+			searchContext, "counts,desc,lastModifiedDate,desc,keywords,asc",
 			_suggestionBuilderFactory, suggestionsContributorConfiguration,
 			_suggestionsContributorResultsBuilderFactory);
 	}

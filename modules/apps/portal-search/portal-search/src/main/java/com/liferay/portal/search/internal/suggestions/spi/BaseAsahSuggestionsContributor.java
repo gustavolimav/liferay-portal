@@ -47,11 +47,13 @@ public abstract class BaseAsahSuggestionsContributor {
 	protected void activate(Map<String, Object> properties) {
 		asahSearchKeywordsConfiguration = ConfigurableUtil.createConfigurable(
 			AsahSearchKeywordsConfiguration.class, properties);
+		asahIndividualsConfiguration = ConfigurableUtil.createConfigurable(
+			AsahIndividualsConfiguration.class, properties);
 	}
 
 	protected SuggestionsContributorResults getSuggestionsContributorResults(
-		AnalyticsSettingsManager analyticsSettingsManager,
-		SearchContext searchContext, String sort,
+		AnalyticsSettingsManager analyticsSettingsManager, String endPointUsage,
+		String endPointName, SearchContext searchContext, String sort,
 		SuggestionBuilderFactory suggestionBuilderFactory,
 		SuggestionsContributorConfiguration suggestionsContributorConfiguration,
 		SuggestionsContributorResultsBuilderFactory
@@ -84,13 +86,14 @@ public abstract class BaseAsahSuggestionsContributor {
 		JSONArray jsonArray = JSONUtil.getValueAsJSONArray(
 			AsahWebCacheItem.get(
 				analyticsConfiguration, asahSearchKeywordsConfiguration,
-				searchContext.getCompanyId(),
+				_getContentType(attributes), searchContext.getCompanyId(),
 				_getDisplayLanguageId(attributes, searchContext.getLocale()),
 				_getGroupId(searchContext), _getMinCounts(attributes),
+				_getRangeKey(attributes),
 				GetterUtil.getInteger(
 					suggestionsContributorConfiguration.getSize(), 5),
-				sort),
-			"JSONObject/_embedded", "JSONArray/search-keywords");
+				sort, endPointUsage, endPointName),
+			"JSONObject/_embedded", "JSONArray/" + endPointUsage);
 
 		if (jsonArray.length() == 0) {
 			return null;
@@ -104,6 +107,8 @@ public abstract class BaseAsahSuggestionsContributor {
 		).build();
 	}
 
+	protected volatile AsahIndividualsConfiguration
+		asahIndividualsConfiguration;
 	protected volatile AsahSearchKeywordsConfiguration
 		asahSearchKeywordsConfiguration;
 
@@ -147,6 +152,10 @@ public abstract class BaseAsahSuggestionsContributor {
 			attributes, "characterThreshold", _CHARACTER_THRESHOLD);
 	}
 
+	private String _getContentType(Map<String, Object> attributes) {
+		return MapUtil.getString(attributes, "contentType", StringPool.BLANK); // TODO: verify what should be the default value
+	}
+
 	private String _getDisplayLanguageId(
 		Map<String, Object> attributes, Locale locale) {
 
@@ -175,6 +184,10 @@ public abstract class BaseAsahSuggestionsContributor {
 		}
 
 		return MapUtil.getInteger(attributes, "minCounts", _MIN_COUNTS);
+	}
+
+	private int _getRangeKey(Map<String, Object> attributes) {
+		return MapUtil.getInteger(attributes, "rangeKey", 0);
 	}
 
 	private List<Suggestion> _getSuggestions(

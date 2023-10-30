@@ -38,8 +38,8 @@ public class AsahRecentPagesIndividualsContributor
 			suggestionsContributorConfiguration) {
 
 		return getSuggestionsContributorResults(
-			_analyticsSettingsManager, searchContext,
-			"rangeKey,displayLanguageId,page,size,sort",
+			_analyticsSettingsManager, "recent-pages", "individuals",
+			searchContext, "rangeKey,displayLanguageId,page,size,sort",
 			_suggestionBuilderFactory, suggestionsContributorConfiguration,
 			_suggestionsContributorResultsBuilderFactory);
 	}

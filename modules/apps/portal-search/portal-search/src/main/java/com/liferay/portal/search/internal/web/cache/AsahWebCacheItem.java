@@ -29,19 +29,21 @@ public class AsahWebCacheItem implements WebCacheItem {
 	public static JSONObject get(
 		AnalyticsConfiguration analyticsConfiguration,
 		AsahSearchKeywordsConfiguration asahSearchKeywordsConfiguration,
-		long companyId, String displayLanguageId, long groupId, int minCounts,
-		int size, String sort) {
+		String contentType, long companyId, String displayLanguageId,
+		long groupId, int minCounts, int rangeKey, int size, String sort,
+		String endPointUsage, String endPointName) {
 
 		try {
 			return (JSONObject)WebCachePoolUtil.get(
 				StringBundler.concat(
-					AsahWebCacheItem.class.getName(),
-					StringPool.POUND, companyId, StringPool.POUND, minCounts,
-					StringPool.POUND, displayLanguageId, StringPool.POUND,
-					groupId, StringPool.POUND, sort),
+					AsahWebCacheItem.class.getName(), StringPool.POUND,
+					companyId, StringPool.POUND, minCounts, StringPool.POUND,
+					displayLanguageId, StringPool.POUND, groupId,
+					StringPool.POUND, sort),
 				new AsahWebCacheItem(
 					analyticsConfiguration, asahSearchKeywordsConfiguration,
-					displayLanguageId, groupId, minCounts, size, sort));
+					displayLanguageId, contentType, groupId, minCounts,
+					rangeKey, size, sort, endPointUsage, endPointName));
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
@@ -55,16 +57,21 @@ public class AsahWebCacheItem implements WebCacheItem {
 	public AsahWebCacheItem(
 		AnalyticsConfiguration analyticsConfiguration,
 		AsahSearchKeywordsConfiguration asahSearchKeywordsConfiguration,
-		String displayLanguageId, long groupId, int minCounts, int size,
-		String sort) {
+		String contentType, String displayLanguageId, long groupId,
+		int minCounts, int rangeKey, int size, String sort,
+		String endPointUsage, String endPointName) {
 
 		_analyticsConfiguration = analyticsConfiguration;
 		_asahSearchKeywordsConfiguration = asahSearchKeywordsConfiguration;
+		_contentType = contentType;
 		_displayLanguageId = displayLanguageId;
 		_groupId = groupId;
 		_minCounts = minCounts;
+		_rangeKey = rangeKey;
 		_size = size;
 		_sort = sort;
+		_endPointUsage = endPointUsage;
+		_endPointName = endPointName;
 	}
 
 	@Override
@@ -105,12 +112,35 @@ public class AsahWebCacheItem implements WebCacheItem {
 		return _asahSearchKeywordsConfiguration.cacheTimeout();
 	}
 
+	private String _getHashedEmail() {
+		return "hashedEmail";
+	}
+
 	private String _getURL() {
-		StringBundler sb = new StringBundler(11);
+		StringBundler sb = new StringBundler(21);
 
 		sb.append(_analyticsConfiguration.liferayAnalyticsFaroBackendURL());
-		sb.append("/api/1.0/pages/search-keywords?minCounts=");
-		sb.append(_minCounts);
+		sb.append("/api/1.0/pages/");
+		sb.append(_endPointName);
+		sb.append("/");
+		sb.append(_getHashedEmail());
+		sb.append("/");
+		sb.append(_endPointUsage);
+
+		if (_minCounts > 0) {
+			sb.append("minCounts=");
+			sb.append(_minCounts);
+		}
+
+		if (_rangeKey > 0) {
+			sb.append("&rangeKey=");
+			sb.append(_rangeKey);
+		}
+
+		if (!Validator.isBlank(_contentType)) {
+			sb.append("&contentType=");
+			sb.append(_contentType);
+		}
 
 		if (!Validator.isBlank(_displayLanguageId)) {
 			sb.append("&displayLanguageId=");
@@ -151,9 +181,13 @@ public class AsahWebCacheItem implements WebCacheItem {
 	private final AnalyticsConfiguration _analyticsConfiguration;
 	private final AsahSearchKeywordsConfiguration
 		_asahSearchKeywordsConfiguration;
+	private final String _contentType;
 	private final String _displayLanguageId;
+	private final String _endPointName;
+	private final String _endPointUsage;
 	private final long _groupId;
 	private final int _minCounts;
+	private final int _rangeKey;
 	private final int _size;
 	private final String _sort;
 
