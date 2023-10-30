@@ -24,7 +24,7 @@ import java.net.HttpURLConnection;
 /**
  * @author Petteri Karttunen
  */
-public class AsahSearchKeywordsWebCacheItem implements WebCacheItem {
+public class AsahWebCacheItem implements WebCacheItem {
 
 	public static JSONObject get(
 		AnalyticsConfiguration analyticsConfiguration,
@@ -35,11 +35,11 @@ public class AsahSearchKeywordsWebCacheItem implements WebCacheItem {
 		try {
 			return (JSONObject)WebCachePoolUtil.get(
 				StringBundler.concat(
-					AsahSearchKeywordsWebCacheItem.class.getName(),
+					AsahWebCacheItem.class.getName(),
 					StringPool.POUND, companyId, StringPool.POUND, minCounts,
 					StringPool.POUND, displayLanguageId, StringPool.POUND,
 					groupId, StringPool.POUND, sort),
-				new AsahSearchKeywordsWebCacheItem(
+				new AsahWebCacheItem(
 					analyticsConfiguration, asahSearchKeywordsConfiguration,
 					displayLanguageId, groupId, minCounts, size, sort));
 		}
@@ -52,7 +52,7 @@ public class AsahSearchKeywordsWebCacheItem implements WebCacheItem {
 		}
 	}
 
-	public AsahSearchKeywordsWebCacheItem(
+	public AsahWebCacheItem(
 		AnalyticsConfiguration analyticsConfiguration,
 		AsahSearchKeywordsConfiguration asahSearchKeywordsConfiguration,
 		String displayLanguageId, long groupId, int minCounts, int size,
@@ -146,7 +146,7 @@ public class AsahSearchKeywordsWebCacheItem implements WebCacheItem {
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
-		AsahSearchKeywordsWebCacheItem.class);
+		AsahWebCacheItem.class);
 
 	private final AnalyticsConfiguration _analyticsConfiguration;
 	private final AsahSearchKeywordsConfiguration

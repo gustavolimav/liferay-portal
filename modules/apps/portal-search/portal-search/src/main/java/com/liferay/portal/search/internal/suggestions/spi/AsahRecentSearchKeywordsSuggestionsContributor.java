@@ -27,7 +27,7 @@ import org.osgi.service.component.annotations.Reference;
 	service = SuggestionsContributor.class
 )
 public class AsahRecentSearchKeywordsSuggestionsContributor
-	extends BaseAsahKeywordsSuggestionsContributor
+	extends BaseAsahSuggestionsContributor
 	implements SuggestionsContributor {
 
 	@Override

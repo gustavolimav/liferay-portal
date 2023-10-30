@@ -22,8 +22,9 @@ import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.search.internal.configuration.AsahIndividualsConfiguration;
 import com.liferay.portal.search.internal.configuration.AsahSearchKeywordsConfiguration;
-import com.liferay.portal.search.internal.web.cache.AsahSearchKeywordsWebCacheItem;
+import com.liferay.portal.search.internal.web.cache.AsahWebCacheItem;
 import com.liferay.portal.search.rest.dto.v1_0.SuggestionsContributorConfiguration;
 import com.liferay.portal.search.suggestions.Suggestion;
 import com.liferay.portal.search.suggestions.SuggestionBuilderFactory;
@@ -40,7 +41,7 @@ import org.osgi.service.component.annotations.Activate;
 /**
  * @author Petteri Karttunen
  */
-public abstract class BaseAsahKeywordsSuggestionsContributor {
+public abstract class BaseAsahSuggestionsContributor {
 
 	@Activate
 	protected void activate(Map<String, Object> properties) {
@@ -81,7 +82,7 @@ public abstract class BaseAsahKeywordsSuggestionsContributor {
 		}
 
 		JSONArray jsonArray = JSONUtil.getValueAsJSONArray(
-			AsahSearchKeywordsWebCacheItem.get(
+			AsahWebCacheItem.get(
 				analyticsConfiguration, asahSearchKeywordsConfiguration,
 				searchContext.getCompanyId(),
 				_getDisplayLanguageId(attributes, searchContext.getLocale()),
@@ -235,6 +236,6 @@ public abstract class BaseAsahKeywordsSuggestionsContributor {
 	private static final int _MIN_COUNTS = 5;
 
 	private static final Log _log = LogFactoryUtil.getLog(
-		BaseAsahKeywordsSuggestionsContributor.class);
+		BaseAsahSuggestionsContributor.class);
 
 }
