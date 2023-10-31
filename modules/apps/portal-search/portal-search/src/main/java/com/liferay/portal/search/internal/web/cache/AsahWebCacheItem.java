@@ -17,6 +17,7 @@ import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.webcache.WebCacheItem;
 import com.liferay.portal.kernel.webcache.WebCachePoolUtil;
+import com.liferay.portal.search.internal.configuration.AsahIndividualsConfiguration;
 import com.liferay.portal.search.internal.configuration.AsahSearchKeywordsConfiguration;
 
 import java.net.HttpURLConnection;
@@ -29,6 +30,7 @@ public class AsahWebCacheItem implements WebCacheItem {
 	public static JSONObject get(
 		AnalyticsConfiguration analyticsConfiguration,
 		AsahSearchKeywordsConfiguration asahSearchKeywordsConfiguration,
+		AsahIndividualsConfiguration asahIndividualsConfiguration,
 		String contentType, long companyId, String displayLanguageId,
 		long groupId, int minCounts, int rangeKey, int size, String sort,
 		String endPointUsage, String endPointName) {
@@ -42,8 +44,9 @@ public class AsahWebCacheItem implements WebCacheItem {
 					StringPool.POUND, sort),
 				new AsahWebCacheItem(
 					analyticsConfiguration, asahSearchKeywordsConfiguration,
-					displayLanguageId, contentType, groupId, minCounts,
-					rangeKey, size, sort, endPointUsage, endPointName));
+					asahIndividualsConfiguration, contentType,
+					displayLanguageId, groupId, minCounts, rangeKey, size, sort,
+					endPointUsage, endPointName));
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
@@ -57,12 +60,14 @@ public class AsahWebCacheItem implements WebCacheItem {
 	public AsahWebCacheItem(
 		AnalyticsConfiguration analyticsConfiguration,
 		AsahSearchKeywordsConfiguration asahSearchKeywordsConfiguration,
+		AsahIndividualsConfiguration asahIndividualsConfiguration,
 		String contentType, String displayLanguageId, long groupId,
 		int minCounts, int rangeKey, int size, String sort,
 		String endPointUsage, String endPointName) {
 
 		_analyticsConfiguration = analyticsConfiguration;
 		_asahSearchKeywordsConfiguration = asahSearchKeywordsConfiguration;
+		_asahIndividualsConfiguration = asahIndividualsConfiguration;
 		_contentType = contentType;
 		_displayLanguageId = displayLanguageId;
 		_groupId = groupId;
@@ -113,11 +118,11 @@ public class AsahWebCacheItem implements WebCacheItem {
 	}
 
 	private String _getHashedEmail() {
-		return "hashedEmail";
+		return "47ff64395860b1d498241d907069f649b98c198a95b3ba5303b87094058590c1";
 	}
 
 	private String _getURL() {
-		StringBundler sb = new StringBundler(21);
+		StringBundler sb = new StringBundler(22);
 
 		sb.append(_analyticsConfiguration.liferayAnalyticsFaroBackendURL());
 		sb.append("/api/1.0/");
@@ -130,9 +135,16 @@ public class AsahWebCacheItem implements WebCacheItem {
 
 		sb.append("/");
 		sb.append(_endPointUsage);
+		sb.append("?");
 
 		if (_minCounts > 0) {
-			sb.append("minCounts=");
+			if (_endPointName.equals("individuals")) {
+				sb.append("counts=");
+			}
+			else {
+				sb.append("minCounts=");
+			}
+
 			sb.append(_minCounts);
 		}
 
@@ -183,6 +195,7 @@ public class AsahWebCacheItem implements WebCacheItem {
 		AsahWebCacheItem.class);
 
 	private final AnalyticsConfiguration _analyticsConfiguration;
+	private final AsahIndividualsConfiguration _asahIndividualsConfiguration;
 	private final AsahSearchKeywordsConfiguration
 		_asahSearchKeywordsConfiguration;
 	private final String _contentType;
