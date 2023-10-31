@@ -86,7 +86,8 @@ public abstract class BaseAsahSuggestionsContributor {
 		JSONArray jsonArray = JSONUtil.getValueAsJSONArray(
 			AsahWebCacheItem.get(
 				analyticsConfiguration, asahSearchKeywordsConfiguration,
-				_getContentType(attributes), searchContext.getCompanyId(),
+				asahIndividualsConfiguration, _getContentType(attributes),
+				searchContext.getCompanyId(),
 				_getDisplayLanguageId(attributes, searchContext.getLocale()),
 				_getGroupId(searchContext), _getMinCounts(attributes),
 				_getRangeKey(attributes),
