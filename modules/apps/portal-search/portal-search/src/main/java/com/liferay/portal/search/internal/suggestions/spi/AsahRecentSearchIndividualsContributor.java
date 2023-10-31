@@ -40,7 +40,8 @@ public class AsahRecentSearchIndividualsContributor
 		return getSuggestionsContributorResults(
 			_analyticsSettingsManager, "search-keywords", "individuals",
 			searchContext,
-			"rangeKey,displayLanguageId,groupId,minCounts,page,size,sort",
+			"counts,displayLanguageId,keywords,lastModifiedDate,createDate" +
+				",groupId",
 			_suggestionBuilderFactory, suggestionsContributorConfiguration,
 			_suggestionsContributorResultsBuilderFactory);
 	}

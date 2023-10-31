@@ -39,8 +39,8 @@ public class AsahRecentSitesIndividualsContributor
 
 		return getSuggestionsContributorResults(
 			_analyticsSettingsManager, "recent-sites", "individuals",
-			searchContext, "rangeKey,page,size,sort", _suggestionBuilderFactory,
-			suggestionsContributorConfiguration,
+			searchContext, "visits,lastVisitDate,firstVisitDate,groupId",
+			_suggestionBuilderFactory, suggestionsContributorConfiguration,
 			_suggestionsContributorResultsBuilderFactory);
 	}
 

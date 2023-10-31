@@ -39,7 +39,8 @@ public class AsahRecentPagesIndividualsContributor
 
 		return getSuggestionsContributorResults(
 			_analyticsSettingsManager, "recent-pages", "individuals",
-			searchContext, "rangeKey,displayLanguageId,page,size,sort",
+			searchContext,
+			"visits,displayLanguageId,lastVisitDate,firstVisitDate,url",
 			_suggestionBuilderFactory, suggestionsContributorConfiguration,
 			_suggestionsContributorResultsBuilderFactory);
 	}
