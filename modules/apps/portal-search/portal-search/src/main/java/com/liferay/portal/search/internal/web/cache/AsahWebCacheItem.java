@@ -120,10 +120,14 @@ public class AsahWebCacheItem implements WebCacheItem {
 		StringBundler sb = new StringBundler(21);
 
 		sb.append(_analyticsConfiguration.liferayAnalyticsFaroBackendURL());
-		sb.append("/api/1.0/pages/");
+		sb.append("/api/1.0/");
 		sb.append(_endPointName);
-		sb.append("/");
-		sb.append(_getHashedEmail());
+
+		if (_endPointName.equals("individuals")) {
+			sb.append("/");
+			sb.append(_getHashedEmail());
+		}
+
 		sb.append("/");
 		sb.append(_endPointUsage);
 
