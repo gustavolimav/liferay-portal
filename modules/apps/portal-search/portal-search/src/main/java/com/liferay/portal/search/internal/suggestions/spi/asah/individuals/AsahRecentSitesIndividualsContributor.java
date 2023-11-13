@@ -39,7 +39,7 @@ public class AsahRecentSitesIndividualsContributor
 		return getSuggestionsContributorResults(
 			AsahSuggestionsConstants.INDIVIDUALS,
 			AsahSuggestionsConstants.RECENT_SITES, searchContext,
-			"visits,lastVisitDate,firstVisitDate,groupId",
+			"lastVisitDate,visits,firstVisitDate,groupId",
 			suggestionsContributorConfiguration);
 	}
 
@@ -51,12 +51,8 @@ public class AsahRecentSitesIndividualsContributor
 	}
 
 	@Override
-	protected String getText(
-		String destinationBaseURL, JSONObject itemJSONObject) {
-
-		// api not return the site name
-
-		return itemJSONObject.getString("site name");
+	protected String getText(JSONObject itemJSONObject) {
+		return itemJSONObject.getString("title");
 	}
 
 }

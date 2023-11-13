@@ -39,21 +39,17 @@ public class AsahRecentPagesIndividualsContributor
 		return getSuggestionsContributorResults(
 			AsahSuggestionsConstants.INDIVIDUALS,
 			AsahSuggestionsConstants.RECENT_PAGES, searchContext,
-			"visits,displayLanguageId,lastVisitDate,firstVisitDate,url",
+			"lastVisitDate,visits,displayLanguageId,firstVisitDate,url",
 			suggestionsContributorConfiguration);
 	}
 
 	protected String getAssetURL(
 		String destinationBaseURL, JSONObject itemJSONObject) {
 
-		// api not return the title
-
 		return itemJSONObject.getString("url");
 	}
 
-	protected String getText(
-		String destinationBaseURL, JSONObject itemJSONObject) {
-
+	protected String getText(JSONObject itemJSONObject) {
 		return itemJSONObject.getString("title");
 	}
 

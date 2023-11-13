@@ -123,8 +123,6 @@ public abstract class BaseAsahIndividualsSuggestionsContributor
 			return 0;
 		}
 
-		// what should be the default?
-
 		return MapUtil.getInteger(attributes, "rangeKey", 0);
 	}
 
