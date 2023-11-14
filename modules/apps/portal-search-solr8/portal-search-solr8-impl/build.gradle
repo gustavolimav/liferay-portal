@@ -2,13 +2,15 @@ String luceneVersion = "8.6.2"
 
 dependencies {
 	compileInclude group: "commons-io", name: "commons-io", version: "2.11.0"
+	compileInclude group: "io.dropwizard.metrics", name: "metrics-core", version: "4.1.12.1"
+	compileInclude group: "io.netty", name: "netty-transport-native-epoll", version: "4.1.101.Final"
 	compileInclude group: "org.apache.lucene", name: "lucene-analyzers-common", version: luceneVersion
 	compileInclude group: "org.apache.lucene", name: "lucene-core", version: luceneVersion
 	compileInclude group: "org.apache.lucene", name: "lucene-queries", version: luceneVersion
 	compileInclude group: "org.apache.lucene", name: "lucene-queryparser", version: luceneVersion
 	compileInclude group: "org.apache.lucene", name: "lucene-suggest", version: luceneVersion
 	compileInclude group: "org.apache.solr", name: "solr-solrj", version: luceneVersion
-	compileInclude group: "org.apache.zookeeper", name: "zookeeper", version: "3.4.14"
+	compileInclude group: "org.apache.zookeeper", name: "zookeeper", version: "3.8.3"
 	compileInclude group: "org.codehaus.woodstox", name: "stax2-api", version: "3.1.4"
 	compileInclude group: "org.codehaus.woodstox", name: "woodstox-core-asl", version: "4.4.1"
 	compileInclude group: "org.noggit", name: "noggit", version: "0.6"
