@@ -27,7 +27,10 @@ import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 import com.liferay.search.experiences.constants.SXPActionKeys;
 import com.liferay.search.experiences.constants.SXPConstants;
 import com.liferay.search.experiences.exception.DuplicateSXPBlueprintExternalReferenceCodeException;
+import com.liferay.search.experiences.rest.dto.v1_0.ElementDefinition;
+import com.liferay.search.experiences.rest.dto.v1_0.ElementInstance;
 import com.liferay.search.experiences.rest.dto.v1_0.SXPBlueprint;
+import com.liferay.search.experiences.rest.dto.v1_0.SXPElement;
 import com.liferay.search.experiences.rest.dto.v1_0.util.ElementInstanceUtil;
 import com.liferay.search.experiences.rest.dto.v1_0.util.SXPBlueprintUtil;
 import com.liferay.search.experiences.rest.internal.odata.entity.v1_0.SXPBlueprintEntityModel;
@@ -36,10 +39,14 @@ import com.liferay.search.experiences.rest.internal.resource.v1_0.util.TitleMapU
 import com.liferay.search.experiences.rest.resource.v1_0.SXPBlueprintResource;
 import com.liferay.search.experiences.service.SXPBlueprintService;
 
+import java.net.URLDecoder;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Objects;
+
+import javax.validation.Valid;
 
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
@@ -221,6 +228,8 @@ public class SXPBlueprintResourceImpl extends BaseSXPBlueprintResourceImpl {
 
 		SXPBlueprintUtil.unpack(sxpBlueprint);
 
+		_decryptElementDefinition(sxpBlueprint);
+
 		return _sxpBlueprintDTOConverter.toDTO(
 			new DefaultDTOConverterContext(
 				contextAcceptLanguage.isAcceptAllLanguages(), new HashMap<>(),
@@ -314,6 +323,27 @@ public class SXPBlueprintResourceImpl extends BaseSXPBlueprintResourceImpl {
 		return postSXPBlueprint(sxpBlueprint);
 	}
 
+	private void _decryptElementDefinition(SXPBlueprint sxpBlueprint)
+		throws Exception {
+
+		@Valid
+		ElementInstance[] elementInstances = sxpBlueprint.getElementInstances();
+
+		for (ElementInstance elementInstance : elementInstances) {
+			_decryptElementDefinition(elementInstance.getSxpElement());
+		}
+	}
+
+	private void _decryptElementDefinition(SXPElement sxpElement)
+		throws Exception {
+
+		sxpElement.setElementDefinition(
+			ElementDefinition.toDTO(
+				URLDecoder.decode(
+					String.valueOf(sxpElement.getElementDefinition()),
+					"UTF-8")));
+	}
+
 	private String _getConfigurationJSON(SXPBlueprint sxpBlueprint) {
 		if (sxpBlueprint.getConfiguration() == null) {
 			return null;
@@ -338,6 +368,8 @@ public class SXPBlueprintResourceImpl extends BaseSXPBlueprintResourceImpl {
 	private SXPBlueprint _updateSXPBlueprint(
 			Long sxpBlueprintId, SXPBlueprint sxpBlueprint)
 		throws Exception {
+
+		_decryptElementDefinition(sxpBlueprint);
 
 		return _sxpBlueprintDTOConverter.toDTO(
 			new DefaultDTOConverterContext(

@@ -42,6 +42,8 @@ import com.liferay.search.experiences.rest.resource.v1_0.SXPElementResource;
 import com.liferay.search.experiences.service.SXPElementLocalService;
 import com.liferay.search.experiences.service.SXPElementService;
 
+import java.net.URLDecoder;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -230,6 +232,8 @@ public class SXPElementResourceImpl extends BaseSXPElementResourceImpl {
 
 	@Override
 	public SXPElement postSXPElement(SXPElement sxpElement) throws Exception {
+		_decodeSXPElementDefinition(sxpElement);
+
 		return _sxpElementDTOConverter.toDTO(
 			new DefaultDTOConverterContext(
 				contextAcceptLanguage.isAcceptAllLanguages(), new HashMap<>(),
@@ -276,6 +280,8 @@ public class SXPElementResourceImpl extends BaseSXPElementResourceImpl {
 	public SXPElement postSXPElementPreview(SXPElement sxpElement)
 		throws Exception {
 
+		_decodeSXPElementDefinition(sxpElement);
+
 		sxpElement.setDescription(
 			_getLocalization(sxpElement.getDescription_i18n()));
 		sxpElement.setElementDefinition(
@@ -289,6 +295,8 @@ public class SXPElementResourceImpl extends BaseSXPElementResourceImpl {
 	public SXPElement postSXPElementValidate(String json) throws Exception {
 		SXPElement sxpElement = SXPElementUtil.toSXPElement(json);
 
+		_decodeSXPElementDefinition(sxpElement);
+
 		_validateSXPElementExternalReferenceCode(sxpElement);
 
 		return sxpElement;
@@ -297,6 +305,8 @@ public class SXPElementResourceImpl extends BaseSXPElementResourceImpl {
 	@Override
 	public SXPElement putSXPElement(Long sxpElementId, SXPElement sxpElement)
 		throws Exception {
+
+		_decodeSXPElementDefinition(sxpElement);
 
 		com.liferay.search.experiences.model.SXPElement
 			serviceBuilderSXPElement = _sxpElementService.fetchSXPElement(
@@ -310,6 +320,8 @@ public class SXPElementResourceImpl extends BaseSXPElementResourceImpl {
 			String externalReferenceCode, SXPElement sxpElement)
 		throws Exception {
 
+		_decodeSXPElementDefinition(sxpElement);
+
 		com.liferay.search.experiences.model.SXPElement
 			serviceBuilderSXPElement =
 				_sxpElementService.fetchSXPElementByExternalReferenceCode(
@@ -318,6 +330,16 @@ public class SXPElementResourceImpl extends BaseSXPElementResourceImpl {
 		sxpElement.setExternalReferenceCode(externalReferenceCode);
 
 		return _putSXPElement(serviceBuilderSXPElement, sxpElement);
+	}
+
+	private void _decodeSXPElementDefinition(SXPElement sxpElement)
+		throws Exception {
+
+		sxpElement.setElementDefinition(
+			ElementDefinition.toDTO(
+				URLDecoder.decode(
+					String.valueOf(sxpElement.getElementDefinition()),
+					"UTF-8")));
 	}
 
 	private String _getElementDefinitionJSON(SXPElement sxpElement) {
