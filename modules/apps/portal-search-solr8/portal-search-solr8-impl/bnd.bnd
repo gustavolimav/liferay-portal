@@ -19,6 +19,7 @@ Import-Package:\
 	!org.apache.zookeeper.data.*,\
 	!org.apache.zookeeper.proto.*,\
 	!org.apache.zookeeper.txn.*,\
+	!org.apache.zookeeper.jute.*,\
 	\
 	!org.eclipse.jetty.client.*,\
 	!org.eclipse.jetty.http.*,\
