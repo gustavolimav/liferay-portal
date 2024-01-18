@@ -47,7 +47,7 @@ public class UserServiceWhenAddingUserAcrossCompaniesTest {
 
 		Company company = CompanyTestUtil.addCompany();
 
-		User user = UserTestUtil.addOmniAdminUser();
+		User user = UserTestUtil.addOmniadminUser();
 
 		PermissionChecker originalPermissionChecker =
 			PermissionThreadLocal.getPermissionChecker();

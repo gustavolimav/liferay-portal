@@ -928,7 +928,7 @@ public class DefaultObjectEntryManagerImplTest
 				}
 			});
 
-		User user = UserTestUtil.addOmniAdminUser();
+		User user = UserTestUtil.addOmniadminUser();
 
 		user.setTimeZoneId("America/Sao_Paulo");
 
