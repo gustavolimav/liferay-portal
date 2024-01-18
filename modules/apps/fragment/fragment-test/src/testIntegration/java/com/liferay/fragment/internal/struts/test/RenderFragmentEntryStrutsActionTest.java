@@ -67,7 +67,7 @@ public class RenderFragmentEntryStrutsActionTest {
 
 	@Test
 	public void testRenderFragment() throws Exception {
-		_user = UserTestUtil.addOmniAdminUser();
+		_user = UserTestUtil.addOmniadminUser();
 
 		UserTestUtil.setUser(_user);
 

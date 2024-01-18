@@ -1045,7 +1045,7 @@ public class PermissionCheckerTest {
 
 	@Test
 	public void testIsOmniAdminWithAdministratorRoleUser() throws Exception {
-		_user = UserTestUtil.addOmniAdminUser();
+		_user = UserTestUtil.addOmniadminUser();
 
 		PermissionChecker permissionChecker = _permissionCheckerFactory.create(
 			_user);

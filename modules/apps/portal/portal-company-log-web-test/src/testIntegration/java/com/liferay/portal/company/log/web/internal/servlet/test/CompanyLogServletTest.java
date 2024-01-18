@@ -269,7 +269,7 @@ public class CompanyLogServletTest {
 		User omniAdminUser = null;
 
 		try {
-			omniAdminUser = UserTestUtil.addOmniAdminUser();
+			omniAdminUser = UserTestUtil.addOmniadminUser();
 
 			MockHttpServletRequest mockHttpServletRequest =
 				_createMockHttpServletRequest("/", omniAdminUser);
