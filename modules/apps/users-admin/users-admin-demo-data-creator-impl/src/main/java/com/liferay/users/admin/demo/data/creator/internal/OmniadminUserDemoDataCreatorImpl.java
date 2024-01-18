@@ -10,7 +10,7 @@ import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.service.RoleLocalService;
-import com.liferay.users.admin.demo.data.creator.OmniAdminUserDemoDataCreator;
+import com.liferay.users.admin.demo.data.creator.OmniadminUserDemoDataCreator;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -18,9 +18,9 @@ import org.osgi.service.component.annotations.Reference;
 /**
  * @author Sergio González
  */
-@Component(service = OmniAdminUserDemoDataCreator.class)
-public class OmniAdminUserDemoDataCreatorImpl
-	extends BaseUserDemoDataCreator implements OmniAdminUserDemoDataCreator {
+@Component(service = OmniadminUserDemoDataCreator.class)
+public class OmniadminUserDemoDataCreatorImpl
+	extends BaseUserDemoDataCreator implements OmniadminUserDemoDataCreator {
 
 	@Override
 	public User create(long companyId) throws PortalException {
