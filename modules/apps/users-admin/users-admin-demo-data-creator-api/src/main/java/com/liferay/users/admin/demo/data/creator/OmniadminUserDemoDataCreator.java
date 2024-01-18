@@ -14,7 +14,7 @@ import org.osgi.annotation.versioning.ProviderType;
  * @author Sergio González
  */
 @ProviderType
-public interface OmniAdminUserDemoDataCreator extends UserDemoDataCreator {
+public interface OmniadminUserDemoDataCreator extends UserDemoDataCreator {
 
 	public User create(long companyId) throws PortalException;
 
