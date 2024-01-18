@@ -42,7 +42,7 @@ public class UserServiceWhenAddingUserAcrossCompaniesTest {
 		new LiferayIntegrationTestRule();
 
 	@Test
-	public void testOmniAdminShouldAddUserFromAnotherCompany()
+	public void testOmniadminShouldAddUserFromAnotherCompany()
 		throws Exception {
 
 		Company company = CompanyTestUtil.addCompany();
