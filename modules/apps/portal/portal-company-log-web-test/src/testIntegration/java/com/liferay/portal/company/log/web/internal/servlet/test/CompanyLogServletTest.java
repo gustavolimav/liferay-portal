@@ -265,7 +265,7 @@ public class CompanyLogServletTest {
 	}
 
 	@Test
-	public void testListWithOmniAdminUser() throws Exception {
+	public void testListWithOmniadminUser() throws Exception {
 		User omniAdminUser = null;
 
 		try {
