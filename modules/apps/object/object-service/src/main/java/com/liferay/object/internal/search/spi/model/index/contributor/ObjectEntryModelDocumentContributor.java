@@ -92,6 +92,17 @@ public class ObjectEntryModelDocumentContributor
 		fieldArray.addField(field);
 	}
 
+	private void _addFieldsForPickListValues(
+		FieldArray fieldArray, String[] strings, String objectFieldName,
+		String valueFieldName) {
+
+		for (String pickListValueString : strings) {
+			_addField(
+				fieldArray, objectFieldName, valueFieldName,
+				_getSortableValue(pickListValueString));
+		}
+	}
+
 	private void _appendToContent(
 		StringBundler sb, String objectFieldName, String valueString) {
 
@@ -162,10 +173,24 @@ public class ObjectEntryModelDocumentContributor
 
 		String valueString = String.valueOf(value);
 
+		// here
+
 		if (objectField.isIndexedAsKeyword()) {
-			_addField(
-				fieldArray, objectFieldName, "value_keyword",
-				StringUtil.lowerCase(valueString));
+			if (objectField.compareBusinessType(
+					ObjectFieldConstants.BUSINESS_TYPE_MULTISELECT_PICKLIST)) {
+
+				_addFieldsForPickListValues(
+					fieldArray,
+					StringUtil.split(
+						StringUtil.lowerCase((String)value),
+						StringPool.COMMA_AND_SPACE),
+					objectFieldName, "value_keyword");
+			}
+			else {
+				_addField(
+					fieldArray, objectFieldName, "value_keyword",
+					StringUtil.lowerCase(valueString));
+			}
 
 			_appendToContent(sb, objectFieldName, valueString);
 		}
@@ -217,9 +242,19 @@ public class ObjectEntryModelDocumentContributor
 					"value_" + objectField.getIndexedLanguageId(), valueString);
 			}
 
-			_addField(
-				fieldArray, objectFieldName, "value_keyword_lowercase",
-				_getSortableValue(valueString));
+			if (objectField.compareBusinessType(
+					ObjectFieldConstants.BUSINESS_TYPE_MULTISELECT_PICKLIST)) {
+
+				_addFieldsForPickListValues(
+					fieldArray,
+					StringUtil.split((String)value, StringPool.COMMA_AND_SPACE),
+					objectFieldName, "value_keyword_lowercase");
+			}
+			else {
+				_addField(
+					fieldArray, objectFieldName, "value_keyword_lowercase",
+					_getSortableValue(valueString));
+			}
 
 			_appendToContent(sb, objectFieldName, valueString);
 		}
