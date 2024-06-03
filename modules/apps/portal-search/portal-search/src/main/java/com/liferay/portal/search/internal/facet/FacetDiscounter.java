@@ -11,6 +11,7 @@ import com.liferay.portal.kernel.search.facet.Facet;
 import com.liferay.portal.kernel.search.facet.collector.DefaultTermCollector;
 import com.liferay.portal.kernel.search.facet.collector.FacetCollector;
 import com.liferay.portal.kernel.search.facet.collector.TermCollector;
+import com.liferay.portal.search.facet.nested.NestedFacet;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -70,19 +71,9 @@ public class FacetDiscounter {
 	private void _exclude(Document document) {
 		Field field = document.getField(_facet.getFieldName());
 
-		boolean nested = false;
-
-		if(_facet.getFieldName().contains("nestedFieldArray")){
-
-			Field nestedField = document.getField("nestedFieldArray");
-
-			String[] nestedArray = nestedField.getValues();
-
-			if (nestedArray[1].contains("value_keyword_lowercase")){
-				nested = true;
-				field = nestedField;
-			}
-
+		if (_facet instanceof NestedFacet) { // da pra melhorar?
+			field = new Field(
+				"nestedFieldArray", document.getValues("nestedFieldArray"));
 		}
 
 		if (field == null) {
@@ -94,7 +85,7 @@ public class FacetDiscounter {
 		for (TermCollector termCollector : facetCollector.getTermCollectors()) {
 			String term = termCollector.getTerm();
 
-			if (FacetBucketUtil.isFieldInBucket(field, term, _facet) || nested) {
+			if (FacetBucketUtil.isFieldInBucket(field, term, _facet)) {
 				int exclusions = _getExclusions(term);
 
 				_excludedTermsMap.put(term, exclusions + 1);

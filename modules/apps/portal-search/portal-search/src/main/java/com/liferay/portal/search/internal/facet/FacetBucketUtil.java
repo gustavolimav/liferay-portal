@@ -11,6 +11,10 @@ import com.liferay.portal.kernel.search.facet.RangeFacet;
 import com.liferay.portal.kernel.search.facet.util.RangeParserUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.search.facet.nested.NestedFacet;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Bryan Engler
@@ -20,6 +24,33 @@ public class FacetBucketUtil {
 
 	public static boolean isFieldInBucket(
 		Field field, String term, Facet facet) {
+
+		if (facet instanceof NestedFacet) {
+			String[] values = field.getValues();
+
+			for (String value : values) {
+				value = value.substring(1, value.length() - 1); // tirar as chaves
+
+				String[] pairs = value.split(", "); // fazer os pares
+
+				Map<String, String> map = new HashMap<>();
+
+				for (String pair : pairs) {
+					String[] keyValue = pair.split("=");
+					String key = keyValue[0].trim();
+					String value2 = keyValue[1].trim();
+
+					// se key for aggregation key
+					map.put(key, value2); // popular o hashmap
+				}
+
+				if (map.containsValue(term)) { // verificar logica
+					return true;
+				}
+			}
+
+			return false;
+		}
 
 		if (facet instanceof RangeFacet) {
 			String[] range = RangeParserUtil.parserRange(term);
