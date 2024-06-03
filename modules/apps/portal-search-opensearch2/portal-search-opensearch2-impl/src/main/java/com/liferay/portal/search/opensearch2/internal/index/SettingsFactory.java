@@ -41,7 +41,8 @@ public class SettingsFactory {
 	public JSONObject getSettingsJSONObject() {
 		JSONObject settingsJSONObject = _createJSONObject(
 			ResourceUtil.getResourceAsString(
-				getClass(), IndexSettingsConstants.INDEX_SETTINGS_FILE_NAME));
+				getClass(),
+				IndexSettingsConstants.INDEX_SETTINGS_ANALYSIS_FILE_NAME));
 
 		_mergeSettingsFromConfiguration(settingsJSONObject);
 
