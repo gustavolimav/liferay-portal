@@ -10,7 +10,7 @@ package com.liferay.portal.search.opensearch2.internal.index.constants;
  */
 public class IndexSettingsConstants {
 
-	public static final String INDEX_SETTINGS_FILE_NAME =
-		"/META-INF/settings/index-settings.json";
+	public static final String INDEX_SETTINGS_ANALYSIS_FILE_NAME =
+		"/META-INF/settings/index-settings-analysis.json";
 
 }
