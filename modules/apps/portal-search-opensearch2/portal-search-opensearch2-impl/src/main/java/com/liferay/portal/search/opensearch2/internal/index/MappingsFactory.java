@@ -116,9 +116,9 @@ public class MappingsFactory implements TypeMappingsHelper {
 
 			JsonpUtil.logInfoResponse(putMappingResponse, _log);
 		}
-		catch (IOException ioException) {
+		catch (Exception exception) {
 			_log.error(
-				"Unable to put mappings for index " + _indexName, ioException);
+				"Unable to put mappings for index " + _indexName, exception);
 		}
 	}
 

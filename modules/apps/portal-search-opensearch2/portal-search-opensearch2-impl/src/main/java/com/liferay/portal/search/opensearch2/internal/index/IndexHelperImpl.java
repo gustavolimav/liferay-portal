@@ -602,9 +602,9 @@ public class IndexHelperImpl implements IndexHelper {
 				_buildPutIndicesSettingsRequest(
 					indexName, settingsJSONObject.toString()));
 		}
-		catch (IOException ioException) {
+		catch (Exception exception) {
 			_log.error(
-				"Unable to put mappings for index " + indexName, ioException);
+				"Unable to put mappings for index " + indexName, exception);
 		}
 	}
 
