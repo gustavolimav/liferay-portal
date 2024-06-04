@@ -16,4 +16,7 @@ public class MappingsConstants {
 	public static final String LIFERAY_MAPPING_FILE_NAME =
 		"/META-INF/mappings/liferay-mappings.json";
 
+	public static final String LIFERAY_MAPPING_FILE_NAME_OPTIONAL_DEFAULTS =
+		"/META-INF/mappings/liferay-mappings-optional-defaults.json";
+
 }

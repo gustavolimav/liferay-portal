@@ -78,17 +78,22 @@ public class IndexHelperImpl implements IndexHelper {
 		SettingsFactory settingsFactory = new SettingsFactory(
 			_jsonFactory, _openSearchConfigurationWrapper);
 
-		_createIndex(
-			indexName, mappingsFactory, openSearchIndicesClient,
-			settingsFactory);
+		CreateIndexRequest.Builder builder = _createCreateIndexRequestBuilder(
+			JSONUtil.put(
+				"mappings",
+				mappingsFactory.getMappingsJSONObject(
+					_openSearchConfigurationWrapper.overrideTypeMappings())
+			).put(
+				"settings", _createSettingsJSONObject(settingsFactory)
+			));
 
-		if (Validator.isNull(
-				_openSearchConfigurationWrapper.overrideTypeMappings())) {
+		builder.index(indexName);
 
-			_executeMappingsContributors(mappingsFactory);
+		JsonpUtil.logInfoResponse(
+			_getCreateIndexResponse(builder.build(), openSearchIndicesClient),
+			_log);
 
-			mappingsFactory.addOptionalDefaultMappings();
-		}
+		_updateMappings(mappingsFactory);
 
 		_executeCompanyIndexListenersAfterCreate(indexName);
 
@@ -306,25 +311,6 @@ public class IndexHelperImpl implements IndexHelper {
 		return builder;
 	}
 
-	private void _createIndex(
-		String indexName, MappingsFactory mappingsFactory,
-		OpenSearchIndicesClient openSearchIndicesClient,
-		SettingsFactory settingsFactory) {
-
-		CreateIndexRequest.Builder builder = _createCreateIndexRequestBuilder(
-			JSONUtil.put(
-				"mappings", mappingsFactory.getMappingsJSONObject()
-			).put(
-				"settings", _createSettingsJSONObject(settingsFactory)
-			));
-
-		builder.index(indexName);
-
-		JsonpUtil.logInfoResponse(
-			_getCreateIndexResponse(builder.build(), openSearchIndicesClient),
-			_log);
-	}
-
 	private JSONObject _createSettingsJSONObject(
 		SettingsFactory settingsFactory) {
 
@@ -435,14 +421,6 @@ public class IndexHelperImpl implements IndexHelper {
 		}
 
 		return contributedSettings;
-	}
-
-	private void _executeMappingsContributors(MappingsFactory mappingsFactory) {
-		for (IndexConfigurationContributor indexConfigurationContributor :
-				_indexConfigurationContributorServiceTrackerList) {
-
-			indexConfigurationContributor.contributeMappings(mappingsFactory);
-		}
 	}
 
 	private CreateIndexResponse _getCreateIndexResponse(

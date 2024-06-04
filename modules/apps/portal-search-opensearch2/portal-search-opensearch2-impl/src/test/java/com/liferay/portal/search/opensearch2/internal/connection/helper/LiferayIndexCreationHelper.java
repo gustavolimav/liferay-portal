@@ -51,7 +51,8 @@ public class LiferayIndexCreationHelper implements IndexCreationHelper {
 		MappingsFactory mappingsFactory = _getMappingsFactory(null);
 
 		String mappings = String.valueOf(
-			mappingsFactory.getMappingsJSONObject());
+			mappingsFactory.getMappingsJSONObject(
+				_openSearchConfigurationWrapper.overrideTypeMappings()));
 
 		try (InputStream inputStream = new ByteArrayInputStream(
 				mappings.getBytes(StandardCharsets.UTF_8))) {
@@ -95,9 +96,6 @@ public class LiferayIndexCreationHelper implements IndexCreationHelper {
 
 	@Override
 	public void whenIndexCreated(String indexName) {
-		MappingsFactory mappingsFactory = _getMappingsFactory(indexName);
-
-		mappingsFactory.addOptionalDefaultMappings();
 	}
 
 	private MappingsFactory _getMappingsFactory(String indexName) {

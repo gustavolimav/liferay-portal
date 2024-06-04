@@ -10,7 +10,6 @@ import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.opensearch2.internal.configuration.OpenSearchConfigurationWrapper;
 import com.liferay.portal.search.opensearch2.internal.index.constants.MappingsConstants;
@@ -50,15 +49,7 @@ public class MappingsFactory implements TypeMappingsHelper {
 		_openSearchConfigurationWrapper = openSearchConfigurationWrapper;
 	}
 
-	public void addOptionalDefaultMappings() {
-		String name = StringUtil.replace(
-			MappingsConstants.LIFERAY_MAPPING_FILE_NAME, ".json",
-			"-optional-defaults.json");
-
-		putTypeMappings(ResourceUtil.getResourceAsString(getClass(), name));
-	}
-
-	public String getMappings(String indexName) {
+	public String getCurrentMappings(String indexName) {
 		try {
 			GetMappingResponse getMappingResponse =
 				_openSearchIndicesClient.getMapping(
@@ -79,26 +70,20 @@ public class MappingsFactory implements TypeMappingsHelper {
 		}
 	}
 
-	public JSONObject getMappingsJSONObject() {
-		JSONObject mappingsJSONObject = _jsonFactory.createJSONObject();
-
-		if (Validator.isNotNull(
-				_openSearchConfigurationWrapper.overrideTypeMappings())) {
-
-			_mergeMappings(
-				_openSearchConfigurationWrapper.overrideTypeMappings(),
-				mappingsJSONObject);
-		}
-		else {
-			_mergeMappings(
-				ResourceUtil.getResourceAsString(
-					getClass(), MappingsConstants.LIFERAY_MAPPING_FILE_NAME),
-				mappingsJSONObject);
-
-			_mergeAdditionalTypeMappings(mappingsJSONObject);
+	public JSONObject getMappingsJSONObject(String overrideMappings) {
+		if (Validator.isNotNull(overrideMappings)) {
+			return _removeLegacyDocumentType(overrideMappings);
 		}
 
-		return mappingsJSONObject;
+		String defaultMappings = ResourceUtil.getResourceAsString(
+			getClass(), MappingsConstants.LIFERAY_MAPPING_FILE_NAME);
+		String defaultMappingTemplate = ResourceUtil.getResourceAsString(
+			getClass(),
+			MappingsConstants.LIFERAY_MAPPING_FILE_NAME_OPTIONAL_DEFAULTS);
+
+		return _createJSONObject(
+			_getMappingsToPutWithMergedDynamicTemplates(
+				defaultMappingTemplate, defaultMappings));
 	}
 
 	@Override
@@ -107,10 +92,9 @@ public class MappingsFactory implements TypeMappingsHelper {
 
 		builder.index(_indexName);
 
-		JSONObject mappingsJSONObject = _removeLegacyDocumentType(
-			_createJSONObject(source));
-
-		_mergeExistingDynamicTemplates(mappingsJSONObject);
+		JSONObject mappingsJSONObject = _createJSONObject(
+			_getMappingsToPutWithMergedDynamicTemplates(
+				getCurrentMappings(_indexName), source));
 
 		List<Map<String, DynamicTemplate>> dynamicTemplates =
 			IndexUtil.getDynamicTemplatesMap(mappingsJSONObject);
@@ -147,46 +131,32 @@ public class MappingsFactory implements TypeMappingsHelper {
 		}
 	}
 
-	private void _mergeAdditionalTypeMappings(JSONObject mappingsJSONObject) {
-		if (Validator.isBlank(
-				_openSearchConfigurationWrapper.additionalTypeMappings())) {
+	private String _getMappingsToPutWithMergedDynamicTemplates(
+		String currentMappings, String mappingsToPut) {
 
-			return;
-		}
+		JSONObject currentMappingsJSONObject = _removeLegacyDocumentType(
+			currentMappings);
+		JSONObject mappingsToPutJSONObject = _removeLegacyDocumentType(
+			mappingsToPut);
 
-		_mergeMappings(
-			_openSearchConfigurationWrapper.additionalTypeMappings(),
-			mappingsJSONObject);
-	}
-
-	private void _mergeExistingDynamicTemplates(JSONObject mappingsJSONObject) {
-		JSONObject existingMappingsJSONObject = _createJSONObject(
-			getMappings(_indexName));
-
-		mappingsJSONObject.put(
+		mappingsToPutJSONObject.put(
 			"dynamic_templates",
 			IndexUtil.mergeDynamicTemplates(
-				existingMappingsJSONObject.getJSONArray("dynamic_templates"),
-				mappingsJSONObject.getJSONArray("dynamic_templates")));
+				currentMappingsJSONObject.getJSONArray("dynamic_templates"),
+				mappingsToPutJSONObject.getJSONArray("dynamic_templates")));
+
+		return mappingsToPutJSONObject.toString();
 	}
 
-	private void _mergeMappings(
-		String mappings, JSONObject mappingsJSONObject) {
+	private JSONObject _removeLegacyDocumentType(String source) {
+		JSONObject jsonObject = _createJSONObject(source);
 
-		IndexUtil.mergeToJsonObject(
-			mappingsJSONObject,
-			_removeLegacyDocumentType(_createJSONObject(mappings)));
-	}
-
-	private JSONObject _removeLegacyDocumentType(JSONObject sourceJSONObject) {
-		if (sourceJSONObject.has(
-				MappingsConstants.LEGACY_LIFERAY_DOCUMENT_TYPE)) {
-
-			return sourceJSONObject.getJSONObject(
+		if (jsonObject.has(MappingsConstants.LEGACY_LIFERAY_DOCUMENT_TYPE)) {
+			return jsonObject.getJSONObject(
 				MappingsConstants.LEGACY_LIFERAY_DOCUMENT_TYPE);
 		}
 
-		return sourceJSONObject;
+		return jsonObject;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
