@@ -16,6 +16,9 @@ import org.opensearch.client.opensearch.indices.OpenSearchIndicesClient;
  */
 public interface IndexHelper {
 
+	public void createIndex(
+		String indexName, OpenSearchIndicesClient openSearchIndicesClient);
+
 	public void deleteIndex(
 		long companyId, String indexName,
 		OpenSearchIndicesClient openSearchIndicesClient,
@@ -26,9 +29,6 @@ public interface IndexHelper {
 	public String getIndexName(long companyId);
 
 	public boolean hasIndex(
-		String indexName, OpenSearchIndicesClient openSearchIndicesClient);
-
-	public void initializeIndex(
 		String indexName, OpenSearchIndicesClient openSearchIndicesClient);
 
 	public void updateIndex(

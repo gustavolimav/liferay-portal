@@ -80,7 +80,7 @@ public class CompanyIndexFactory
 			return false;
 		}
 
-		_indexHelper.initializeIndex(indexName, openSearchIndicesClient);
+		_indexHelper.createIndex(indexName, openSearchIndicesClient);
 
 		return true;
 	}

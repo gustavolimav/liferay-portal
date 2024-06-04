@@ -68,6 +68,38 @@ import org.osgi.service.component.annotations.Reference;
 public class IndexHelperImpl implements IndexHelper {
 
 	@Override
+	public void createIndex(
+		String indexName, OpenSearchIndicesClient openSearchIndicesClient) {
+
+		MappingsFactory mappingsFactory = new MappingsFactory(
+			indexName, _jsonFactory, openSearchIndicesClient,
+			_openSearchConfigurationWrapper);
+
+		SettingsFactory settingsFactory = new SettingsFactory(
+			_jsonFactory, _openSearchConfigurationWrapper);
+
+		_createIndex(
+			indexName, mappingsFactory, openSearchIndicesClient,
+			settingsFactory);
+
+		if (Validator.isNull(
+				_openSearchConfigurationWrapper.overrideTypeMappings())) {
+
+			_executeMappingsContributors(mappingsFactory);
+
+			mappingsFactory.addOptionalDefaultMappings();
+		}
+
+		_executeCompanyIndexListenersAfterCreate(indexName);
+
+		if (PortalRunMode.isTestMode()) {
+			_setTestModeIndexSettings(
+				settingsFactory.getTestModeIndexSettings(),
+				openSearchIndicesClient);
+		}
+	}
+
+	@Override
 	public void deleteIndex(
 		long companyId, String indexName,
 		OpenSearchIndicesClient openSearchIndicesClient,
@@ -121,38 +153,6 @@ public class IndexHelperImpl implements IndexHelper {
 		}
 		catch (IOException ioException) {
 			throw new RuntimeException(ioException);
-		}
-	}
-
-	@Override
-	public void initializeIndex(
-		String indexName, OpenSearchIndicesClient openSearchIndicesClient) {
-
-		MappingsFactory mappingsFactory = new MappingsFactory(
-			indexName, _jsonFactory, openSearchIndicesClient,
-			_openSearchConfigurationWrapper);
-
-		SettingsFactory settingsFactory = new SettingsFactory(
-			_jsonFactory, _openSearchConfigurationWrapper);
-
-		_createIndex(
-			indexName, mappingsFactory, openSearchIndicesClient,
-			settingsFactory);
-
-		if (Validator.isNull(
-				_openSearchConfigurationWrapper.overrideTypeMappings())) {
-
-			_executeMappingsContributors(mappingsFactory);
-
-			mappingsFactory.addOptionalDefaultMappings();
-		}
-
-		_executeCompanyIndexListenersAfterCreate(indexName);
-
-		if (PortalRunMode.isTestMode()) {
-			_setTestModeIndexSettings(
-				settingsFactory.getTestModeIndexSettings(),
-				openSearchIndicesClient);
 		}
 	}
 
