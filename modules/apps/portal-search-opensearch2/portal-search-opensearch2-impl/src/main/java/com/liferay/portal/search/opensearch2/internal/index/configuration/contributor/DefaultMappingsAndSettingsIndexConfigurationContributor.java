@@ -22,15 +22,13 @@ public class DefaultMappingsAndSettingsIndexConfigurationContributor
 
 	@Override
 	public void contributeMappings(TypeMappingsHelper typeMappingsHelper) {
-		String mappings = ResourceUtil.getResourceAsString(
-			getClass(), MappingsConstants.LIFERAY_MAPPING_FILE_NAME);
-
-		typeMappingsHelper.putTypeMappings(mappings);
+		typeMappingsHelper.putTypeMappings(
+			ResourceUtil.getResourceAsString(
+				getClass(), MappingsConstants.LIFERAY_MAPPING_FILE_NAME));
 	}
 
 	@Override
 	public void contributeSettings(IndexSettingsHelper indexSettingsHelper) {
-		indexSettingsHelper.put("index.default_pipeline", "timestamp");
 	}
 
 }
