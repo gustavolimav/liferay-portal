@@ -5,7 +5,6 @@
 
 package com.liferay.portal.search.opensearch2.internal.index;
 
-import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -161,23 +160,14 @@ public class MappingsFactory implements TypeMappingsHelper {
 	}
 
 	private void _mergeExistingDynamicTemplates(JSONObject mappingsJSONObject) {
-		JSONArray dynamicTemplatesJSONArray = mappingsJSONObject.getJSONArray(
-			"dynamic_templates");
-
-		if (dynamicTemplatesJSONArray == null) {
-			return;
-		}
-
 		JSONObject existingMappingsJSONObject = _createJSONObject(
 			getMappings(_indexName));
-
-		JSONArray existingDynamicTemplatesJSONArray =
-			existingMappingsJSONObject.getJSONArray("dynamic_templates");
 
 		mappingsJSONObject.put(
 			"dynamic_templates",
 			IndexUtil.mergeDynamicTemplates(
-				existingDynamicTemplatesJSONArray, dynamicTemplatesJSONArray));
+				existingMappingsJSONObject.getJSONArray("dynamic_templates"),
+				mappingsJSONObject.getJSONArray("dynamic_templates")));
 	}
 
 	private void _mergeMappings(

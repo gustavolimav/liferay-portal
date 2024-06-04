@@ -124,15 +124,21 @@ public class IndexUtil {
 	}
 
 	public static JSONArray mergeDynamicTemplates(
-		JSONArray jsonArray1, JSONArray jsonArray2) {
+		JSONArray dynamicTemplatesToPutJSONArray,
+		JSONArray currentDynamicTemplatesJSONArray) {
+
+		if (dynamicTemplatesToPutJSONArray == null) {
+			return currentDynamicTemplatesJSONArray;
+		}
 
 		LinkedHashMap<String, JSONObject> linkedHashMap = new LinkedHashMap<>();
 
-		_putAll(jsonArray1, linkedHashMap);
+		_putAll(dynamicTemplatesToPutJSONArray, linkedHashMap);
 
-		_putAll(jsonArray2, linkedHashMap);
+		_putAll(currentDynamicTemplatesJSONArray, linkedHashMap);
 
-		JSONArray jsonArray3 = JSONFactoryUtil.createJSONArray();
+		JSONArray mergedDynamicTemplatesJSONArray =
+			JSONFactoryUtil.createJSONArray();
 
 		JSONObject defaultTemplateJSONObject = null;
 
@@ -143,15 +149,15 @@ public class IndexUtil {
 				defaultTemplateJSONObject = entry.getValue();
 			}
 			else {
-				jsonArray3.put(entry.getValue());
+				mergedDynamicTemplatesJSONArray.put(entry.getValue());
 			}
 		}
 
 		if (defaultTemplateJSONObject != null) {
-			jsonArray3.put(defaultTemplateJSONObject);
+			mergedDynamicTemplatesJSONArray.put(defaultTemplateJSONObject);
 		}
 
-		return jsonArray3;
+		return mergedDynamicTemplatesJSONArray;
 	}
 
 	public static void mergeToJsonObject(
@@ -210,6 +216,10 @@ public class IndexUtil {
 
 	private static void _putAll(
 		JSONArray jsonArray, Map<String, JSONObject> map) {
+
+		if (jsonArray == null) {
+			return;
+		}
 
 		for (int i = 0; i < jsonArray.length(); i++) {
 			JSONObject jsonObject = jsonArray.getJSONObject(i);
