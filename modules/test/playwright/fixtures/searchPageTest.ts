@@ -6,12 +6,17 @@
 import {test} from '@playwright/test';
 
 import {SearchPage} from '../pages/portal-search-web/SearchPage';
+import { SemanticSearchSettingsPage } from '../pages/portal-search-web/SemanticSearchSettingsPage';
 
 const searchPageTest = test.extend<{
 	searchPage: SearchPage;
+	semanticSearchSettingsPage: SemanticSearchSettingsPage;
 }>({
 	searchPage: async ({page}, use) => {
 		await use(new SearchPage(page));
+	},
+	semanticSearchSettingsPage: async ({page}, use) => {
+		await use(new SemanticSearchSettingsPage(page));
 	},
 });
 
