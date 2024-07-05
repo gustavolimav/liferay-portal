@@ -215,7 +215,7 @@ definition {
 				text = "facebook");
 
 			Click(
-				key_itemName = "facebook/bart-base",
+				key_itemName = "facebook/bart-base-v1",
 				locator1 = "FormFields#FIELD_DROPDOWN_ITEM");
 
 			AssertElementPresent(
@@ -476,10 +476,10 @@ definition {
 			fieldLabel = "Model",
 			text = "facebook");
 
-		FormFields.viewFieldDropdownItem(itemName = "facebook/bart-base");
+		FormFields.viewFieldDropdownItem(itemName = "facebook/bart-base-v1");
 
 		Click(
-			key_itemName = "facebook/bart-base",
+			key_itemName = "facebook/bart-base-v1",
 			locator1 = "FormFields#FIELD_DROPDOWN_ITEM");
 
 		PortletEntry.inputNumber(
@@ -534,7 +534,7 @@ definition {
 				text = "facebook");
 
 			Click(
-				key_itemName = "facebook/bart-base",
+				key_itemName = "facebook/bart-base-v1",
 				locator1 = "FormFields#FIELD_DROPDOWN_ITEM");
 
 			SemanticSearch.saveAndContinue();
@@ -557,7 +557,7 @@ definition {
 
 			SystemSettings.viewInputText(
 				fieldLabel = "Model",
-				fieldValue = "facebook/bart-base");
+				fieldValue = "facebook/bart-base-v1");
 		}
 
 		task ("Refresh the page and assert form fields retain the values added earlier") {
@@ -573,7 +573,7 @@ definition {
 
 			SystemSettings.viewInputText(
 				fieldLabel = "Model",
-				fieldValue = "facebook/bart-base");
+				fieldValue = "facebook/bart-base-v1");
 		}
 
 		task ("Assert field values are reset when the form is reset to default") {
@@ -663,7 +663,7 @@ definition {
 				text = "facebook");
 
 			Click(
-				key_itemName = "facebook/bart-base",
+				key_itemName = "facebook/bart-base-v1",
 				locator1 = "FormFields#FIELD_DROPDOWN_ITEM");
 
 			SemanticSearch.saveAndContinue();
@@ -698,7 +698,7 @@ definition {
 
 			SystemSettings.viewInputText(
 				fieldLabel = "Model",
-				fieldValue = "facebook/bart-base");
+				fieldValue = "facebook/bart-base-v1");
 		}
 	}
 
