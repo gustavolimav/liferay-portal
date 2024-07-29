@@ -60,6 +60,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import org.skyscreamer.jsonassert.JSONAssert;
+import org.skyscreamer.jsonassert.JSONCompareMode;
+
 /**
  * @author Almir Ferreira
  */
@@ -377,10 +380,11 @@ public class SXPBlueprintUpgradeProcessTest {
 		SXPBlueprint sxpBlueprint = _sxpBlueprintLocalService.fetchSXPBlueprint(
 			sxpBlueprintId);
 
+
 		Assert.assertNotNull(sxpBlueprint);
-		Assert.assertEquals(
+		JSONAssert.assertEquals(
 			expectedElementInstancesJSON,
-			sxpBlueprint.getElementInstancesJSON());
+			sxpBlueprint.getElementInstancesJSON(), JSONCompareMode.NON_EXTENSIBLE);
 		_assertSearch(
 			sxpBlueprint.getTitle(LocaleUtil.US), _sxpBlueprintIndexerFixture);
 	}
@@ -393,9 +397,9 @@ public class SXPBlueprintUpgradeProcessTest {
 			sxpElementId);
 
 		Assert.assertNotNull(sxpElement);
-		Assert.assertEquals(
-			expectedElementDefinitionJSON,
-			sxpElement.getElementDefinitionJSON());
+		JSONAssert.assertEquals(
+			expectedElementDefinitionJSON, sxpElement.getElementDefinitionJSON(),
+			JSONCompareMode.NON_EXTENSIBLE);
 		_assertSearch(
 			sxpElement.getTitle(LocaleUtil.US), _sxpElementIndexerFixture);
 	}
