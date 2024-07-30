@@ -120,6 +120,10 @@ public class UserModelDocumentContributor
 					"Unable to index user " + user.getUserId(), exception);
 			}
 		}
+
+		System.out.println(
+			UserModelDocumentContributor.class.getName() + " - users-admin");
+		System.out.println("User: " + user.getFullName() + " indexed.");
 	}
 
 	@Reference

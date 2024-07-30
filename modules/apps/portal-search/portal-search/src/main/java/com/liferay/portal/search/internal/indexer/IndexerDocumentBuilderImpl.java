@@ -8,6 +8,7 @@ package com.liferay.portal.search.internal.indexer;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.DocumentContributor;
 import com.liferay.portal.kernel.search.Field;
@@ -52,6 +53,15 @@ public class IndexerDocumentBuilderImpl implements IndexerDocumentBuilder {
 		_modelDocumentContributors.forEach(
 			(ModelDocumentContributor modelDocumentContributor) ->
 				modelDocumentContributor.contribute(document, baseModel));
+
+		if (baseModel instanceof User) {
+			System.out.println(
+				IndexerDocumentBuilderImpl.class.getName() + " - User: " +
+					((User)baseModel).getFullName());
+			_modelDocumentContributors.forEach(
+				(ModelDocumentContributor modelDocumentContributor) ->
+					System.out.println(modelDocumentContributor.toString()));
+		}
 
 		_searchPermissionDocumentContributor.addPermissionFields(
 			GetterUtil.getLong(document.get(Field.COMPANY_ID)), document);

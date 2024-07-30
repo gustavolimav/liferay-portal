@@ -374,6 +374,17 @@ public class ModelSearchConfiguratorServiceTrackerCustomizer
 				(Class<ModelDocumentContributor<?>>)
 					(Class<?>)ModelDocumentContributor.class,
 				"(indexer.class.name=" + className + ")");
+
+			if (className.contains("User")) {
+				System.out.println("User class found");
+
+				_modelDocumentContributors.forEach(
+					_modelDocumentContributor -> {
+						System.out.println(
+							"Model Document Contributor: " +
+								_modelDocumentContributor.toString());
+					});
+			}
 		}
 
 		public void close() {

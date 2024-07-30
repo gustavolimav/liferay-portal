@@ -48,6 +48,11 @@ public class UserModelDocumentContributor
 					"Unable to index user " + user.getUserId(), exception);
 			}
 		}
+
+		System.out.println(
+			UserModelDocumentContributor.class.getName() +
+				" - account-service");
+		System.out.println("User: " + user.getFullName() + " indexed.");
 	}
 
 	protected long[] getAccountEntryIds(User user) throws Exception {
