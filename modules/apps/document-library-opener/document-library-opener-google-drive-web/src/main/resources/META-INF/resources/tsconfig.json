@@ -1,5 +1,5 @@
 {
-	"@generated": "4e37e54a86b1ab0cf1bc53da2a9b670da521909b",
+	"@generated": "55d44028027ec67fd0e00023d8a1fe1d564d292f",
 	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
@@ -14,9 +14,10 @@
 		"paths": {
 		},
 		"rootDir": "../../../../../../../..",
+		"skipLibCheck": true,
 		"sourceMap": false,
 		"strict": true,
-		"target": "es2020",
+		"target": "esnext",
 		"tsBuildInfoFile": "../../../../../../../../.tsc/buildinfo/@liferay/document-library-opener-google-drive-web.tsbuildinfo",
 		"typeRoots": [
 			"../../../../../../../../node_modules/@types"

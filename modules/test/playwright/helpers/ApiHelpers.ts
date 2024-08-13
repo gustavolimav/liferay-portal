@@ -24,6 +24,7 @@ import {HeadlessCommerceAdminPaymentApiHelper} from './HeadlessCommerceAdminPaym
 import {HeadlessCommerceAdminPricingApiHelper} from './HeadlessCommerceAdminPricingApiHelper';
 import {HeadlessCommerceDeliveryCartApiHelper} from './HeadlessCommerceDeliveryCartApiHelper';
 import {HeadlessCommerceDeliveryCatalogApiHelper} from './HeadlessCommerceDeliveryCatalogApiHelper';
+import {HeadlessCommerceReturnApiHelper} from './HeadlessCommerceReturnApiHelper';
 import {HeadlessDeliveryApiHelper} from './HeadlessDeliveryApiHelper';
 import {HeadlessSiteApiHelper} from './HeadlessSiteApiHelper';
 import {ListTypeAdminApiHelper} from './ListTypeAdminApiHelper';
@@ -42,6 +43,7 @@ import {JSONWebServicesLayoutSetPrototypeApiHelper} from './json-web-services/JS
 import {JSONWebServicesMBApiHelper} from './json-web-services/JSONWebServicesMBApiHelper';
 import {JSONWebServicesOSBAsahApiHelper} from './json-web-services/JSONWebServicesOSBAsahApiHelper';
 import {JSONWebServicesOSBFaroApiHelper} from './json-web-services/JSONWebServicesOSBFaroApiHelper';
+import {JSONWebServicesUserApiHelper} from './json-web-services/JSONWebServicesUserApiHelper';
 
 type TDataApiHelpersData = {
 	id: any;
@@ -75,6 +77,7 @@ export class ApiHelpers {
 	readonly headlessCommerceAdminPricing: HeadlessCommerceAdminPricingApiHelper;
 	readonly headlessCommerceDeliveryCatalog: HeadlessCommerceDeliveryCatalogApiHelper;
 	readonly headlessCommerceDeliveryCart: HeadlessCommerceDeliveryCartApiHelper;
+	readonly headlessCommerceReturn: HeadlessCommerceReturnApiHelper;
 	readonly headlessDelivery: HeadlessDeliveryApiHelper;
 	readonly headlessSite: HeadlessSiteApiHelper;
 	readonly jsonWebServicesAnnouncementsEntryApiHelper: JSONWebServicesAnnouncementsEntryApiHelper;
@@ -88,6 +91,7 @@ export class ApiHelpers {
 	readonly jsonWebServicesMBApiHelper: JSONWebServicesMBApiHelper;
 	readonly jsonWebServicesOSBAsah: JSONWebServicesOSBAsahApiHelper;
 	readonly jsonWebServicesOSBFaro: JSONWebServicesOSBFaroApiHelper;
+	readonly jsonWebServicesUser: JSONWebServicesUserApiHelper;
 	readonly listTypeAdmin: ListTypeAdminApiHelper;
 	readonly notification: NotificationApiHelper;
 	readonly objectAdmin: ObjectAdminApiHelper;
@@ -128,6 +132,7 @@ export class ApiHelpers {
 			new HeadlessCommerceDeliveryCatalogApiHelper(this);
 		this.headlessCommerceDeliveryCart =
 			new HeadlessCommerceDeliveryCartApiHelper(this);
+		this.headlessCommerceReturn = new HeadlessCommerceReturnApiHelper(this);
 		this.headlessDelivery = new HeadlessDeliveryApiHelper(this);
 		this.headlessSite = new HeadlessSiteApiHelper(this);
 		this.jsonWebServicesAnnouncementsEntryApiHelper =
@@ -145,6 +150,7 @@ export class ApiHelpers {
 		this.jsonWebServicesMBApiHelper = new JSONWebServicesMBApiHelper(this);
 		this.jsonWebServicesOSBFaro = new JSONWebServicesOSBFaroApiHelper(this);
 		this.jsonWebServicesOSBAsah = new JSONWebServicesOSBAsahApiHelper(this);
+		this.jsonWebServicesUser = new JSONWebServicesUserApiHelper(this);
 		this.listTypeAdmin = new ListTypeAdminApiHelper(this);
 		this.notification = new NotificationApiHelper(this);
 		this.objectAdmin = new ObjectAdminApiHelper(this);
@@ -280,7 +286,7 @@ export class DataApiHelpers extends ApiHelpers {
 	}
 
 	async clearData() {
-		for await (const item of this.data.reverse()) {
+		for await (const item of this.data) {
 			switch (item.type) {
 				case 'account':
 					await this.headlessAdminUser.deleteAccount(item.id);
@@ -304,6 +310,12 @@ export class DataApiHelpers extends ApiHelpers {
 					break;
 				case 'channel':
 					await this.headlessCommerceAdminChannel.deleteChannel(
+						item.id
+					);
+
+					break;
+				case 'commerceReturn':
+					await this.headlessCommerceReturn.deleteCommerceReturn(
 						item.id
 					);
 
@@ -334,10 +346,26 @@ export class DataApiHelpers extends ApiHelpers {
 					await this.headlessCommerceAdminOrder.deleteOrder(item.id);
 
 					break;
+				case 'orderType':
+					await this.headlessCommerceAdminOrder.deleteOrderTypes(
+						item.id
+					);
+
+					break;
 				case 'organization':
 					await this.headlessAdminUser.deleteOrganization(item.id);
 
 					break;
+				case 'organizationUserAccountAssociation': {
+					const [organizationId, emailAddress] = item.id.split('_');
+
+					await this.headlessAdminUser.deleteOrganizationUserAccountAssociation(
+						organizationId,
+						emailAddress
+					);
+
+					break;
+				}
 				case 'payment':
 					await this.headlessCommerceAdminPaymentApiHelper.deletePayment(
 						item.id
@@ -356,6 +384,12 @@ export class DataApiHelpers extends ApiHelpers {
 					break;
 				case 'product':
 					await this.headlessCommerceAdminCatalog.deleteProduct(
+						item.id
+					);
+
+					break;
+				case 'relatedProduct':
+					await this.headlessCommerceAdminCatalog.deleteRelatedProduct(
 						item.id
 					);
 
@@ -402,6 +436,10 @@ export class DataApiHelpers extends ApiHelpers {
 					await this.headlessAdminUser.deleteUserAccount(item.id);
 
 					break;
+				case 'userGroup':
+					await this.headlessAdminUser.deleteUserGroup(item.id);
+
+					break;
 				case 'warehouse':
 					await this.headlessCommerceAdminInventoryApiHelper.deleteWarehouse(
 						item.id
@@ -411,6 +449,14 @@ export class DataApiHelpers extends ApiHelpers {
 				default:
 					break;
 			}
+		}
+	}
+
+	setData(data: TDataApiHelpersData[]) {
+		this.data.length = 0;
+
+		while (data.length) {
+			this.data.push(data.pop());
 		}
 	}
 }

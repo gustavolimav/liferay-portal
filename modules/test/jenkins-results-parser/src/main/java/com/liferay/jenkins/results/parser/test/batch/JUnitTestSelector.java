@@ -6,6 +6,7 @@
 package com.liferay.jenkins.results.parser.test.batch;
 
 import com.liferay.jenkins.results.parser.job.property.JobProperty;
+import com.liferay.jenkins.results.parser.test.suite.RelevantRuleConfigurationException;
 
 import java.io.File;
 
@@ -18,17 +19,10 @@ import java.util.Properties;
  */
 public class JUnitTestSelector extends BaseTestSelector {
 
-	public static final String
-		MODULES_INCLUDES_REQUIRED_TEST_BATCH_CLASS_NAMES_EXCLUDES =
-			"modules.includes.required.test.batch.class.names.excludes";
-
-	public static final String
-		MODULES_INCLUDES_REQUIRED_TEST_BATCH_CLASS_NAMES_INCLUDES =
-			"modules.includes.required.test.batch.class.names.includes";
-
 	public JUnitTestSelector(
-		File propertiesFile, Properties properties, String batchName,
-		String relevantRuleName, String testSuiteName) {
+			File propertiesFile, Properties properties, String batchName,
+			String relevantRuleName, String testSuiteName)
+		throws RelevantRuleConfigurationException {
 
 		super(
 			propertiesFile, properties, batchName, relevantRuleName,
@@ -36,21 +30,23 @@ public class JUnitTestSelector extends BaseTestSelector {
 
 		validate();
 
-		addJobProperties();
-	}
-
-	public void addJobProperties() {
-		_excludesJobProperties.add(getExcludesJobProperty());
-		_includesJobProperties.add(getIncludesJobProperty());
+		_addJobProperties();
 	}
 
 	public List<JobProperty> getExcludesJobProperties() {
+		JobProperty jobProperty = getGlobalJobProperty(
+			"test.batch.class.names.excludes", JobProperty.Type.EXCLUDE_GLOB);
+
+		if (!_excludesJobProperties.contains(jobProperty)) {
+			_excludesJobProperties.add(jobProperty);
+		}
+
 		return _excludesJobProperties;
 	}
 
 	public JobProperty getExcludesJobProperty() {
 		return getJobProperty(
-			MODULES_INCLUDES_REQUIRED_TEST_BATCH_CLASS_NAMES_EXCLUDES,
+			_MODULES_INCLUDES_REQUIRED_TEST_BATCH_CLASS_NAMES_EXCLUDES,
 			JobProperty.Type.MODULE_EXCLUDE_GLOB);
 	}
 
@@ -60,7 +56,7 @@ public class JUnitTestSelector extends BaseTestSelector {
 
 	public JobProperty getIncludesJobProperty() {
 		return getJobProperty(
-			MODULES_INCLUDES_REQUIRED_TEST_BATCH_CLASS_NAMES_INCLUDES,
+			_MODULES_INCLUDES_REQUIRED_TEST_BATCH_CLASS_NAMES_INCLUDES,
 			JobProperty.Type.MODULE_INCLUDE_GLOB);
 	}
 
@@ -72,14 +68,38 @@ public class JUnitTestSelector extends BaseTestSelector {
 
 		JUnitTestSelector jUnitTestSelector = (JUnitTestSelector)testSelector;
 
-		_excludesJobProperties.add(jUnitTestSelector.getExcludesJobProperty());
-		_includesJobProperties.add(jUnitTestSelector.getIncludesJobProperty());
+		if (!_includesJobProperties.contains(
+				jUnitTestSelector.getIncludesJobProperty())) {
+
+			_includesJobProperties.add(
+				jUnitTestSelector.getIncludesJobProperty());
+		}
+
+		if (!_excludesJobProperties.contains(
+				jUnitTestSelector.getExcludesJobProperty())) {
+
+			_excludesJobProperties.add(
+				jUnitTestSelector.getExcludesJobProperty());
+		}
 	}
 
 	@Override
-	public void validate() {
-		validate(MODULES_INCLUDES_REQUIRED_TEST_BATCH_CLASS_NAMES_INCLUDES);
+	public void validate() throws RelevantRuleConfigurationException {
+		validate(_MODULES_INCLUDES_REQUIRED_TEST_BATCH_CLASS_NAMES_INCLUDES);
 	}
+
+	private void _addJobProperties() {
+		_excludesJobProperties.add(getExcludesJobProperty());
+		_includesJobProperties.add(getIncludesJobProperty());
+	}
+
+	private static final String
+		_MODULES_INCLUDES_REQUIRED_TEST_BATCH_CLASS_NAMES_EXCLUDES =
+			"modules.includes.required.test.batch.class.names.excludes";
+
+	private static final String
+		_MODULES_INCLUDES_REQUIRED_TEST_BATCH_CLASS_NAMES_INCLUDES =
+			"modules.includes.required.test.batch.class.names.includes";
 
 	private final List<JobProperty> _excludesJobProperties = new ArrayList<>();
 	private final List<JobProperty> _includesJobProperties = new ArrayList<>();

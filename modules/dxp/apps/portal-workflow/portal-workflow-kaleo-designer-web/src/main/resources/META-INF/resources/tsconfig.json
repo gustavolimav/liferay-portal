@@ -1,5 +1,5 @@
 {
-	"@generated": "9f8abb2b35e44fea3257103eaedc05717c3d9d6b",
+	"@generated": "d9d51d9736cc2c865e357a19b5543cb728907e90",
 	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
@@ -26,9 +26,10 @@
 			]
 		},
 		"rootDir": "../../../../../../../../..",
+		"skipLibCheck": true,
 		"sourceMap": false,
 		"strict": true,
-		"target": "es2020",
+		"target": "esnext",
 		"tsBuildInfoFile": "../../../../../../../../../.tsc/buildinfo/portal-workflow-kaleo-designer-web.tsbuildinfo",
 		"typeRoots": [
 			"../../../../../../../../../node_modules/@types"

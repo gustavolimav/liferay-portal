@@ -1,5 +1,5 @@
 {
-	"@generated": "f7d9cfe658b9e38ad3c2e908ce3c193b88375dff",
+	"@generated": "a9aa0c5583409473072b75d873de2c2afd4076a2",
 	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
@@ -17,9 +17,10 @@
 			]
 		},
 		"rootDir": "../../../../../../../..",
+		"skipLibCheck": true,
 		"sourceMap": false,
 		"strict": true,
-		"target": "es2020",
+		"target": "esnext",
 		"tsBuildInfoFile": "../../../../../../../../.tsc/buildinfo/@liferay/portal-defaultpermissions-web.tsbuildinfo",
 		"typeRoots": [
 			"../../../../../../../../node_modules/@types"

@@ -47,6 +47,7 @@
 	<classpathentry kind="lib" path="lib/development/byte-buddy.jar"/>
 	<classpathentry kind="lib" path="lib/development/byte-buddy-agent.jar"/>
 	<classpathentry kind="lib" path="lib/development/catalina.jar"/>
+	<classpathentry kind="lib" path="lib/development/catalina-ha.jar"/>
 	<classpathentry kind="lib" path="lib/development/com.liferay.ant.beanshell.jar"/>
 	<classpathentry kind="lib" path="lib/development/com.liferay.ant.build.logger.jar"/>
 	<classpathentry kind="lib" path="lib/development/com.liferay.ant.mirrors.get.jar"/>
@@ -116,6 +117,7 @@
 	<classpathentry kind="lib" path="lib/development/tlddoc.jar"/>
 	<classpathentry kind="lib" path="lib/development/tomcat-api.jar"/>
 	<classpathentry kind="lib" path="lib/development/tomcat-coyote.jar"/>
+	<classpathentry kind="lib" path="lib/development/tomcat-tribes.jar"/>
 	<classpathentry kind="lib" path="lib/development/tomcat-util-scan.jar"/>
 	<classpathentry kind="lib" path="lib/development/tomcat-util.jar"/>
 	<classpathentry kind="lib" path="lib/development/velocity.jar"/>

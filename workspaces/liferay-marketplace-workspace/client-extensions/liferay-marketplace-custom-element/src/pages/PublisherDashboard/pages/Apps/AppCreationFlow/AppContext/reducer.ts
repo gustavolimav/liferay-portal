@@ -144,7 +144,7 @@ export function appReducer(state: InitialStateProps, action: TAction) {
 			const licenseTier: LicenseTier = action.payload.licenseTier;
 			const oldLicensePrice = state.appLicensePrice;
 
-			const newLicensePrices = [...oldLicensePrice[licenseTier]];
+			const newLicensePrices = [...(oldLicensePrice[licenseTier] ?? [])];
 			newLicensePrices[action.payload.index] = action.payload.price;
 
 			return {
@@ -257,6 +257,18 @@ export function appReducer(state: InitialStateProps, action: TAction) {
 			return {
 				...state,
 				supportEmail: {
+					id,
+					value,
+				},
+			};
+		}
+
+		case TYPES.UPDATE_APP_SUPPORT_PHONE: {
+			const {id, value} = action.payload;
+
+			return {
+				...state,
+				supportPhone: {
 					id,
 					value,
 				},

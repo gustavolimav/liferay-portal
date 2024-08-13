@@ -86,6 +86,7 @@ import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.PrefsProps;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -293,7 +294,8 @@ public class CompanyLocalServiceTest {
 				StorageType.DEFAULT.toString(), serviceContext);
 
 			dlFileEntryType = _dlFileEntryTypeLocalService.addFileEntryType(
-				userId, guestGroup.getGroupId(), ddmStructure.getStructureId(),
+				null, userId, guestGroup.getGroupId(),
+				ddmStructure.getStructureId(),
 				CompanyLocalServiceTest.class.getSimpleName(),
 				HashMapBuilder.put(
 					LocaleUtil.getDefault(),
@@ -534,8 +536,8 @@ public class CompanyLocalServiceTest {
 				user.getUserId(), userGroup);
 
 			role = _roleLocalService.addRole(
-				userId, Group.class.getName(), group.getClassPK(),
-				StringUtil.randomString(),
+				RandomTestUtil.randomString(), userId, Group.class.getName(),
+				group.getClassPK(), StringUtil.randomString(),
 				Collections.singletonMap(
 					LocaleUtil.getDefault(), StringUtil.randomString()),
 				Collections.emptyMap(), RoleConstants.TYPE_SITE,
@@ -670,8 +672,9 @@ public class CompanyLocalServiceTest {
 			_transactionConfig,
 			() -> {
 				Assert.assertNull(
-					_portalPreferencesLocalService.
-						fetchCompanyPortalPreferences(company.getCompanyId()));
+					_portalPreferencesLocalService.fetchPortalPreferences(
+						company.getCompanyId(),
+						PortletKeys.PREFS_OWNER_TYPE_COMPANY));
 
 				return null;
 			});
@@ -733,8 +736,8 @@ public class CompanyLocalServiceTest {
 				user.getUserId(), userGroup);
 
 			Role role = _roleLocalService.addRole(
-				userId, Group.class.getName(), group.getClassPK(),
-				StringUtil.randomString(),
+				RandomTestUtil.randomString(), userId, Group.class.getName(),
+				group.getClassPK(), StringUtil.randomString(),
 				Collections.singletonMap(
 					LocaleUtil.getDefault(), StringUtil.randomString()),
 				Collections.emptyMap(), RoleConstants.TYPE_SITE,

@@ -5,26 +5,26 @@
 
 package com.liferay.portal.log4j.internal;
 
-import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerList;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
-import com.liferay.portal.kernel.log.LogContext;
+import com.liferay.portal.kernel.instance.PortalInstancePool;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
-import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
 import com.liferay.portal.kernel.test.rule.NewEnv;
 import com.liferay.portal.kernel.test.util.PropsTestUtil;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.log.Log4jLogContextLogWrapper;
 import com.liferay.portal.test.log.LogCapture;
 import com.liferay.portal.test.log.LogEntry;
 import com.liferay.portal.test.log.LoggerTestUtil;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.PrintStream;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -37,6 +37,7 @@ import java.util.logging.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.Appender;
 import org.apache.logging.log4j.core.Logger;
+import org.apache.logging.log4j.core.config.AppenderRef;
 import org.apache.logging.log4j.core.config.LoggerConfig;
 
 import org.junit.Assert;
@@ -44,7 +45,8 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
-import org.osgi.framework.ServiceRegistration;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 
 /**
  * @author Hai Yu
@@ -59,59 +61,53 @@ public class Log4jConfigUtilTest {
 
 	@NewEnv(type = NewEnv.Type.CLASSLOADER)
 	@Test
-	public void testCompanyWebIdLogContextDisabled() {
-		ServiceTrackerList<LogContext> serviceTrackerList =
-			ReflectionTestUtil.invoke(
-				Log4jLogContextLogWrapper.class, "_createServiceTrackerList",
-				new Class<?>[0]);
+	public void testCompanyWebIdConsoleAppender() throws Exception {
+		PrintStream systemOutPrintStream = System.out;
 
-		List<LogContext> logContexts = serviceTrackerList.toList();
+		try (MockedStatic<CompanyThreadLocal> companyThreadLocalMockedStatic =
+				Mockito.mockStatic(CompanyThreadLocal.class);
+			MockedStatic<PortalInstancePool> portalInstancePoolMockedStatic =
+				Mockito.mockStatic(PortalInstancePool.class);
+			ByteArrayOutputStream byteArrayOutputStream =
+				new ByteArrayOutputStream();
+			PrintStream printStream = new PrintStream(byteArrayOutputStream)) {
 
-		Assert.assertTrue(logContexts.isEmpty());
+			System.setOut(printStream);
 
-		Log4jConfigUtil.configureLog4J(
-			_generateXMLConfigurationContent(
-				StringUtil.randomString(), _ALL, _CONSOLE));
+			Logger logger = (Logger)LogManager.getLogger(
+				StringUtil.randomString());
 
-		logContexts = serviceTrackerList.toList();
+			Log4jConfigUtil.configureLog4J(
+				_generateXMLConfigurationContent(
+					logger.getName(), _PRIORITY_INFO,
+					_APPENDER_TYPE_COMPANY_WEB_ID_CONSOLE));
 
-		Assert.assertTrue(logContexts.isEmpty());
-	}
+			_assertAppenders(logger, _APPENDER_TYPE_COMPANY_WEB_ID_CONSOLE);
 
-	@NewEnv(type = NewEnv.Type.CLASSLOADER)
-	@Test
-	public void testCompanyWebIdLogContextEnabled() {
-		ServiceTrackerList<LogContext> serviceTrackerList =
-			ReflectionTestUtil.invoke(
-				Log4jLogContextLogWrapper.class, "_createServiceTrackerList",
-				new Class<?>[0]);
+			long companyId = RandomTestUtil.randomLong();
 
-		List<LogContext> logContexts = serviceTrackerList.toList();
+			portalInstancePoolMockedStatic.when(
+				() -> PortalInstancePool.getWebId(companyId)
+			).thenReturn(
+				"test.com"
+			);
 
-		Assert.assertTrue(logContexts.isEmpty());
-
-		Log4jConfigUtil.configureLog4J(
-			_generateCompanyWebIdLogContextConfigurationContent());
-
-		logContexts = serviceTrackerList.toList();
-
-		Assert.assertEquals(
-			logContexts.toString(), 1, serviceTrackerList.size());
-
-		LogContext logContext = logContexts.get(0);
-
-		Assert.assertTrue(logContext instanceof CompanyWebIdLogContext);
-		Assert.assertEquals("company", logContext.getName());
-
-		ServiceRegistration<?> serviceRegistration =
-			ReflectionTestUtil.getFieldValue(
-				CompanyWebIdConsoleAppender.class, "_serviceRegistration");
-
-		serviceRegistration.unregister();
-
-		logContexts = serviceTrackerList.toList();
-
-		Assert.assertTrue(logContexts.isEmpty());
+			_testCompanyWebIdConsoleAppender(
+				new long[0], byteArrayOutputStream, 0L,
+				companyThreadLocalMockedStatic, "Test Log Message", logger,
+				"Test Log Message", portalInstancePoolMockedStatic);
+			_testCompanyWebIdConsoleAppender(
+				new long[0], byteArrayOutputStream, companyId,
+				companyThreadLocalMockedStatic, "Test Log Message", logger,
+				"Test Log Message", portalInstancePoolMockedStatic);
+			_testCompanyWebIdConsoleAppender(
+				new long[] {companyId}, byteArrayOutputStream, companyId,
+				companyThreadLocalMockedStatic, "test.com Test Log Message",
+				logger, "Test Log Message", portalInstancePoolMockedStatic);
+		}
+		finally {
+			System.setOut(systemOutPrintStream);
+		}
 	}
 
 	@Test
@@ -121,52 +117,52 @@ public class Log4jConfigUtilTest {
 		Logger logger = (Logger)LogManager.getLogger(loggerName);
 
 		Map<String, String> priorities = Log4jConfigUtil.configureLog4J(
-			_generateXMLConfigurationContent(loggerName, _ALL));
+			_generateXMLConfigurationContent(loggerName, _PRIORITY_ALL));
 
 		Assert.assertEquals(
-			priorities, Collections.singletonMap(loggerName, _ALL));
+			priorities, Collections.singletonMap(loggerName, _PRIORITY_ALL));
 
-		_assertPriority(logger, _ALL);
-
-		Log4jConfigUtil.configureLog4J(
-			_generateXMLConfigurationContent(loggerName, _DEBUG));
-
-		_assertPriority(logger, _DEBUG);
+		_assertPriority(logger, _PRIORITY_ALL);
 
 		Log4jConfigUtil.configureLog4J(
-			_generateXMLConfigurationContent(loggerName, _ERROR));
+			_generateXMLConfigurationContent(loggerName, _PRIORITY_DEBUG));
 
-		_assertPriority(logger, _ERROR);
-
-		Log4jConfigUtil.configureLog4J(
-			_generateXMLConfigurationContent(loggerName, _FATAL));
-
-		_assertPriority(logger, _FATAL);
+		_assertPriority(logger, _PRIORITY_DEBUG);
 
 		Log4jConfigUtil.configureLog4J(
-			_generateXMLConfigurationContent(loggerName, _INFO));
+			_generateXMLConfigurationContent(loggerName, _PRIORITY_ERROR));
 
-		_assertPriority(logger, _INFO);
-
-		Log4jConfigUtil.configureLog4J(
-			_generateXMLConfigurationContent(loggerName, _OFF));
-
-		_assertPriority(logger, _OFF);
+		_assertPriority(logger, _PRIORITY_ERROR);
 
 		Log4jConfigUtil.configureLog4J(
-			_generateXMLConfigurationContent(loggerName, _TRACE));
+			_generateXMLConfigurationContent(loggerName, _PRIORITY_FATAL));
 
-		_assertPriority(logger, _TRACE);
-
-		Log4jConfigUtil.configureLog4J(
-			_generateXMLConfigurationContent(loggerName, _WARN));
-
-		_assertPriority(logger, _WARN);
+		_assertPriority(logger, _PRIORITY_FATAL);
 
 		Log4jConfigUtil.configureLog4J(
-			_generateXMLConfigurationContent(loggerName, "FAKE_LEVEL"));
+			_generateXMLConfigurationContent(loggerName, _PRIORITY_INFO));
 
-		_assertPriority(logger, _ERROR);
+		_assertPriority(logger, _PRIORITY_INFO);
+
+		Log4jConfigUtil.configureLog4J(
+			_generateXMLConfigurationContent(loggerName, _PRIORITY_OFF));
+
+		_assertPriority(logger, _PRIORITY_OFF);
+
+		Log4jConfigUtil.configureLog4J(
+			_generateXMLConfigurationContent(loggerName, _PRIORITY_TRACE));
+
+		_assertPriority(logger, _PRIORITY_TRACE);
+
+		Log4jConfigUtil.configureLog4J(
+			_generateXMLConfigurationContent(loggerName, _PRIORITY_WARN));
+
+		_assertPriority(logger, _PRIORITY_WARN);
+
+		Log4jConfigUtil.configureLog4J(
+			_generateXMLConfigurationContent(loggerName, "FAKE_PRIORITY"));
+
+		_assertPriority(logger, _PRIORITY_ERROR);
 	}
 
 	@Test
@@ -174,39 +170,44 @@ public class Log4jConfigUtilTest {
 		String loggerName = StringUtil.randomString();
 
 		Log4jConfigUtil.configureLog4J(
-			_generateXMLConfigurationContent(loggerName, _ERROR));
+			_generateXMLConfigurationContent(loggerName, _PRIORITY_ERROR));
 
 		Logger logger = (Logger)LogManager.getLogger(loggerName);
 
 		_assertAppenders(logger);
 
 		Log4jConfigUtil.configureLog4J(
-			_generateXMLConfigurationContent(loggerName, _ERROR, _CONSOLE));
+			_generateXMLConfigurationContent(
+				loggerName, _PRIORITY_ERROR, _APPENDER_TYPE_CONSOLE));
 
-		_assertAppenders(logger, _CONSOLE);
-
-		Log4jConfigUtil.configureLog4J(
-			_generateXMLConfigurationContent(loggerName, _ERROR, _NULL));
-
-		_assertAppenders(logger, _CONSOLE, _NULL);
-
-		Log4jConfigUtil.configureLog4J(
-			_generateXMLConfigurationContent(loggerName, _ERROR, _CONSOLE));
-
-		_assertAppenders(logger, _CONSOLE, _NULL);
+		_assertAppenders(logger, _APPENDER_TYPE_CONSOLE);
 
 		Log4jConfigUtil.configureLog4J(
 			_generateXMLConfigurationContent(
-				loggerName, _ERROR, _CONSOLE, _NULL));
+				loggerName, _PRIORITY_ERROR, _APPENDER_TYPE_NULL));
 
-		_assertAppenders(logger, _CONSOLE, _NULL);
+		_assertAppenders(logger, _APPENDER_TYPE_CONSOLE, _APPENDER_TYPE_NULL);
 
 		Log4jConfigUtil.configureLog4J(
 			_generateXMLConfigurationContent(
-				loggerName, _ERROR, _CONSOLE, _NULL),
-			_NULL);
+				loggerName, _PRIORITY_ERROR, _APPENDER_TYPE_CONSOLE));
 
-		_assertAppenders(logger, _CONSOLE, _NULL);
+		_assertAppenders(logger, _APPENDER_TYPE_CONSOLE, _APPENDER_TYPE_NULL);
+
+		Log4jConfigUtil.configureLog4J(
+			_generateXMLConfigurationContent(
+				loggerName, _PRIORITY_ERROR, _APPENDER_TYPE_CONSOLE,
+				_APPENDER_TYPE_NULL));
+
+		_assertAppenders(logger, _APPENDER_TYPE_CONSOLE, _APPENDER_TYPE_NULL);
+
+		Log4jConfigUtil.configureLog4J(
+			_generateXMLConfigurationContent(
+				loggerName, _PRIORITY_ERROR, _APPENDER_TYPE_CONSOLE,
+				_APPENDER_TYPE_NULL),
+			_APPENDER_TYPE_NULL);
+
+		_assertAppenders(logger, _APPENDER_TYPE_CONSOLE, _APPENDER_TYPE_NULL);
 	}
 
 	@Test
@@ -227,7 +228,7 @@ public class Log4jConfigUtilTest {
 			Assert.assertSame(NullPointerException.class, throwable.getClass());
 
 			String xmlContent = _generateXMLConfigurationContent(
-				StringUtil.randomString(), _INFO);
+				StringUtil.randomString(), _PRIORITY_INFO);
 
 			xmlContent = StringUtil.removeSubstring(
 				xmlContent, "strict=\"true\"");
@@ -277,13 +278,17 @@ public class Log4jConfigUtilTest {
 	@Test
 	public void testGetJDKLevel() {
 		Assert.assertEquals(
-			"FINE", String.valueOf(Log4jConfigUtil.getJDKLevel(_DEBUG)));
+			"FINE",
+			String.valueOf(Log4jConfigUtil.getJDKLevel(_PRIORITY_DEBUG)));
 		Assert.assertEquals(
-			"SEVERE", String.valueOf(Log4jConfigUtil.getJDKLevel(_ERROR)));
+			"SEVERE",
+			String.valueOf(Log4jConfigUtil.getJDKLevel(_PRIORITY_ERROR)));
 		Assert.assertEquals(
-			"INFO", String.valueOf(Log4jConfigUtil.getJDKLevel(_INFO)));
+			"INFO",
+			String.valueOf(Log4jConfigUtil.getJDKLevel(_PRIORITY_INFO)));
 		Assert.assertEquals(
-			"WARNING", String.valueOf(Log4jConfigUtil.getJDKLevel(_WARN)));
+			"WARNING",
+			String.valueOf(Log4jConfigUtil.getJDKLevel(_PRIORITY_WARN)));
 	}
 
 	@Test
@@ -295,12 +300,12 @@ public class Log4jConfigUtilTest {
 		Assert.assertFalse(priorities.containsKey(loggerName));
 
 		Log4jConfigUtil.configureLog4J(
-			_generateXMLConfigurationContent(loggerName, _WARN));
+			_generateXMLConfigurationContent(loggerName, _PRIORITY_WARN));
 
 		priorities = Log4jConfigUtil.getPriorities();
 
 		Assert.assertEquals(
-			"The priority should be WARN by configuration", _WARN,
+			"The priority should be WARN by configuration", _PRIORITY_WARN,
 			priorities.get(loggerName));
 
 		Log4jConfigUtil.configureLog4J(
@@ -310,7 +315,7 @@ public class Log4jConfigUtilTest {
 
 		Assert.assertEquals(
 			"The level should use its parent level(root logger level is Error)",
-			_ERROR, priorities.get(loggerName));
+			_PRIORITY_ERROR, priorities.get(loggerName));
 	}
 
 	@Test
@@ -324,29 +329,29 @@ public class Log4jConfigUtilTest {
 
 		Logger logger = (Logger)LogManager.getLogger(loggerName);
 
-		_assertPriority(logger, _ERROR);
+		_assertPriority(logger, _PRIORITY_ERROR);
 
 		String childLoggerName = loggerName + ".child";
 
 		Logger childLogger = (Logger)LogManager.getLogger(childLoggerName);
 
-		_assertPriority(childLogger, _ERROR);
+		_assertPriority(childLogger, _PRIORITY_ERROR);
 
 		Log4jConfigUtil.configureLog4J(
-			_generateXMLConfigurationContent(loggerName, _WARN));
+			_generateXMLConfigurationContent(loggerName, _PRIORITY_WARN));
 
-		_assertPriority(logger, _WARN);
-		_assertPriority(childLogger, _WARN);
+		_assertPriority(logger, _PRIORITY_WARN);
+		_assertPriority(childLogger, _PRIORITY_WARN);
 
-		Log4jConfigUtil.setLevel(loggerName, _DEBUG);
+		Log4jConfigUtil.setLevel(loggerName, _PRIORITY_DEBUG);
 
-		_assertPriority(logger, _DEBUG);
-		_assertPriority(childLogger, _DEBUG);
+		_assertPriority(logger, _PRIORITY_DEBUG);
+		_assertPriority(childLogger, _PRIORITY_DEBUG);
 
-		Log4jConfigUtil.setLevel(childLoggerName, _ERROR);
+		Log4jConfigUtil.setLevel(childLoggerName, _PRIORITY_ERROR);
 
-		_assertPriority(logger, _DEBUG);
-		_assertPriority(childLogger, _ERROR);
+		_assertPriority(logger, _PRIORITY_DEBUG);
+		_assertPriority(childLogger, _PRIORITY_ERROR);
 	}
 
 	@NewEnv(type = NewEnv.Type.JVM)
@@ -378,8 +383,7 @@ public class Log4jConfigUtilTest {
 			appenders.size());
 
 		List<String> appenderRefs = TransformUtil.unsafeTransform(
-			loggerConfig.getAppenderRefs(),
-			appenderRef -> appenderRef.getRef());
+			loggerConfig.getAppenderRefs(), AppenderRef::getRef);
 
 		Assert.assertEquals(
 			appenderRefs.toString(), appenderTypes.length, appenderRefs.size());
@@ -391,7 +395,7 @@ public class Log4jConfigUtilTest {
 	}
 
 	private void _assertPriority(Logger logger, String priority) {
-		if (priority.equals(_ALL)) {
+		if (priority.equals(_PRIORITY_ALL)) {
 			Assert.assertTrue(
 				"TRACE should be enabled if logging priority is ALL",
 				logger.isTraceEnabled());
@@ -400,25 +404,32 @@ public class Log4jConfigUtilTest {
 		}
 
 		if (logger.isTraceEnabled()) {
-			Assert.assertEquals("Logging priority is wrong", priority, _TRACE);
+			Assert.assertEquals(
+				"Logging priority is wrong", priority, _PRIORITY_TRACE);
 		}
 		else if (logger.isDebugEnabled()) {
-			Assert.assertEquals("Logging priority is wrong", priority, _DEBUG);
+			Assert.assertEquals(
+				"Logging priority is wrong", priority, _PRIORITY_DEBUG);
 		}
 		else if (logger.isInfoEnabled()) {
-			Assert.assertEquals("Logging priority is wrong", priority, _INFO);
+			Assert.assertEquals(
+				"Logging priority is wrong", priority, _PRIORITY_INFO);
 		}
 		else if (logger.isWarnEnabled()) {
-			Assert.assertEquals("Logging priority is wrong", priority, _WARN);
+			Assert.assertEquals(
+				"Logging priority is wrong", priority, _PRIORITY_WARN);
 		}
 		else if (logger.isErrorEnabled()) {
-			Assert.assertEquals("Logging priority is wrong", priority, _ERROR);
+			Assert.assertEquals(
+				"Logging priority is wrong", priority, _PRIORITY_ERROR);
 		}
 		else if (logger.isFatalEnabled()) {
-			Assert.assertEquals("Logging priority is wrong", priority, _FATAL);
+			Assert.assertEquals(
+				"Logging priority is wrong", priority, _PRIORITY_FATAL);
 		}
 		else {
-			Assert.assertEquals("Logging priority is wrong", priority, _OFF);
+			Assert.assertEquals(
+				"Logging priority is wrong", priority, _PRIORITY_OFF);
 		}
 	}
 
@@ -449,18 +460,6 @@ public class Log4jConfigUtilTest {
 		return sb.toString();
 	}
 
-	private String _generateCompanyWebIdLogContextConfigurationContent() {
-		StringBundler sb = new StringBundler(5);
-
-		sb.append("<?xml version=\"1.0\"?><Configuration strict=\"true\">");
-		sb.append("<Appenders><Appender name=\"");
-		sb.append(StringUtil.randomString());
-		sb.append("\" type=\"CompanyWebIdConsole\"><Layout type=\"");
-		sb.append("PatternLayout\"/></Appender></Appenders></Configuration>");
-
-		return sb.toString();
-	}
-
 	private String _generateLog4j1XMLConfigurationContent() {
 		StringBundler sb = new StringBundler(5);
 
@@ -479,8 +478,14 @@ public class Log4jConfigUtilTest {
 		int initialCapacity =
 			(appenderTypes.length == 0) ? 7 : (9 + (9 * appenderTypes.length));
 
-		if (ArrayUtil.contains(appenderTypes, _CONSOLE, false)) {
+		if (ArrayUtil.contains(appenderTypes, _APPENDER_TYPE_CONSOLE, false)) {
 			initialCapacity = initialCapacity + 1;
+		}
+
+		if (ArrayUtil.contains(
+				appenderTypes, _APPENDER_TYPE_COMPANY_WEB_ID_CONSOLE, false)) {
+
+			initialCapacity = initialCapacity + 2;
 		}
 
 		StringBundler sb = new StringBundler(initialCapacity);
@@ -497,7 +502,13 @@ public class Log4jConfigUtilTest {
 				sb.append(appenderType);
 				sb.append("\">");
 
-				if (appenderType.equals(_CONSOLE)) {
+				if (appenderType.equals(
+						_APPENDER_TYPE_COMPANY_WEB_ID_CONSOLE)) {
+
+					sb.append("<Layout pattern=\"%X{company.webId} %m%n");
+					sb.append("\" type=\"PatternLayout\"/>");
+				}
+				else if (appenderType.equals(_APPENDER_TYPE_CONSOLE)) {
 					sb.append("<Layout type=\"PatternLayout\"/>");
 				}
 
@@ -524,13 +535,41 @@ public class Log4jConfigUtilTest {
 		return sb.toString();
 	}
 
+	private void _testCompanyWebIdConsoleAppender(
+		long[] availableCompanyIds, ByteArrayOutputStream byteArrayOutputStream,
+		long companyId,
+		MockedStatic<CompanyThreadLocal> companyThreadLocalMockedStatic,
+		String expectedLogMessage, Logger logger, String logMessage,
+		MockedStatic<PortalInstancePool> portalInstancePoolMockedStatic) {
+
+		companyThreadLocalMockedStatic.when(
+			CompanyThreadLocal::getCompanyId
+		).thenReturn(
+			companyId
+		);
+
+		portalInstancePoolMockedStatic.when(
+			PortalInstancePool::getCompanyIds
+		).thenReturn(
+			availableCompanyIds
+		);
+
+		byteArrayOutputStream.reset();
+
+		logger.log(org.apache.logging.log4j.Level.INFO, logMessage);
+
+		String actualLogMessage = byteArrayOutputStream.toString();
+
+		Assert.assertEquals(expectedLogMessage, actualLogMessage.trim());
+	}
+
 	private void _testGetCompanyLogDirectory(boolean enabled) throws Exception {
 		long companyId = CompanyThreadLocal.getCompanyId();
 
 		String loggerName = StringUtil.randomString();
 
 		Log4jConfigUtil.configureLog4J(
-			_generateXMLConfigurationContent(loggerName, _INFO));
+			_generateXMLConfigurationContent(loggerName, _PRIORITY_INFO));
 
 		try {
 			Log4jConfigUtil.getCompanyLogDirectory(companyId);
@@ -558,7 +597,7 @@ public class Log4jConfigUtilTest {
 					"COMPANY_LOG_ROUTING_TEXT_FILE",
 					tempLogFileDirPathString + "/@company.id@",
 					"liferay-@company.id@.%d{yyyy-MM-dd}.log", loggerName,
-					_INFO));
+					_PRIORITY_INFO));
 
 			Logger logger = (Logger)LogManager.getLogger(loggerName);
 
@@ -597,24 +636,27 @@ public class Log4jConfigUtilTest {
 		}
 	}
 
-	private static final String _ALL = "ALL";
+	private static final String _APPENDER_TYPE_COMPANY_WEB_ID_CONSOLE =
+		"CompanyWebIdConsole";
 
-	private static final String _CONSOLE = "CONSOLE";
+	private static final String _APPENDER_TYPE_CONSOLE = "CONSOLE";
 
-	private static final String _DEBUG = "DEBUG";
+	private static final String _APPENDER_TYPE_NULL = "NULL";
 
-	private static final String _ERROR = "ERROR";
+	private static final String _PRIORITY_ALL = "ALL";
 
-	private static final String _FATAL = "FATAL";
+	private static final String _PRIORITY_DEBUG = "DEBUG";
 
-	private static final String _INFO = "INFO";
+	private static final String _PRIORITY_ERROR = "ERROR";
 
-	private static final String _NULL = "NULL";
+	private static final String _PRIORITY_FATAL = "FATAL";
 
-	private static final String _OFF = "OFF";
+	private static final String _PRIORITY_INFO = "INFO";
 
-	private static final String _TRACE = "TRACE";
+	private static final String _PRIORITY_OFF = "OFF";
 
-	private static final String _WARN = "WARN";
+	private static final String _PRIORITY_TRACE = "TRACE";
+
+	private static final String _PRIORITY_WARN = "WARN";
 
 }

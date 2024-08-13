@@ -638,6 +638,10 @@ components:
                     description:
                         The address's type.
                     type: string
+                externalReferenceCode:
+                    description:
+                        The optional external key of this address.
+                    type: string
                 id:
                     description:
                         The address's ID.
@@ -1319,7 +1323,7 @@ components:
 info:
     description:
         "A Java client JAR is available for use with the group ID 'com.liferay', artifact ID
-        'com.liferay.headless.admin.user.client', and version '4.0.64'."
+        'com.liferay.headless.admin.user.client', and version '4.0.65'."
     license:
         name: "Apache 2.0"
         url: "http://www.apache.org/licenses/LICENSE-2.0.html"
@@ -1438,6 +1442,51 @@ paths:
                         application/json: {}
                         application/xml: {}
             tags: ["AccountGroup"]
+    "/account-groups/by-external-reference-code/{accountGroupExternalReferenceCode}/accounts":
+        get:
+            description:
+                Retrieves the list of accounts in an account group.
+            operationId: getAccountGroupByExternalReferenceCodeAccountsPage
+            parameters:
+                - in: path
+                  name: accountGroupExternalReferenceCode
+                  required: true
+                  schema:
+                      type: string
+                - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
+                  name: page
+                  schema:
+                      type: integer
+                - in: query
+                  name: pageSize
+                  schema:
+                      type: integer
+                - in: query
+                  name: search
+                  schema:
+                      type: string
+                - in: query
+                  name: sort
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Account"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Account"
+                                type: array
+            tags: ["Account"]
     "/account-groups/by-external-reference-code/{externalReferenceCode}":
         delete:
             # @review
@@ -1645,6 +1694,52 @@ paths:
                     description:
                         "AccountGroup successfully replaced"
             tags: ["AccountGroup"]
+    "/account-groups/{accountGroupId}/accounts":
+        get:
+            description:
+                Retrieves the list of accounts in an account group.
+            operationId: getAccountGroupAccountsPage
+            parameters:
+                - in: path
+                  name: accountGroupId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
+                  name: page
+                  schema:
+                      type: integer
+                - in: query
+                  name: pageSize
+                  schema:
+                      type: integer
+                - in: query
+                  name: search
+                  schema:
+                      type: string
+                - in: query
+                  name: sort
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Account"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Account"
+                                type: array
+            tags: ["Account"]
     "/accounts":
         get:
             # @review
@@ -4491,6 +4586,99 @@ paths:
                             schema:
                                 $ref: "#/components/schemas/Phone"
             tags: ["Phone"]
+    "/postal-addresses/by-external-reference-code/{externalReferenceCode}":
+        delete:
+            description:
+                Deletes the postal address using external reference code.
+            operationId: deletePostalAddressByExternalReferenceCode
+            parameters:
+                - in: path
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                        application/xml: {}
+            tags: ["PostalAddress"]
+        get:
+            description:
+                Retrieves the postal address using external reference code.
+            operationId: getPostalAddressByExternalReferenceCode
+            parameters:
+                - in: path
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/PostalAddress"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/PostalAddress"
+            tags: ["PostalAddress"]
+        patch:
+            description:
+                Updates the postal address using external reference code.
+            operationId: patchPostalAddressByExternalReferenceCode
+            parameters:
+                - in: path
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/PostalAddress"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/PostalAddress"
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/PostalAddress"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/PostalAddress"
+            tags: ["PostalAddress"]
+        put:
+            description:
+                Updates the postal address using external reference code.
+            operationId: putPostalAddressByExternalReferenceCode
+            parameters:
+                - in: path
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/PostalAddress"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/PostalAddress"
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/PostalAddress"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/PostalAddress"
+            tags: ["PostalAddress"]
     "/postal-addresses/{postalAddressId}":
         delete:
             description:
@@ -4675,6 +4863,34 @@ paths:
                             schema:
                                 $ref: "#/components/schemas/Role"
             tags: ["Role"]
+        patch:
+            description:
+                update the given Role
+            operationId: patchRoleByExternalReferenceCode
+            parameters:
+                - in: path
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/Role"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/Role"
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Role"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Role"
+            tags: ["Role"]
         put:
             description:
                 update the given Role
@@ -4738,6 +4954,124 @@ paths:
                       type: string
                 - in: path
                   name: userAccountId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+            responses:
+                200:
+                    content:
+                        application/json: {}
+                        application/xml: {}
+            tags: ["Role"]
+    "/roles/by-external-reference-code/{externalReferenceCode}/association/user-account/{userAccountId}/organization/{organizationId}":
+        delete:
+            # @review
+            description:
+                Unassociates an organization role by external reference code with a user account
+            operationId: deleteOrganizationRoleByExternalReferenceCodeUserAccountAssociation
+            parameters:
+                - in: path
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      type: string
+                - in: path
+                  name: userAccountId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: path
+                  name: organizationId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                        application/xml: {}
+            tags: ["Role"]
+        post:
+            # @review
+            description:
+                Associates a organization role by external reference code with a user account
+            operationId: postOrganizationRoleByExternalReferenceCodeUserAccountAssociation
+            parameters:
+                - in: path
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      type: string
+                - in: path
+                  name: userAccountId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: path
+                  name: organizationId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+            responses:
+                200:
+                    content:
+                        application/json: {}
+                        application/xml: {}
+            tags: ["Role"]
+    "/roles/by-external-reference-code/{externalReferenceCode}/association/user-account/{userAccountId}/site/{siteId}":
+        delete:
+            # @review
+            description:
+                Unassociates a site role by external reference code with a user account
+            operationId: deleteSiteRoleByExternalReferenceCodeUserAccountAssociation
+            parameters:
+                - in: path
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      type: string
+                - in: path
+                  name: userAccountId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: path
+                  name: siteId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                        application/xml: {}
+            tags: ["Role"]
+        post:
+            # @review
+            description:
+                Associates a site role by external reference code with a user account
+            operationId: postSiteRoleByExternalReferenceCodeUserAccountAssociation
+            parameters:
+                - in: path
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      type: string
+                - in: path
+                  name: userAccountId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: path
+                  name: siteId
                   required: true
                   schema:
                       format: int64

@@ -6,14 +6,10 @@
 package com.liferay.testray.rest.internal.resource.v1_0;
 
 import com.liferay.petra.string.StringBundler;
-import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.UserConstants;
 import com.liferay.portal.kernel.security.auth.FullNameGenerator;
 import com.liferay.portal.kernel.security.auth.FullNameGeneratorFactory;
-import com.liferay.portal.kernel.service.RoleLocalService;
-import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.vulcan.pagination.Page;
@@ -22,15 +18,24 @@ import com.liferay.testray.rest.dto.v1_0.TestrayCaseResult;
 import com.liferay.testray.rest.internal.util.TestrayUtil;
 import com.liferay.testray.rest.resource.v1_0.TestrayCaseResultResource;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+
 import java.net.URI;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
+
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
+
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ServiceScope;
 
 /**
@@ -158,10 +163,12 @@ public class TestrayCaseResultResourceImpl
 
 		long totalCount = TestrayUtil.getTotalCount(sql, params);
 
-		sql += " limit ? offset ?";
+		if (pagination != null) {
+			sql += " limit ? offset ?";
 
-		params.add(pagination.getPageSize());
-		params.add(pagination.getStartPosition());
+			params.add(pagination.getPageSize());
+			params.add(pagination.getStartPosition());
+		}
 
 		List<Map<String, Object>> values = TestrayUtil.executeQuery(
 			sql, params);
@@ -213,11 +220,11 @@ public class TestrayCaseResultResourceImpl
 			String issues, Boolean noComment, Boolean noError, Boolean noIssues,
 			String priority, String status, String testrayCaseName,
 			String testrayCaseTypeIds, String testrayComponentIds,
-			String testrayRunId, String testrayRunName, String testrayTeamIds,
-			String testrayUserId, Pagination pagination)
+			String testrayRunId, String testrayRunName, String testraySubtaskId,
+			String testrayTeamIds, String testrayUserId, Pagination pagination)
 		throws Exception {
 
-		StringBundler sb = new StringBundler(49);
+		StringBundler sb = new StringBundler(50);
 
 		sb.append("select cr.c_caseResultId_, cr.comment_, cr.dueStatus_, ");
 		sb.append("cr.errors_, cr.issues_, ct.name_ as caseTypeName, c.name_ ");
@@ -316,6 +323,11 @@ public class TestrayCaseResultResourceImpl
 			params.add("%" + testrayRunName + "%");
 		}
 
+		if (Validator.isNotNull(testraySubtaskId)) {
+			sb.append("and cr.r_subtaskToCaseResults_c_subtaskId = ? ");
+			params.add(testraySubtaskId);
+		}
+
 		if (Validator.isNotNull(testrayTeamIds)) {
 			sb.append("and co.r_teamToComponents_c_teamId in (");
 			sb.append(TestrayUtil.interpolateParams(params, testrayTeamIds));
@@ -338,10 +350,12 @@ public class TestrayCaseResultResourceImpl
 
 		long totalCount = TestrayUtil.getTotalCount(sql, params);
 
-		sql += " limit ? offset ?";
+		if (pagination != null) {
+			sql += " limit ? offset ?";
 
-		params.add(pagination.getPageSize());
-		params.add(pagination.getStartPosition());
+			params.add(pagination.getPageSize());
+			params.add(pagination.getStartPosition());
+		}
 
 		List<Map<String, Object>> values = TestrayUtil.executeQuery(
 			sql, params);
@@ -351,10 +365,10 @@ public class TestrayCaseResultResourceImpl
 				values,
 				value -> new TestrayCaseResult() {
 					{
-						actions = _getActions(value);
 						comment = GetterUtil.getString(value.get("comment_"));
 						error = GetterUtil.getString(value.get("errors_"));
-						flaky = GetterUtil.getBoolean(value.get("flaky_"));
+						flaky = GetterUtil.getBoolean(
+							String.valueOf(value.get("flaky_")));
 						issues = GetterUtil.getString(value.get("issues_"));
 						priority = GetterUtil.getLong(value.get("priority_"));
 						status = GetterUtil.getString(value.get("dueStatus_"));
@@ -373,17 +387,6 @@ public class TestrayCaseResultResourceImpl
 						testrayTeamName = GetterUtil.getString(
 							value.get("teamName"));
 
-						setUserImgUrl(
-							() -> {
-								if (value.get("portraitId") == null) {
-									return null;
-								}
-
-								return UserConstants.getPortraitURL(
-									"/image", true,
-									GetterUtil.getLong(value.get("portraitId")),
-									GetterUtil.getString(value.get("uuid_")));
-							});
 						setUserName(
 							() -> {
 								FullNameGenerator fullNameGenerator =
@@ -397,58 +400,87 @@ public class TestrayCaseResultResourceImpl
 									GetterUtil.getString(
 										value.get("lastName")));
 							});
+						setUserPortraitUrl(
+							() -> {
+								long portraitId = GetterUtil.getLong(
+									value.get("portraitId"));
+
+								if (portraitId == 0) {
+									return null;
+								}
+
+								return UserConstants.getPortraitURL(
+									"/image", true, portraitId,
+									GetterUtil.getString(value.get("uuid_")));
+							});
 					}
 				}),
 			pagination, totalCount);
 	}
 
-	private Map<String, Map<String, String>> _getActions(
-		Map<String, Object> value) {
+	@Override
+	public Response getTestrayExportCaseResultTestrayBuild(
+		Long testrayBuildId) {
 
-		try {
-			if (!ArrayUtil.contains(
-					contextUser.getRoleIds(),
-					_roleLocalService.getRole(
-						contextUser.getCompanyId(), "Testray Administrator"
-					).getRoleId()) &&
-				!ArrayUtil.contains(
-					contextUser.getRoleIds(),
-					_roleLocalService.getRole(
-						contextUser.getCompanyId(), "Testray Lead"
-					).getRoleId())) {
+		return Response.ok(
+			new StreamingOutput() {
 
-				return null;
+				@Override
+				public void write(OutputStream outputStream)
+					throws IOException {
+
+					_write(outputStream, testrayBuildId);
+				}
+
 			}
-		}
-		catch (PortalException portalException) {
-			throw new RuntimeException(portalException);
-		}
-
-		URI baseURI = contextUriInfo.getBaseUri();
-
-		String href =
-			baseURI.getScheme() + "://" + baseURI.getAuthority() +
-				"/o/c/caseresults/" + value.get("c_caseResultId_");
-
-		return new HashMap<>(
-			HashMapBuilder.put(
-				"delete",
-				HashMapBuilder.put(
-					"href", href
-				).put(
-					"method", "DELETE"
-				).build()
-			).put(
-				"update",
-				HashMapBuilder.put(
-					"href", href
-				).put(
-					"method", "PUT"
-				).build()
-			).build());
+		).header(
+			"Content-Disposition", "attachment; filename=\"case_results.csv\""
+		).build();
 	}
 
-	@Reference
-	private RoleLocalService _roleLocalService;
+	private void _write(OutputStream outputStream, long testrayBuildId)
+		throws IOException {
+
+		try (CSVPrinter csvPrinter = new CSVPrinter(
+				new BufferedWriter(new OutputStreamWriter(outputStream)),
+				CSVFormat.DEFAULT.builder(
+				).setHeader(
+					"Case Name", "Case Type", "Priority", "Team", "Component",
+					"Run Number", "Run Name", "Assignee", "Status", "Issues",
+					"Errors", "Comments", "Case Result URL"
+				).build())) {
+
+			Page<TestrayCaseResult> page =
+				getTestrayCaseResultsTestrayBuildPage(
+					testrayBuildId, null, null, null, null, null, null, null,
+					null, null, null, null, null, null, null, null, null, null,
+					null);
+
+			for (TestrayCaseResult testrayCaseResult : page.getItems()) {
+				URI uri = contextUriInfo.getBaseUri();
+
+				csvPrinter.printRecord(
+					testrayCaseResult.getTestrayCaseName(),
+					testrayCaseResult.getTestrayCaseTypeName(),
+					testrayCaseResult.getPriority(),
+					testrayCaseResult.getTestrayTeamName(),
+					testrayCaseResult.getTestrayComponentName(),
+					testrayCaseResult.getTestrayRunNumber(),
+					testrayCaseResult.getTestrayRunName(),
+					testrayCaseResult.getUserName(),
+					testrayCaseResult.getStatus(),
+					testrayCaseResult.getIssues(), testrayCaseResult.getError(),
+					testrayCaseResult.getComment(),
+					uri.getScheme() + "://" + uri.getAuthority() +
+						"/#/case-result/" +
+							testrayCaseResult.getTestrayCaseResultId());
+			}
+
+			csvPrinter.flush();
+		}
+		catch (Exception exception) {
+			throw new IOException(exception);
+		}
+	}
 
 }

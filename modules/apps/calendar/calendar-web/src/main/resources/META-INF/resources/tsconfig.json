@@ -1,5 +1,5 @@
 {
-	"@generated": "cf6dcdcbe2ff1aaf67f7414b151acd61cbc722ce",
+	"@generated": "042cc59442c8107a5d4a462032cd9e8658b67d56",
 	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
@@ -14,9 +14,10 @@
 		"paths": {
 		},
 		"rootDir": "../../../../../../../..",
+		"skipLibCheck": true,
 		"sourceMap": false,
 		"strict": true,
-		"target": "es2020",
+		"target": "esnext",
 		"tsBuildInfoFile": "../../../../../../../../.tsc/buildinfo/calendar-web.tsbuildinfo",
 		"typeRoots": [
 			"../../../../../../../../node_modules/@types"

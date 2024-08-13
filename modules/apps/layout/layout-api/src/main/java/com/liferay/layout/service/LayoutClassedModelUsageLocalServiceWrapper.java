@@ -274,14 +274,15 @@ public class LayoutClassedModelUsageLocalServiceWrapper
 
 	@Override
 	public LayoutClassedModelUsage fetchLayoutClassedModelUsage(
-		long classNameId, long classPK,
+		long groupId, long classNameId, long classPK,
 		String classedModelExternalReferenceCode, String containerKey,
 		long containerType, long plid) {
 
 		return _layoutClassedModelUsageLocalService.
 			fetchLayoutClassedModelUsage(
-				classNameId, classPK, classedModelExternalReferenceCode,
-				containerKey, containerType, plid);
+				groupId, classNameId, classPK,
+				classedModelExternalReferenceCode, containerKey, containerType,
+				plid);
 	}
 
 	/**
@@ -523,6 +524,18 @@ public class LayoutClassedModelUsageLocalServiceWrapper
 
 		return _layoutClassedModelUsageLocalService.
 			updateLayoutClassedModelUsage(layoutClassedModelUsage);
+	}
+
+	@Override
+	public LayoutClassedModelUsage updateLayoutClassedModelUsage(
+			long classNameId, long classPK, String containerKey,
+			long containerType, long layoutClassedModelUsageId, long plid)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _layoutClassedModelUsageLocalService.
+			updateLayoutClassedModelUsage(
+				classNameId, classPK, containerKey, containerType,
+				layoutClassedModelUsageId, plid);
 	}
 
 	@Override

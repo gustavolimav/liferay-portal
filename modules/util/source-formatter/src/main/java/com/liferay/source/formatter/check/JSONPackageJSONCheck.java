@@ -64,23 +64,29 @@ public class JSONPackageJSONCheck extends BaseFileCheck {
 
 		_checkIncorrectEntry(fileName, jsonObject, "devDependencies");
 
-		if (absolutePath.endsWith("frontend-theme-admin") ||
-			absolutePath.endsWith("frontend-theme-classic") ||
-			absolutePath.endsWith("frontend-theme-styled") ||
-			absolutePath.endsWith("frontend-theme-unstyled")) {
+		if (absolutePath.endsWith("commerce-theme-minium/package.json") ||
+			absolutePath.endsWith("commerce-theme-speedwell/package.json") ||
+			absolutePath.endsWith("frontend-theme-admin/package.json") ||
+			absolutePath.endsWith("frontend-theme-classic/package.json") ||
+			absolutePath.endsWith("frontend-theme-dialect/package.json") ||
+			absolutePath.endsWith("frontend-theme-styled/package.json") ||
+			absolutePath.endsWith("frontend-theme-unstyled/package.json")) {
 
 			_checkScript(
-				fileName, scriptsJSONObject, "build", false, "theme build");
+				fileName, scriptsJSONObject, "build", false, "theme build",
+				"build:theme");
 		}
 		else {
 			_checkScript(
 				fileName, scriptsJSONObject, "build", false, "build",
-				"webpack");
+				"build:custom", "webpack");
 		}
 
 		_checkScript(
-			fileName, scriptsJSONObject, "checkFormat", true, "--check");
-		_checkScript(fileName, scriptsJSONObject, "format", true, "format");
+			fileName, scriptsJSONObject, "checkFormat", true, "--check",
+			"check", "check:ci");
+		_checkScript(
+			fileName, scriptsJSONObject, "format", true, "fix", "format");
 
 		return content;
 	}

@@ -113,13 +113,25 @@ public class RoleLocalServiceTest {
 		}
 
 		_role = _roleLocalService.addRole(
-			TestPropsValues.getUserId(), null, 0, RandomTestUtil.randomString(),
-			null,
+			RandomTestUtil.randomString(), TestPropsValues.getUserId(), null, 0,
+			RandomTestUtil.randomString(), null,
 			Collections.singletonMap(
 				LocaleUtil.US, RandomTestUtil.randomString(4001)),
 			RoleConstants.TYPE_REGULAR, null, null);
 
 		Assert.assertNotNull(_role);
+	}
+
+	@Test
+	public void testAddRoleWithoutExternalReferenceCode() throws Exception {
+		_role = _roleLocalService.addRole(
+			null, TestPropsValues.getUserId(), null, 0,
+			RandomTestUtil.randomString(), null,
+			Collections.singletonMap(
+				LocaleUtil.US, RandomTestUtil.randomString()),
+			RoleConstants.TYPE_REGULAR, null, null);
+
+		Assert.assertNotNull(_role.getExternalReferenceCode());
 	}
 
 	@Test
@@ -251,7 +263,7 @@ public class RoleLocalServiceTest {
 			}
 		}
 
-		Comparator roleIdComparator = new RoleRoleIdComparator();
+		Comparator roleIdComparator = RoleRoleIdComparator.getInstance(false);
 
 		Collections.sort(actualRoles, roleIdComparator);
 		Collections.sort(expectedRoles, roleIdComparator);
@@ -315,7 +327,8 @@ public class RoleLocalServiceTest {
 		actualRoles = new ArrayList(actualRoles);
 		expectedRoles = new ArrayList(expectedRoles);
 
-		Comparator<Role> roleIdComparator = new RoleRoleIdComparator();
+		Comparator<Role> roleIdComparator = RoleRoleIdComparator.getInstance(
+			false);
 
 		Collections.sort(actualRoles, roleIdComparator);
 		Collections.sort(expectedRoles, roleIdComparator);
@@ -331,12 +344,13 @@ public class RoleLocalServiceTest {
 		String keyword = RandomTestUtil.randomString();
 
 		Role role1 = _roleLocalService.addRole(
-			userId, null, 0, keyword,
+			RandomTestUtil.randomString(), userId, null, 0, keyword,
 			Collections.singletonMap(LocaleUtil.getDefault(), keyword),
 			Collections.emptyMap(), RoleConstants.TYPE_SITE, StringPool.BLANK,
 			new ServiceContext());
 		Role role2 = _roleLocalService.addRole(
-			userId, null, 0, StringUtil.randomString(),
+			RandomTestUtil.randomString(), userId, null, 0,
+			StringUtil.randomString(),
 			Collections.singletonMap(
 				LocaleUtil.getDefault(), StringUtil.randomString()),
 			Collections.singletonMap(LocaleUtil.getDefault(), keyword),

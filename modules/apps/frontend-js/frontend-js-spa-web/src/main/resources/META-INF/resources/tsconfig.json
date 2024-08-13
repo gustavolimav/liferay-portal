@@ -1,5 +1,5 @@
 {
-	"@generated": "162ad2feee80359fa4553cbcb6e1a0a525faf4b4",
+	"@generated": "29759a0d31913875f3881946866b38f6423579eb",
 	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
@@ -17,9 +17,10 @@
 			]
 		},
 		"rootDir": "../../../../../../../..",
+		"skipLibCheck": true,
 		"sourceMap": false,
 		"strict": true,
-		"target": "es2020",
+		"target": "esnext",
 		"tsBuildInfoFile": "../../../../../../../../.tsc/buildinfo/frontend-js-spa-web.tsbuildinfo",
 		"typeRoots": [
 			"../../../../../../../../node_modules/@types"

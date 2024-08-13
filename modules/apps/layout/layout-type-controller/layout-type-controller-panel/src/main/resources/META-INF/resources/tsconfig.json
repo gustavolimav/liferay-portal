@@ -1,5 +1,5 @@
 {
-	"@generated": "550f22e6308538505ebf41f023d9f524d53c1ff2",
+	"@generated": "76f5f93a6ab694f8601c4f4690d2add2521b3ad0",
 	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
@@ -14,9 +14,10 @@
 		"paths": {
 		},
 		"rootDir": "../../../../../../../../..",
+		"skipLibCheck": true,
 		"sourceMap": false,
 		"strict": true,
-		"target": "es2020",
+		"target": "esnext",
 		"tsBuildInfoFile": "../../../../../../../../../.tsc/buildinfo/@liferay/layout-type-controller-panel.tsbuildinfo",
 		"typeRoots": [
 			"../../../../../../../../../node_modules/@types"

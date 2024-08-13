@@ -212,7 +212,7 @@ public class ObjectEntryVariablesUtil {
 						return null;
 					}
 
-					return MapUtil.getString(objectEntry, "userId");
+					return MapUtil.getLong(objectEntry, "userId");
 				}
 			).put(
 				"currentDate",
@@ -232,7 +232,7 @@ public class ObjectEntryVariablesUtil {
 					return dateFormat.format(new Date());
 				}
 			).put(
-				"currentUserId", payloadJSONObject.getString("userId")
+				"currentUserId", payloadJSONObject.getLong("userId")
 			).put(
 				"groupId",
 				() -> {
@@ -260,7 +260,11 @@ public class ObjectEntryVariablesUtil {
 				contentType, objectDefinition, oldValues, payloadJSONObject);
 
 			if (variables == null) {
-				return payloadJSONObject.toMap();
+				return HashMapBuilder.<String, Object>putAll(
+					allowedVariables
+				).putAll(
+					payloadJSONObject.toMap()
+				).build();
 			}
 
 			allowedVariables.put(

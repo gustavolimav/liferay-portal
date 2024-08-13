@@ -12,7 +12,11 @@ import React, {useEffect, useState} from 'react';
 
 import {IDataSet} from '../DataSets';
 import {FDSViewType} from '../FDSViews';
-import {API_URL, OBJECT_RELATIONSHIP} from '../utils/constants';
+import {
+	API_URL,
+	DEFAULT_FETCH_HEADERS,
+	OBJECT_RELATIONSHIP,
+} from '../utils/constants';
 import getFields from '../utils/getFields';
 import openDefaultFailureToast from '../utils/openDefaultFailureToast';
 import {IFieldTreeItem} from '../utils/types';
@@ -22,7 +26,6 @@ import Filters from './filters/Filters';
 import Pagination from './pagination/Pagination';
 import Settings from './settings/Settings';
 import Sorting from './sorting/Sorting';
-import SortingDeprecated from './sorting/SortingDeprecated';
 import VisualizationModes from './visualization_modes/VisualizationModes';
 
 const NAVIGATION_BAR_ITEMS = [
@@ -38,15 +41,10 @@ const NAVIGATION_BAR_ITEMS = [
 		Component: Filters,
 		label: Liferay.Language.get('filters'),
 	},
-	Liferay.FeatureFlags['LPD-19465']
-		? {
-				Component: Sorting,
-				label: Liferay.Language.get('sorting'),
-			}
-		: {
-				Component: SortingDeprecated,
-				label: Liferay.Language.get('sorting'),
-			},
+	{
+		Component: Sorting,
+		label: Liferay.Language.get('sorting'),
+	},
 	{
 		Component: Actions,
 		label: Liferay.Language.get('actions'),
@@ -72,6 +70,7 @@ export interface IDataSetSectionProps {
 	onDataSetUpdate: (data: FDSViewType) => void;
 	restApplications: string[];
 	saveFDSFieldsURL: string;
+	saveFDSSortURL: string;
 	spritemap: string;
 }
 
@@ -84,6 +83,7 @@ const DataSet = ({
 	namespace,
 	restApplications,
 	saveFDSFieldsURL,
+	saveFDSSortURL,
 	spritemap,
 }: {
 	backURL: string;
@@ -94,6 +94,7 @@ const DataSet = ({
 	namespace: string;
 	restApplications: string[];
 	saveFDSFieldsURL: string;
+	saveFDSSortURL: string;
 	spritemap: string;
 }) => {
 	const [activeIndex, setActiveIndex] = useState(0);
@@ -110,9 +111,7 @@ const DataSet = ({
 				: `${API_URL.DATA_SETS}/${fdsViewId}?nestedFields=${OBJECT_RELATIONSHIP.FDS_ENTRY_FDS_VIEW}`;
 
 			const response = await fetch(url, {
-				headers: {
-					Accept: 'application/json',
-				},
+				headers: DEFAULT_FETCH_HEADERS,
 			});
 
 			const responseJSON = await response.json();
@@ -178,6 +177,7 @@ const DataSet = ({
 						}}
 						restApplications={restApplications}
 						saveFDSFieldsURL={saveFDSFieldsURL}
+						saveFDSSortURL={saveFDSSortURL}
 						spritemap={spritemap}
 					/>
 				)

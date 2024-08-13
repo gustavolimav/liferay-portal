@@ -41,8 +41,10 @@ import com.liferay.jenkins.results.parser.WorkspaceGitRepository;
 import com.liferay.jenkins.results.parser.job.property.JobProperty;
 import com.liferay.jenkins.results.parser.job.property.JobPropertyFactory;
 import com.liferay.jenkins.results.parser.test.clazz.TestClass;
+import com.liferay.jenkins.results.parser.test.clazz.TestClassMethod;
 import com.liferay.jenkins.results.parser.test.clazz.group.AxisTestClassGroup;
 import com.liferay.jenkins.results.parser.test.clazz.group.FunctionalAxisTestClassGroup;
+import com.liferay.jenkins.results.parser.test.clazz.group.JSUnitAxisTestClassGroup;
 import com.liferay.jenkins.results.parser.test.clazz.group.JUnitAxisTestClassGroup;
 import com.liferay.jenkins.results.parser.test.clazz.group.PlaywrightAxisTestClassGroup;
 
@@ -583,15 +585,18 @@ public class TestrayImporter {
 			}
 
 			if (testrayProductVersion == null) {
-				PortalGitWorkingDirectory portalGitWorkingDirectory =
-					_getPortalGitWorkingDirectory();
+				JobProperty jobProperty = _getJobProperty(
+					"testray.product.version.name", testBaseDir);
 
-				testrayProductVersion =
-					testrayProject.createTestrayProductVersion(
-						_replaceEnvVars(
-							portalGitWorkingDirectory.getMajorPortalVersion() +
-								".x",
-							true));
+				testrayProductVersionName = jobProperty.getValue();
+
+				if (!JenkinsResultsParserUtil.isNullOrEmpty(
+						testrayProductVersionName)) {
+
+					testrayProductVersion =
+						testrayProject.createTestrayProductVersion(
+							_replaceEnvVars(testrayProductVersionName, true));
+				}
 			}
 
 			PortalRelease portalRelease = getPortalRelease();
@@ -1063,6 +1068,23 @@ public class TestrayImporter {
 										axisTestClassGroup, testClass));
 							}
 						}
+						else if (axisTestClassGroup instanceof
+									JSUnitAxisTestClassGroup) {
+
+							for (TestClass testClass :
+									axisTestClassGroup.getTestClasses()) {
+
+								for (TestClassMethod testClassMethod :
+										testClass.getTestClassMethods()) {
+
+									testrayCaseResults.add(
+										TestrayFactory.newTestrayCaseResult(
+											testrayBuild, getTopLevelBuild(),
+											axisTestClassGroup, testClass,
+											testClassMethod));
+								}
+							}
+						}
 						else {
 							testrayCaseResults.add(
 								TestrayFactory.newTestrayCaseResult(
@@ -1091,6 +1113,10 @@ public class TestrayImporter {
 							testcasePropertiesMap.put(
 								"testray.team.name",
 								testrayCaseResult.getTeamName());
+							testcasePropertiesMap.put(
+								"testray.testcase.duration",
+								String.valueOf(
+									testrayCaseResult.getDuration()));
 
 							String testrayCaseName =
 								testrayCaseResult.getName();
@@ -1219,7 +1245,7 @@ public class TestrayImporter {
 			callables, _executorService, "recordTestrayCaseResults");
 
 		try {
-			parallelExecutor.execute();
+			parallelExecutor.execute(60L * 180L);
 		}
 		catch (TimeoutException timeoutException) {
 			throw new RuntimeException(timeoutException);
@@ -1245,7 +1271,8 @@ public class TestrayImporter {
 			}
 
 			if (!(testrayBuild instanceof Testray1TestrayBuild) &&
-				(testray1ImportEnabled != null)) {
+				(testray1ImportEnabled != null) &&
+				testray1ImportEnabled.equals("true")) {
 
 				TestrayProject testrayProject =
 					testrayBuild.getTestrayProject();
@@ -1298,7 +1325,7 @@ public class TestrayImporter {
 				workspaceGitRepository.addPropertyOption(
 					workspaceGitRepository.getUpstreamBranchName());
 
-				String dockerEnabled = System.getenv("DOCKER_ENABLED");
+				String dockerEnabled = System.getenv("LIFERAY_DOCKER_ENABLED");
 
 				if ((dockerEnabled != null) && dockerEnabled.equals("true")) {
 					workspaceGitRepository.addPropertyOption("docker");
@@ -1566,6 +1593,11 @@ public class TestrayImporter {
 
 		TestrayRoutine testrayRoutine = testrayProject.getTestrayRoutineByName(
 			testrayRoutineName);
+
+		if (testrayRoutine == null) {
+			testrayRoutine = testrayProject.createTestrayRoutine(
+				testrayRoutineName);
+		}
 
 		TestrayProductVersion testrayProductVersion =
 			testrayProject.getTestrayProductVersionByName(

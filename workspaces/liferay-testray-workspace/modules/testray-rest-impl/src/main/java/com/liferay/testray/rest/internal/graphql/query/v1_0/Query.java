@@ -14,9 +14,11 @@ import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.testray.rest.dto.v1_0.TestrayCaseResult;
 import com.liferay.testray.rest.dto.v1_0.TestrayRunComparison;
 import com.liferay.testray.rest.dto.v1_0.TestrayStatusMetric;
+import com.liferay.testray.rest.dto.v1_0.TestrayTestFlow;
 import com.liferay.testray.rest.resource.v1_0.TestrayCaseResultResource;
 import com.liferay.testray.rest.resource.v1_0.TestrayRunComparisonResource;
 import com.liferay.testray.rest.resource.v1_0.TestrayStatusMetricResource;
+import com.liferay.testray.rest.resource.v1_0.TestrayTestFlowResource;
 
 import java.util.Map;
 import java.util.function.BiFunction;
@@ -26,6 +28,7 @@ import javax.annotation.Generated;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import org.osgi.service.component.ComponentServiceObjects;
@@ -59,6 +62,14 @@ public class Query {
 
 		_testrayStatusMetricResourceComponentServiceObjects =
 			testrayStatusMetricResourceComponentServiceObjects;
+	}
+
+	public static void setTestrayTestFlowResourceComponentServiceObjects(
+		ComponentServiceObjects<TestrayTestFlowResource>
+			testrayTestFlowResourceComponentServiceObjects) {
+
+		_testrayTestFlowResourceComponentServiceObjects =
+			testrayTestFlowResourceComponentServiceObjects;
 	}
 
 	/**
@@ -103,7 +114,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {testrayCaseResultsTestrayBuild(comment: ___, error: ___, flaky: ___, issues: ___, noComment: ___, noError: ___, noIssues: ___, page: ___, pageSize: ___, priority: ___, status: ___, testrayBuildId: ___, testrayCaseName: ___, testrayCaseTypeIds: ___, testrayComponentIds: ___, testrayRunId: ___, testrayRunName: ___, testrayTeamIds: ___, userId: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {testrayCaseResultsTestrayBuild(comment: ___, error: ___, flaky: ___, issues: ___, noComment: ___, noError: ___, noIssues: ___, page: ___, pageSize: ___, priority: ___, status: ___, testrayBuildId: ___, testrayCaseName: ___, testrayCaseTypeIds: ___, testrayComponentIds: ___, testrayRunId: ___, testrayRunName: ___, testraySubtaskId: ___, testrayTeamIds: ___, userId: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
 	public TestrayCaseResultPage testrayCaseResultsTestrayBuild(
@@ -122,6 +133,7 @@ public class Query {
 			@GraphQLName("testrayComponentIds") String testrayComponentIds,
 			@GraphQLName("testrayRunId") String testrayRunId,
 			@GraphQLName("testrayRunName") String testrayRunName,
+			@GraphQLName("testraySubtaskId") String testraySubtaskId,
 			@GraphQLName("testrayTeamIds") String testrayTeamIds,
 			@GraphQLName("userId") String userId,
 			@GraphQLName("pageSize") int pageSize,
@@ -136,8 +148,26 @@ public class Query {
 					testrayBuildId, comment, error, flaky, issues, noComment,
 					noError, noIssues, priority, status, testrayCaseName,
 					testrayCaseTypeIds, testrayComponentIds, testrayRunId,
-					testrayRunName, testrayTeamIds, userId,
+					testrayRunName, testraySubtaskId, testrayTeamIds, userId,
 					Pagination.of(page, pageSize))));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {testrayExportCaseResultTestrayBuild(testrayBuildId: ___){}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public Response testrayExportCaseResultTestrayBuild(
+			@GraphQLName("testrayBuildId") Long testrayBuildId)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_testrayCaseResultResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			testrayCaseResultResource ->
+				testrayCaseResultResource.
+					getTestrayExportCaseResultTestrayBuild(testrayBuildId));
 	}
 
 	/**
@@ -427,6 +457,36 @@ public class Query {
 						Pagination.of(page, pageSize))));
 	}
 
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {testrayTestFlowTestraySubtask(error: ___, issues: ___, name: ___, noIssues: ___, page: ___, pageSize: ___, status: ___, testrayComponentIds: ___, testrayTaskId: ___, testrayTeamIds: ___, userId: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public TestrayTestFlowPage testrayTestFlowTestraySubtask(
+			@GraphQLName("error") String error,
+			@GraphQLName("issues") String issues,
+			@GraphQLName("name") String name,
+			@GraphQLName("noIssues") Boolean noIssues,
+			@GraphQLName("status") String status,
+			@GraphQLName("testrayComponentIds") String testrayComponentIds,
+			@GraphQLName("testrayTaskId") Long testrayTaskId,
+			@GraphQLName("testrayTeamIds") String testrayTeamIds,
+			@GraphQLName("userId") String userId,
+			@GraphQLName("pageSize") int pageSize,
+			@GraphQLName("page") int page)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_testrayTestFlowResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			testrayTestFlowResource -> new TestrayTestFlowPage(
+				testrayTestFlowResource.getTestrayTestFlowTestraySubtaskPage(
+					error, issues, name, noIssues, status, testrayComponentIds,
+					testrayTaskId, testrayTeamIds, userId,
+					Pagination.of(page, pageSize))));
+	}
+
 	@GraphQLName("TestrayCaseResultPage")
 	public class TestrayCaseResultPage {
 
@@ -526,6 +586,39 @@ public class Query {
 
 	}
 
+	@GraphQLName("TestrayTestFlowPage")
+	public class TestrayTestFlowPage {
+
+		public TestrayTestFlowPage(Page testrayTestFlowPage) {
+			actions = testrayTestFlowPage.getActions();
+
+			items = testrayTestFlowPage.getItems();
+			lastPage = testrayTestFlowPage.getLastPage();
+			page = testrayTestFlowPage.getPage();
+			pageSize = testrayTestFlowPage.getPageSize();
+			totalCount = testrayTestFlowPage.getTotalCount();
+		}
+
+		@GraphQLField
+		protected Map<String, Map<String, String>> actions;
+
+		@GraphQLField
+		protected java.util.Collection<TestrayTestFlow> items;
+
+		@GraphQLField
+		protected long lastPage;
+
+		@GraphQLField
+		protected long page;
+
+		@GraphQLField
+		protected long pageSize;
+
+		@GraphQLField
+		protected long totalCount;
+
+	}
+
 	private <T, R, E1 extends Throwable, E2 extends Throwable> R
 			_applyComponentServiceObjects(
 				ComponentServiceObjects<T> componentServiceObjects,
@@ -593,12 +686,30 @@ public class Query {
 		testrayStatusMetricResource.setRoleLocalService(_roleLocalService);
 	}
 
+	private void _populateResourceContext(
+			TestrayTestFlowResource testrayTestFlowResource)
+		throws Exception {
+
+		testrayTestFlowResource.setContextAcceptLanguage(_acceptLanguage);
+		testrayTestFlowResource.setContextCompany(_company);
+		testrayTestFlowResource.setContextHttpServletRequest(
+			_httpServletRequest);
+		testrayTestFlowResource.setContextHttpServletResponse(
+			_httpServletResponse);
+		testrayTestFlowResource.setContextUriInfo(_uriInfo);
+		testrayTestFlowResource.setContextUser(_user);
+		testrayTestFlowResource.setGroupLocalService(_groupLocalService);
+		testrayTestFlowResource.setRoleLocalService(_roleLocalService);
+	}
+
 	private static ComponentServiceObjects<TestrayCaseResultResource>
 		_testrayCaseResultResourceComponentServiceObjects;
 	private static ComponentServiceObjects<TestrayRunComparisonResource>
 		_testrayRunComparisonResourceComponentServiceObjects;
 	private static ComponentServiceObjects<TestrayStatusMetricResource>
 		_testrayStatusMetricResourceComponentServiceObjects;
+	private static ComponentServiceObjects<TestrayTestFlowResource>
+		_testrayTestFlowResourceComponentServiceObjects;
 
 	private AcceptLanguage _acceptLanguage;
 	private com.liferay.portal.kernel.model.Company _company;

@@ -11,6 +11,17 @@ import {createChannel} from '../../osb-faro-web/utils/channel';
 import {createDataSource} from '../../osb-faro-web/utils/dataSource';
 import {acceptsCookiesBanner} from '../../osb-faro-web/utils/portal';
 
+export const PROPERTY_COMMERCE_CHANNEL_COLUMN_INDEX = 1;
+export const PROPERTY_SITE_COLUMN_INDEX = 2;
+
+async function switchToTab({page, tabName}: {page: Page; tabName: string}) {
+	const sitesTab = await page.getByRole('tab', {name: tabName});
+
+	await sitesTab.click();
+
+	await page.waitForTimeout(3000);
+}
+
 export async function connectToAnalyticsCloud(page: Page) {
 	await page.getByPlaceholder('Paste token here.').click();
 
@@ -35,6 +46,58 @@ export async function disconnectFromAnalyticsCloud(page: Page) {
 	}
 }
 
+export async function enableCommerceChannel({
+	channelName,
+	page,
+}: {
+	channelName: string;
+	page: Page;
+}) {
+	const channel = await findChannel({channelName, page});
+
+	const commerceChannelSwitchButton = channel.locator('.toggle-switch-check');
+
+	await commerceChannelSwitchButton.click();
+}
+
+export async function expectPropertyColumn({
+	channelName,
+	expectedValue,
+	index,
+	page,
+}: {
+	channelName: string;
+	expectedValue: string;
+	index: number;
+	page: Page;
+}) {
+	const channel = await findChannel({channelName, page});
+
+	const cellContents = await channel.locator('td').allTextContents();
+
+	expect(cellContents[index]).toBe(expectedValue);
+}
+
+export async function findChannel({
+	channelName,
+	page,
+}: {
+	channelName: string;
+	page: Page;
+}): Promise<any> {
+	await page.waitForSelector('[data-testid="properties"]');
+
+	await page.getByPlaceholder('Search').first().fill(channelName);
+
+	await page.getByRole('button', {name: 'Search'}).first().click();
+
+	await expect(page.getByRole('cell', {name: channelName})).toBeVisible({
+		timeout: 100 * 1000,
+	});
+
+	return await page.locator('table.table tbody tr:first-child');
+}
+
 export async function goToAnalyticsCloudInstanceSettings(page: Page) {
 	await page.goto(liferayConfig.environment.baseUrl);
 
@@ -51,6 +114,20 @@ export async function goToAnalyticsCloudInstanceSettings(page: Page) {
 	});
 }
 
+export async function goToSettingsStep({
+	page,
+	stepName,
+}: {
+	page: Page;
+	stepName: string;
+}) {
+	await goToAnalyticsCloudInstanceSettings(page);
+
+	const menuBar = await page.locator('.menubar');
+
+	await menuBar.getByText(stepName).click();
+}
+
 export async function syncAllContacts(page: Page) {
 	const wizard = page.locator('[data-testid="VIEW_WIZARD_MODE"]');
 
@@ -65,20 +142,24 @@ export async function syncAllContacts(page: Page) {
 	if (await syncContactsButton.isVisible()) {
 		await syncContactsButton.click();
 	}
-
-	await page.getByRole('button', {exact: true, name: 'Next'}).click();
 }
 
 export async function syncAnalyticsCloud({
 	apiHelpers,
 	channelName,
+	commerceChannelName,
+	organizationName,
 	page,
 	siteName,
+	userGroupName,
 }: {
 	apiHelpers: ApiHelpers;
 	channelName: string;
+	commerceChannelName?: string;
+	organizationName?: string;
 	page: Page;
 	siteName?: string;
+	userGroupName?: string;
 }) {
 	const {channel, project} = await createChannel({
 		apiHelpers,
@@ -101,7 +182,26 @@ export async function syncAnalyticsCloud({
 		siteName,
 	});
 
-	await syncAllContacts(page);
+	if (commerceChannelName) {
+		await enableCommerceChannel({channelName, page});
+
+		await syncCommerce({channelName, commerceChannelName, page});
+	}
+
+	await goNextStep(page);
+
+	if (userGroupName || organizationName) {
+		await syncContactsData({
+			organizationName,
+			page,
+			userGroupName,
+		});
+	}
+	else {
+		await syncAllContacts(page);
+	}
+
+	await goNextStep(page);
 
 	await page.getByRole('button', {name: 'Finish'}).click();
 
@@ -111,53 +211,77 @@ export async function syncAnalyticsCloud({
 	};
 }
 
-export async function syncSite({
-	channelName,
+export async function syncContactsData({
+	organizationName,
 	page,
-	siteName = 'Liferay DXP',
+	userGroupName,
+}: {
+	organizationName?: string;
+	page: Page;
+	userGroupName?: string;
+}) {
+	const selectContactsCollapsed = page
+		.locator('[aria-expanded="false"]')
+		.getByText('Select Contacts');
+
+	if (await selectContactsCollapsed.isVisible()) {
+		await page.getByRole('button', {name: 'Select Contacts'}).click();
+	}
+
+	if (userGroupName) {
+		await page.getByText('User Groups').click();
+
+		await page
+			.locator(`[data-testid="${userGroupName}"]`)
+			.locator('[type="checkbox"]')
+			.check();
+
+		await page.getByRole('button', {name: 'Add'}).click();
+	}
+	else if (organizationName) {
+		await page.getByText('Organizations', {exact: true}).click();
+
+		await page
+			.locator(`[data-testid="${organizationName}"]`)
+			.locator('[type="checkbox"]')
+			.check();
+
+		await page.getByRole('button', {name: 'Add'}).click();
+	}
+}
+
+export async function syncCommerce({
+	channelName,
+	commerceChannelName,
+	page,
 }: {
 	channelName: string;
+	commerceChannelName: string;
 	page: Page;
-	siteName?: string;
 }) {
-	await expect(
-		page.getByRole('heading', {name: 'Property Assignment'})
-	).toBeVisible({
-		timeout: 100 * 1000,
-	});
+	const channel = await findChannel({channelName, page});
 
-	const wizard = page.locator('[data-testid="VIEW_WIZARD_MODE"]');
-
-	await expect(wizard.getByText('Available Properties')).toBeVisible({
-		timeout: 100 * 1000,
-	});
-
-	await page.getByPlaceholder('Search').fill(channelName);
-
-	await page.getByRole('button', {name: 'Search'}).click();
-
-	await expect(page.getByRole('cell', {name: channelName})).toBeVisible({
-		timeout: 100 * 1000,
-	});
-
-	const assignButton = await page.$(
-		'table.table tbody tr:first-child button'
-	);
+	const assignButton = await channel.locator('button');
 
 	await assignButton.click();
 
-	await page.getByRole('tab', {name: 'Sites'}).click();
+	await switchToTab({page, tabName: 'Channel'});
 
-	await page.waitForSelector('div[aria-modal="true"] tbody');
-
-	await page.locator('.active').getByPlaceholder('Search').fill(siteName);
+	await page
+		.locator('.active')
+		.getByPlaceholder('Search')
+		.fill(commerceChannelName);
 
 	await page.locator('.active').getByRole('button', {name: 'Search'}).click();
 
 	await expect(page.locator('span[data-testid="loading"]')).toBeHidden();
 
-	const checkbox = await page.$(
-		'.modal table.table tbody tr:first-child input[type="checkbox"]'
+	const channelTable = await page.locator('[data-testid="channel"]');
+
+	expect(channelTable).toBeVisible();
+
+	const checkbox = channelTable.locator(
+		'tbody tr:first-child input[type="checkbox"]'
 	);
 
 	await checkbox.check();
@@ -171,6 +295,52 @@ export async function syncSite({
 	await expect(
 		page.getByText('Success:Properties settings have been saved.')
 	).toBeVisible();
+}
 
+export async function syncSite({
+	channelName,
+	page,
+	siteName = 'Liferay DXP',
+}: {
+	channelName: string;
+	page: Page;
+	siteName?: string;
+}) {
+	const channel = await findChannel({channelName, page});
+
+	const assignButton = await channel.locator('button');
+
+	await assignButton.click();
+
+	await switchToTab({page, tabName: 'Sites'});
+
+	await page.locator('.active').getByPlaceholder('Search').fill(siteName);
+
+	await page.locator('.active').getByRole('button', {name: 'Search'}).click();
+
+	await expect(page.locator('span[data-testid="loading"]')).toBeHidden();
+
+	const sitesTable = await page.locator('[data-testid="sites"]');
+
+	expect(sitesTable).toBeVisible();
+
+	const checkbox = sitesTable.locator(
+		'tbody tr:first-child input[type="checkbox"]'
+	);
+
+	await checkbox.check();
+
+	const submitButton = await page.$(
+		'.modal .modal-item-last button.btn-primary'
+	);
+
+	await submitButton.click();
+
+	await expect(
+		page.getByText('Success:Properties settings have been saved.')
+	).toBeVisible();
+}
+
+export async function goNextStep(page) {
 	await page.getByRole('button', {exact: true, name: 'Next'}).click();
 }

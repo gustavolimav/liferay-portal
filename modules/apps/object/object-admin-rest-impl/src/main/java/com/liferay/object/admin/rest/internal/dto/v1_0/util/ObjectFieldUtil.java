@@ -61,14 +61,6 @@ public class ObjectFieldUtil {
 		}
 
 		ListTypeDefinition listTypeDefinition =
-			listTypeDefinitionLocalService.fetchListTypeDefinition(
-				GetterUtil.getLong(objectField.getListTypeDefinitionId()));
-
-		if (listTypeDefinition != null) {
-			return objectField.getListTypeDefinitionId();
-		}
-
-		listTypeDefinition =
 			listTypeDefinitionLocalService.
 				fetchListTypeDefinitionByExternalReferenceCode(
 					objectField.getListTypeDefinitionExternalReferenceCode(),
@@ -76,10 +68,18 @@ public class ObjectFieldUtil {
 
 		if (listTypeDefinition == null) {
 			listTypeDefinition =
-				listTypeDefinitionLocalService.addListTypeDefinition(
-					objectField.getListTypeDefinitionExternalReferenceCode(),
-					userId, GetterUtil.getBoolean(objectField.getSystem()));
+				listTypeDefinitionLocalService.fetchListTypeDefinition(
+					GetterUtil.getLong(objectField.getListTypeDefinitionId()));
 		}
+
+		if (listTypeDefinition != null) {
+			return listTypeDefinition.getListTypeDefinitionId();
+		}
+
+		listTypeDefinition =
+			listTypeDefinitionLocalService.addListTypeDefinition(
+				objectField.getListTypeDefinitionExternalReferenceCode(),
+				userId, GetterUtil.getBoolean(objectField.getSystem()));
 
 		Map<String, ListTypeEntry> listTypeEntries = new HashMap<>();
 
@@ -124,7 +124,7 @@ public class ObjectFieldUtil {
 
 		ObjectFieldSetting[] defaultObjectFieldSettings = null;
 
-		if (!objectField.getState()) {
+		if (!GetterUtil.getBoolean(objectField.getState())) {
 			defaultObjectFieldSettings = ArrayUtil.filter(
 				objectField.getObjectFieldSettings(),
 				objectFieldSetting -> StringUtil.equals(

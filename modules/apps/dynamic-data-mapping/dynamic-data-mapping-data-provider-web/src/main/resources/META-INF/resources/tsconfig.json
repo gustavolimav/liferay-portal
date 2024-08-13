@@ -1,5 +1,5 @@
 {
-	"@generated": "71a763c6391533caae7b6a134aa7ca216435df82",
+	"@generated": "6b19725ef329e2edbd9a161a937f07503f022f36",
 	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
@@ -17,9 +17,10 @@
 			]
 		},
 		"rootDir": "../../../../../../../..",
+		"skipLibCheck": true,
 		"sourceMap": false,
 		"strict": true,
-		"target": "es2020",
+		"target": "esnext",
 		"tsBuildInfoFile": "../../../../../../../../.tsc/buildinfo/dynamic-data-mapping-data-provider-web.tsbuildinfo",
 		"typeRoots": [
 			"../../../../../../../../node_modules/@types"

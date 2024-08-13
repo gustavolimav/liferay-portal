@@ -22,8 +22,12 @@ import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.search.Field;
+import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.Sync;
 import com.liferay.portal.kernel.test.rule.SynchronousDestinationTestRule;
@@ -235,6 +239,14 @@ public class DLFileEntryIndexerIndexedFieldsTest extends BaseDLIndexerTestCase {
 		map.put(
 			Field.ENTRY_CLASS_PK, String.valueOf(fileEntry.getFileEntryId()));
 		map.put(Field.FOLDER_ID, String.valueOf(fileEntry.getFolderId()));
+
+		Group group = _groupLocalService.getGroup(dlFixture.getGroupId());
+
+		map.put("groupExternalReferenceCode", group.getExternalReferenceCode());
+		map.put(
+			"scopeGroupExternalReferenceCode",
+			group.getExternalReferenceCode());
+
 		map.put(Field.GROUP_ID, String.valueOf(fileEntry.getGroupId()));
 		map.put(Field.SCOPE_GROUP_ID, String.valueOf(fileEntry.getGroupId()));
 		map.put(Field.STAGING_GROUP, "false");
@@ -253,10 +265,12 @@ public class DLFileEntryIndexerIndexedFieldsTest extends BaseDLIndexerTestCase {
 			"dataRepositoryId", String.valueOf(fileEntry.getRepositoryId()));
 		map.put("ddmContent", "text/plain; charset=UTF-8 UTF-8");
 		map.put("extension", fileEntry.getExtension());
+		map.put("externalReferenceCode", fileEntry.getExternalReferenceCode());
 		map.put("fileEntryTypeId", "0");
 		map.put("fileExtension", fileEntry.getExtension());
 		map.put("fileExtension_String_sortable", fileEntry.getExtension());
 		map.put("fileName", fileEntry.getFileName());
+		map.put("groupExternalReferenceCode", group.getExternalReferenceCode());
 		map.put("hidden", "false");
 		map.put(
 			"mimeType",
@@ -270,6 +284,11 @@ public class DLFileEntryIndexerIndexedFieldsTest extends BaseDLIndexerTestCase {
 		map.put("size", String.valueOf(fileEntry.getSize()));
 		map.put("size_sortable", String.valueOf(fileEntry.getSize()));
 		map.put("title_ja_JP", fileEntry.getTitle());
+
+		User user = _userLocalService.getUser(dlFixture.getUserId());
+
+		map.put("userExternalReferenceCode", user.getExternalReferenceCode());
+
 		map.put("versionCount", String.valueOf(fileEntry.getVersion()));
 		map.put(
 			"versionCount_sortable", String.valueOf(fileEntry.getVersion()));
@@ -413,6 +432,12 @@ public class DLFileEntryIndexerIndexedFieldsTest extends BaseDLIndexerTestCase {
 	private FileEntrySearchFixture _fileEntrySearchFixture;
 
 	@Inject
+	private GroupLocalService _groupLocalService;
+
+	@Inject
 	private TextExtractor _textExtractor;
+
+	@Inject
+	private UserLocalService _userLocalService;
 
 }

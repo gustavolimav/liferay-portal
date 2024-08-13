@@ -2,6 +2,7 @@ import moment from 'moment';
 import {
 	Attribute,
 	AttributeOwnerTypes,
+	AttributeTypes,
 	Breakdown,
 	BreakdownData,
 	BreakdownDataItem,
@@ -82,7 +83,7 @@ export const DATE_GROUPING_LABELS_MAP = {
 
 export const DATE_OPERATOR_LABELS_MAP = {
 	[Operators.Between]: '-',
-	[Operators.EQ]: '=',
+	[Operators.EQ]: Liferay.Language.get('is-fragment'),
 	[Operators.GT]: Liferay.Language.get('after-fragment'),
 	[Operators.LT]: Liferay.Language.get('before-fragment')
 };
@@ -95,8 +96,8 @@ export const DATE_OPERATOR_LONGHAND_LABELS_MAP = {
 };
 
 export const DURATION_OPERATOR_LABELS_MAP = {
-	[Operators.GT]: '>',
-	[Operators.LT]: '<'
+	[Operators.GT]: Liferay.Language.get('is-greater-than-fragment'),
+	[Operators.LT]: Liferay.Language.get('is-less-than-fragment')
 };
 
 export const DURATION_OPERATOR_LONGHAND_LABELS_MAP = {
@@ -106,8 +107,8 @@ export const DURATION_OPERATOR_LONGHAND_LABELS_MAP = {
 
 export const NUMBER_OPERATOR_LABELS_MAP = {
 	[Operators.Between]: '-',
-	[Operators.GT]: '>',
-	[Operators.LT]: '<'
+	[Operators.GT]: Liferay.Language.get('is-greater-than-fragment'),
+	[Operators.LT]: Liferay.Language.get('is-less-than-fragment')
 };
 
 export const NUMBER_OPERATOR_LONGHAND_LABELS_MAP = {
@@ -118,7 +119,7 @@ export const NUMBER_OPERATOR_LONGHAND_LABELS_MAP = {
 
 export const STRING_OPERATOR_LABELS_MAP = {
 	[Operators.Contains]: Liferay.Language.get('contains-fragment'),
-	[Operators.NotContains]: Liferay.Language.get('not-contains-fragment'),
+	[Operators.NotContains]: Liferay.Language.get('does-not-contain-fragment'),
 	[Operators.EQ]: Liferay.Language.get('is-fragment'),
 	[Operators.NE]: Liferay.Language.get('is-not-fragment')
 };
@@ -141,7 +142,9 @@ const getDateDisplay = (
 
 	const breakdownValue =
 		operator === Operators.Between
-			? `${formattedStartDate} ${operatorLabel} ${formatUTCDate(
+			? `${Liferay.Language.get(
+					'between'
+			  )} ${formattedStartDate} ${operatorLabel} ${formatUTCDate(
 					endDate as string,
 					'll'
 			  )}`
@@ -339,9 +342,9 @@ export const formatDateName = (
 export const formatDurationName = (name: string): string => {
 	const [durationStart, durationEnd] = name.split('-');
 
-	return `${formatTime(Number(durationStart))} - ${formatTime(
-		Number(durationEnd)
-	)}`;
+	return `${Liferay.Language.get('between')} ${formatTime(
+		Number(durationStart)
+	)} - ${formatTime(Number(durationEnd))}`;
 };
 
 export const formatBreakdownNameByDataType = (
@@ -460,3 +463,89 @@ export const getMaxEventValue = (parsedData, compareToPrevious: boolean) =>
 			),
 		0
 	);
+
+export function getModifiedEventAttributeDefinitions({
+	attribute,
+	attributeOwnerType,
+	eventAttributeDefinitions
+}: {
+	attribute: Attribute;
+	attributeOwnerType: AttributeOwnerTypes;
+	eventAttributeDefinitions: Attribute[];
+}): Attribute[] {
+	let modifiedEventAttributeDefinitions = [];
+
+	if (attributeOwnerType === AttributeOwnerTypes.Event) {
+		modifiedEventAttributeDefinitions = attribute
+			? eventAttributeDefinitions.map(eventAttributeDefinition => {
+					if (attribute.id === eventAttributeDefinition.id) {
+						return attribute;
+					}
+
+					return eventAttributeDefinition;
+			  })
+			: eventAttributeDefinitions;
+	} else if (attributeOwnerType === AttributeOwnerTypes.Individual) {
+		modifiedEventAttributeDefinitions = [
+			{
+				dataType: DataTypes.String,
+				displayName: 'jobTitle',
+				id: 'jobTitle',
+				name: 'jobTitle',
+				type: AttributeTypes.Global
+			},
+			{
+				dataType: DataTypes.String,
+				displayName: 'languageId',
+				id: 'languageId',
+				name: 'languageId',
+				type: AttributeTypes.Global
+			},
+			{
+				dataType: DataTypes.String,
+				displayName: Liferay.Language.get('role'),
+				id: 'role',
+				name: 'role',
+				type: AttributeTypes.Local
+			},
+			{
+				dataType: DataTypes.String,
+				displayName: Liferay.Language.get('site-membership'),
+				id: 'group',
+				name: 'group',
+				type: AttributeTypes.Local
+			},
+			{
+				dataType: DataTypes.String,
+				displayName: Liferay.Language.get('team'),
+				id: 'team',
+				name: 'team',
+				type: AttributeTypes.Local
+			},
+			{
+				dataType: DataTypes.String,
+				displayName: Liferay.Language.get('user-group'),
+				id: 'userGroup',
+				name: 'userGroup',
+				type: AttributeTypes.Local
+			}
+		];
+	}
+
+	return modifiedEventAttributeDefinitions;
+}
+
+export const getTabs = (
+	setAttributeOwnerType: (type: AttributeOwnerTypes) => void
+) => [
+	{
+		onClick: () => setAttributeOwnerType(AttributeOwnerTypes.Event),
+		tabId: AttributeOwnerTypes.Event,
+		title: Liferay.Language.get('event')
+	},
+	{
+		onClick: () => setAttributeOwnerType(AttributeOwnerTypes.Individual),
+		tabId: AttributeOwnerTypes.Individual,
+		title: Liferay.Language.get('individual')
+	}
+];

@@ -1,5 +1,5 @@
 {
-	"@generated": "6f955884e0b566c4246ff1affb242da24065f103",
+	"@generated": "feb8874ade95be6a5fec98f39fef20fd3e071325",
 	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
@@ -20,9 +20,10 @@
 			]
 		},
 		"rootDir": "../../../../../../../..",
+		"skipLibCheck": true,
 		"sourceMap": false,
 		"strict": true,
-		"target": "es2020",
+		"target": "esnext",
 		"tsBuildInfoFile": "../../../../../../../../.tsc/buildinfo/@liferay/commerce-order-web.tsbuildinfo",
 		"typeRoots": [
 			"../../../../../../../../node_modules/@types"

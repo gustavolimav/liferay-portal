@@ -54,6 +54,7 @@ import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.Log;
@@ -112,6 +113,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
@@ -151,13 +154,20 @@ public class CalendarBookingLocalServiceImpl
 		long calendarBookingId = counterLocalService.increment();
 
 		for (Map.Entry<Locale, String> entry : descriptionMap.entrySet()) {
-			String sanitizedDescription = SanitizerUtil.sanitize(
-				calendar.getCompanyId(), calendar.getGroupId(), userId,
-				CalendarBooking.class.getName(), calendarBookingId,
-				ContentTypes.TEXT_HTML, Sanitizer.MODE_ALL, entry.getValue(),
-				null);
+			String description = null;
 
-			descriptionMap.put(entry.getKey(), sanitizedDescription);
+			if (!FeatureFlagManagerUtil.isEnabled("LPD-31212")) {
+				description = SanitizerUtil.sanitize(
+					calendar.getCompanyId(), calendar.getGroupId(), userId,
+					CalendarBooking.class.getName(), calendarBookingId,
+					ContentTypes.TEXT_HTML, Sanitizer.MODE_ALL,
+					entry.getValue(), null);
+			}
+			else {
+				description = _sanitize(entry.getValue());
+			}
+
+			descriptionMap.put(entry.getKey(), description);
 		}
 
 		TimeZone timeZone = _getTimeZone(calendar, allDay);
@@ -1205,13 +1215,20 @@ public class CalendarBookingLocalServiceImpl
 		}
 
 		for (Map.Entry<Locale, String> entry : descriptionMap.entrySet()) {
-			String sanitizedDescription = SanitizerUtil.sanitize(
-				calendar.getCompanyId(), calendar.getGroupId(), userId,
-				CalendarBooking.class.getName(), calendarBookingId,
-				ContentTypes.TEXT_HTML, Sanitizer.MODE_ALL, entry.getValue(),
-				null);
+			String description = null;
 
-			descriptionMap.put(entry.getKey(), sanitizedDescription);
+			if (!FeatureFlagManagerUtil.isEnabled("LPD-31212")) {
+				description = SanitizerUtil.sanitize(
+					calendar.getCompanyId(), calendar.getGroupId(), userId,
+					CalendarBooking.class.getName(), calendarBookingId,
+					ContentTypes.TEXT_HTML, Sanitizer.MODE_ALL,
+					entry.getValue(), null);
+			}
+			else {
+				description = _sanitize(entry.getValue());
+			}
+
+			descriptionMap.put(entry.getKey(), description);
 		}
 
 		TimeZone timeZone = _getTimeZone(calendar, allDay);
@@ -2305,6 +2322,41 @@ public class CalendarBookingLocalServiceImpl
 		}
 	}
 
+	private String _sanitize(String htmlEntry) {
+		if ((htmlEntry == null) || htmlEntry.isEmpty()) {
+			return htmlEntry;
+		}
+
+		StringBuffer sb = new StringBuffer();
+
+		Matcher matcher = _htmlTagWithOnAttributePattern.matcher(htmlEntry);
+
+		while (matcher.find()) {
+			matcher.appendReplacement(
+				sb,
+				matcher.group(
+				).replaceAll(
+					_onAttributePattern.pattern(), ""
+				));
+		}
+
+		matcher.appendTail(sb);
+
+		String string = sb.toString();
+
+		return string.replaceAll(
+			_alertPattern.pattern(), ""
+		).replaceAll(
+			_innerHtmlPattern.pattern(), ""
+		).replaceAll(
+			_phpCodePattern.pattern(), ""
+		).replaceAll(
+			_aspCodePattern.pattern(), ""
+		).replaceAll(
+			_aspNetCodePattern.pattern(), ""
+		);
+	}
+
 	private void _sendChildrenNotifications(
 		CalendarBooking calendarBooking,
 		NotificationTemplateType notificationTemplateType,
@@ -2722,6 +2774,25 @@ public class CalendarBookingLocalServiceImpl
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		CalendarBookingLocalServiceImpl.class);
+
+	private static final Pattern _alertPattern = Pattern.compile(
+		"alert\\((.*?)\\)", Pattern.CASE_INSENSITIVE);
+	private static final Pattern _aspCodePattern = Pattern.compile(
+		"<%[\\s\\S]*?%>", Pattern.CASE_INSENSITIVE);
+	private static final Pattern _aspNetCodePattern = Pattern.compile(
+		"<asp:[^>]+>.*?</asp:[^>]+>", Pattern.CASE_INSENSITIVE);
+	private static final Pattern _htmlTagWithOnAttributePattern =
+		Pattern.compile(
+			"<[^>]+?(\\s+\\bon\\w+=" +
+				"(?:'[^']*'|\"[^\"]*\"|[^'\"\\s>]+))*\\s*/?>",
+			Pattern.CASE_INSENSITIVE);
+	private static final Pattern _innerHtmlPattern = Pattern.compile(
+		"innerHTML\\s*=\\s*.*?", Pattern.CASE_INSENSITIVE);
+	private static final Pattern _onAttributePattern = Pattern.compile(
+		"(\\s+\\bon\\w+=(?:'[^']*'|\"[^\"]*\"|[^'\"\\s>]+))",
+		Pattern.CASE_INSENSITIVE);
+	private static final Pattern _phpCodePattern = Pattern.compile(
+		"<\\?[\\s\\S]*?\\?>", Pattern.CASE_INSENSITIVE);
 
 	@Reference
 	private AssetEntryLocalService _assetEntryLocalService;

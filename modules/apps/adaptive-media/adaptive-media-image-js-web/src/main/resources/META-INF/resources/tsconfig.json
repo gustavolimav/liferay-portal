@@ -1,5 +1,5 @@
 {
-	"@generated": "a3e1a076f65f31347e9f14d2125ee74caa1cb547",
+	"@generated": "c30ebfca0f32083f363dd34d0136ce97cf7bdb2b",
 	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
@@ -14,9 +14,10 @@
 		"paths": {
 		},
 		"rootDir": "../../../../../../../..",
+		"skipLibCheck": true,
 		"sourceMap": false,
 		"strict": true,
-		"target": "es2020",
+		"target": "esnext",
 		"tsBuildInfoFile": "../../../../../../../../.tsc/buildinfo/adaptive-media-image-js-web.tsbuildinfo",
 		"typeRoots": [
 			"../../../../../../../../node_modules/@types"

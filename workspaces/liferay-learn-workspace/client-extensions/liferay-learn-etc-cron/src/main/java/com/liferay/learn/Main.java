@@ -29,6 +29,7 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
+import com.vladsch.flexmark.ast.Heading;
 import com.vladsch.flexmark.ext.admonition.AdmonitionExtension;
 import com.vladsch.flexmark.ext.anchorlink.AnchorLinkExtension;
 import com.vladsch.flexmark.ext.aside.AsideExtension;
@@ -48,6 +49,7 @@ import com.vladsch.flexmark.ext.yaml.front.matter.YamlFrontMatterVisitor;
 import com.vladsch.flexmark.ext.yaml.front.matter.YamlFrontMatterVisitorExt;
 import com.vladsch.flexmark.html.HtmlRenderer;
 import com.vladsch.flexmark.parser.Parser;
+import com.vladsch.flexmark.util.ast.Block;
 import com.vladsch.flexmark.util.ast.Document;
 import com.vladsch.flexmark.util.ast.Node;
 import com.vladsch.flexmark.util.ast.NodeVisitor;
@@ -1133,14 +1135,37 @@ public class Main {
 		return taxonomyCategoryIds.toArray(new Long[0]);
 	}
 
+	private String _getTitle(Node node) {
+		if (node instanceof Heading) {
+			Heading heading = (Heading)node;
+
+			if ((heading.getLevel() == 1) && heading.hasChildren()) {
+				TextCollectingVisitor textCollectingVisitor =
+					new TextCollectingVisitor();
+
+				return textCollectingVisitor.collectAndGetText(heading);
+			}
+		}
+
+		if ((node instanceof Block) && node.hasChildren()) {
+			Node childNode = node.getFirstChild();
+
+			while (childNode != null) {
+				String title = _getTitle(childNode);
+
+				if (title != null) {
+					return title;
+				}
+
+				childNode = childNode.getNext();
+			}
+		}
+
+		return null;
+	}
+
 	private String _getTitle(String text) {
-		int x = text.indexOf("#");
-
-		int y = text.indexOf(StringPool.NEW_LINE, x);
-
-		String title = text.substring(x + 1, y);
-
-		return title.trim();
+		return _getTitle(_parser.parse(text));
 	}
 
 	private String _getUuid(String text) {
@@ -1629,6 +1654,14 @@ public class Main {
 							setContentFieldValue(
 								() -> englishNavigationContentFieldValue);
 							setName(() -> "navigation");
+						}
+					},
+					new ContentField() {
+						{
+							setContentFieldValue(
+								() ->
+									englishShowChildrenCardsContentFieldValue);
+							setName(() -> "showChildrenCards");
 						}
 					}
 				});

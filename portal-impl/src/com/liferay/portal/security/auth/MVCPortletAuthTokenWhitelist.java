@@ -16,6 +16,7 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCResourceCommand;
 import com.liferay.portal.kernel.security.auth.BaseAuthTokenWhitelist;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -163,12 +164,8 @@ public class MVCPortletAuthTokenWhitelist extends BaseAuthTokenWhitelist {
 
 		String namespace = PortalUtil.getPortletNamespace(portletId);
 
-		String[] actionNames = httpServletRequest.getParameterValues(
+		return httpServletRequest.getParameterValues(
 			namespace.concat(ActionRequest.ACTION_NAME));
-
-		String actions = StringUtil.merge(actionNames);
-
-		return StringUtil.split(actions);
 	}
 
 	protected String[] getMVCActionCommandNames(
@@ -177,11 +174,7 @@ public class MVCPortletAuthTokenWhitelist extends BaseAuthTokenWhitelist {
 		Map<String, String[]> parameterMap =
 			liferayPortletURL.getParameterMap();
 
-		String[] actionNames = parameterMap.get(ActionRequest.ACTION_NAME);
-
-		String actions = StringUtil.merge(actionNames);
-
-		return StringUtil.split(actions);
+		return parameterMap.get(ActionRequest.ACTION_NAME);
 	}
 
 	protected String getWhitelistValue(
@@ -222,7 +215,7 @@ public class MVCPortletAuthTokenWhitelist extends BaseAuthTokenWhitelist {
 	private boolean _containsAll(
 		String portletId, Set<String> whitelist, String[] items) {
 
-		if (items.length == 0) {
+		if (ArrayUtil.isEmpty(items)) {
 			return false;
 		}
 

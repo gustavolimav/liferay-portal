@@ -7,11 +7,17 @@ import {expect, mergeTests} from '@playwright/test';
 import moment from 'moment';
 import path from 'path';
 
+import {apiHelpersTest} from '../../fixtures/apiHelpersTest';
 import {documentLibraryPagesTest} from '../../fixtures/documentLibraryPages.fixtures';
 import {featureFlagsTest} from '../../fixtures/featureFlagsTest';
 import {isolatedSiteTest} from '../../fixtures/isolatedSiteTest';
 import {loginTest} from '../../fixtures/loginTest';
+import {clickAndExpectToBeVisible} from '../../utils/clickAndExpectToBeVisible';
 import getRandomString from '../../utils/getRandomString';
+import {performLogout} from '../../utils/performLogin';
+import {waitForSuccessAlert} from '../../utils/waitForSuccessAlert';
+import getPageDefinition from '../layout-content-page-editor-web/utils/getPageDefinition';
+import getWidgetDefinition from '../layout-content-page-editor-web/utils/getWidgetDefinition';
 
 const baseTest = mergeTests(
 	documentLibraryPagesTest,
@@ -19,6 +25,13 @@ const baseTest = mergeTests(
 	loginTest()
 );
 
+export const testSearchInDlPortlet = mergeTests(
+	apiHelpersTest,
+	baseTest,
+	featureFlagsTest({
+		'LPS-178052': true,
+	})
+);
 export const testFeatureFlagsEnabled = mergeTests(
 	baseTest,
 	featureFlagsTest({
@@ -28,6 +41,81 @@ export const testFeatureFlagsEnabled = mergeTests(
 
 export const testUploadMultipleFieldsWithCustomDocumentType =
 	mergeTests(baseTest);
+
+baseTest(
+	'Check order by Relevance in Search of DL',
+	{
+		tag: '@LPD-32481',
+	},
+	async ({documentLibraryEditFilePage, documentLibraryPage, page, site}) => {
+		await documentLibraryEditFilePage.publishNewBasicFileEntry(
+			'test',
+			site.friendlyUrlPath
+		);
+		await documentLibraryEditFilePage.publishNewBasicFileEntry(
+			getRandomString(),
+			site.friendlyUrlPath
+		);
+		await documentLibraryEditFilePage.publishNewBasicFileEntry(
+			getRandomString(),
+			site.friendlyUrlPath
+		);
+		await documentLibraryPage.orderMenu.click();
+		await expect(
+			page.getByRole('menuitem', {name: 'Relevance'})
+		).not.toBeVisible();
+
+		await page.reload();
+
+		await documentLibraryPage.searchInDL('test');
+
+		await documentLibraryPage.orderBy('relevance');
+
+		await expect(
+			page.locator('dd.list-group-item[data-title="test"]')
+		).toHaveAttribute('id', /_entries_1$/);
+	}
+);
+
+baseTest(
+	'Check if Ordering by Modified Date working, after editing a document',
+	{
+		tag: '@LPD-32483',
+	},
+	async ({documentLibraryEditFilePage, documentLibraryPage, page, site}) => {
+		const title = getRandomString();
+		await documentLibraryEditFilePage.publishNewBasicFileEntry(
+			title,
+			site.friendlyUrlPath
+		);
+
+		const title2 = getRandomString();
+		await documentLibraryEditFilePage.publishNewBasicFileEntry(
+			title2,
+			site.friendlyUrlPath
+		);
+
+		await documentLibraryPage.editFileEntry(title);
+		await documentLibraryEditFilePage.descriptionInput.fill(
+			getRandomString()
+		);
+		await documentLibraryEditFilePage.publishButton.click();
+		await waitForSuccessAlert(
+			page,
+			'Success:Your request completed successfully.'
+		);
+		await page.getByRole('link', {name: 'Back'}).click();
+
+		await documentLibraryPage.orderBy('Modified Date');
+		await documentLibraryPage.orderBy('Descending');
+
+		await expect(
+			page
+				.locator(`dd.card-page-item[data-title="${title}"]`)
+				.getAttribute('id')
+		).resolves.toMatch(/_entries_1$/);
+	}
+);
 
 testFeatureFlagsEnabled(
 	'LPD-16658 Show a success message after scheduling a new file',
@@ -133,7 +221,7 @@ testFeatureFlagsEnabled(
 			'Document'
 		);
 
-		await documentLibraryEditFilePage.changeViewInItemSelctor(
+		await documentLibraryEditFilePage.changeViewInItemSelector(
 			'Document',
 			'List'
 		);
@@ -142,7 +230,7 @@ testFeatureFlagsEnabled(
 			'Document'
 		);
 
-		await documentLibraryEditFilePage.changeViewInItemSelctor(
+		await documentLibraryEditFilePage.changeViewInItemSelector(
 			'Document',
 			'Table'
 		);
@@ -180,5 +268,50 @@ testUploadMultipleFieldsWithCustomDocumentType(
 		await expect(
 			page.getByRole('link', {exact: true, name: 'image1'})
 		).toBeVisible();
+	}
+);
+
+testSearchInDlPortlet(
+	'LPD-31694 Search in DL portlet does not show results in card view for LPS-202909',
+	async ({
+		apiHelpers,
+		documentLibraryEditFilePage,
+		documentLibraryPage,
+		page,
+		site,
+	}) => {
+		const title = getRandomString();
+		await documentLibraryPage.goto(site.friendlyUrlPath);
+		await documentLibraryPage.goToCreateNewFile();
+		await documentLibraryEditFilePage.publishNewBasicFileEntryWithoutGoTo(
+			title
+		);
+
+		const portletId = getRandomString();
+		const widgetDefinition = getWidgetDefinition({
+			id: portletId,
+			widgetName: 'com_liferay_document_library_web_portlet_DLPortlet',
+		});
+		await apiHelpers.headlessDelivery.createSitePage({
+			pageDefinition: getPageDefinition([widgetDefinition]),
+			siteId: site.id,
+			title: getRandomString(),
+		});
+
+		await performLogout(page);
+
+		await page.goto('/web' + site.friendlyUrlPath);
+
+		const dlPortlet = page.locator('.portlet-document-library');
+
+		await dlPortlet.getByPlaceholder('Search for').first().fill(title);
+		await dlPortlet.getByPlaceholder('Search for').first().press('Enter');
+
+		await clickAndExpectToBeVisible({
+			autoClick: true,
+			target: page.getByRole('menuitem', {name: 'Cards'}),
+			trigger: page.getByLabel('Select View, Currently Selected: '),
+		});
+		await expect(dlPortlet.getByRole('link', {name: title})).toBeVisible();
 	}
 );

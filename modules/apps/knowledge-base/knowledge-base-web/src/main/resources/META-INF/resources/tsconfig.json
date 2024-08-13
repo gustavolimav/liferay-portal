@@ -1,5 +1,5 @@
 {
-	"@generated": "113d065e32e1a7bd958cf52b85707d9649730894",
+	"@generated": "0129bfa71b63dc68ecbd732a05eaf7af373453c9",
 	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
@@ -17,9 +17,10 @@
 			]
 		},
 		"rootDir": "../../../../../../../..",
+		"skipLibCheck": true,
 		"sourceMap": false,
 		"strict": true,
-		"target": "es2020",
+		"target": "esnext",
 		"tsBuildInfoFile": "../../../../../../../../.tsc/buildinfo/knowledge-base-web.tsbuildinfo",
 		"typeRoots": [
 			"../../../../../../../../node_modules/@types"

@@ -14,6 +14,7 @@ export enum EFilterType {
 export enum EFieldFormat {
 	DATE = 'date',
 	DATE_TIME = 'date-time',
+	INT32 = 'int32',
 	INT64 = 'int64',
 }
 
@@ -25,8 +26,8 @@ export enum EFieldType {
 }
 
 export enum ESelectionFilterSourceType {
-	PICKLIST = 'PICKLIST',
-	API_HEADLESS = 'API_HEADLESS',
+	OBJECT_PICKLIST = 'OBJECT_PICKLIST',
+	API_REST_APPLICATION = 'API_REST_APPLICATION',
 }
 
 export interface IBaseVisualizationMode<Mode extends string> {
@@ -77,8 +78,18 @@ export interface IFieldTreeItem extends IField {
 export interface IFilter extends IOrderable {
 	fieldName: string;
 	filterType?: EFilterType;
+	include?: boolean;
+	itemKey?: string;
+	itemLabel?: string;
 	label: string;
 	label_i18n: LocalizedValue<string>;
+	multiple?: boolean;
+	preselectedValues?: any;
+	restApplication?: string;
+	restEndpoint?: string;
+	restSchema?: string;
+	source?: string;
+	sourceType?: ESelectionFilterSourceType;
 	type: string;
 }
 

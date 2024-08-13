@@ -682,11 +682,24 @@ public class ClientExtensionProjectConfigurator
 
 				copy.into(clientExtensionBuildDir);
 
+				copy.doFirst(
+					new Action<Task>() {
+
+						@Override
+						public void execute(Task task) {
+							Copy copy1 = (Copy)task;
+
+							project.delete(copy1.getDestinationDir());
+						}
+
+					});
 				copy.doLast(
 					new Action<Task>() {
 
 						@Override
-						public void execute(Task copy1) {
+						public void execute(Task task) {
+							Copy copy1 = (Copy)task;
+
 							if (!copy1.getDidWork()) {
 								return;
 							}

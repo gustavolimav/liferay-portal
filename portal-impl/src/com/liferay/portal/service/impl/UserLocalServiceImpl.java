@@ -330,8 +330,7 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 
 		updateEmailAddressVerified(defaultAdminUser.getUserId(), true);
 
-		updateLastLogin(
-			defaultAdminUser.getUserId(), defaultAdminUser.getLoginIP());
+		updateLastLogin(defaultAdminUser, defaultAdminUser.getLoginIP());
 
 		updatePasswordReset(defaultAdminUser.getUserId(), passwordReset);
 
@@ -1286,8 +1285,6 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 		user.setScreenName(screenName);
 		user.setEmailAddress(emailAddress);
 
-		user.setDigest(user.getDigest(password1));
-
 		Long ldapServerId = null;
 
 		if (serviceContext != null) {
@@ -2007,6 +2004,8 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 
 		if (group != null) {
 			_groupLocalService.deleteGroup(group);
+
+			user.setGroup(null);
 		}
 
 		// Portrait
@@ -4941,7 +4940,18 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 	public User updateLastLogin(long userId, String loginIP)
 		throws PortalException {
 
-		User user = userPersistence.findByPrimaryKey(userId);
+		return updateLastLogin(
+			userPersistence.findByPrimaryKey(userId), loginIP);
+	}
+
+	@CTAware(onProduction = true)
+	@Indexable(
+		callbackKey = "com.liferay.portal.kernel.model.User#lastLoginDate",
+		type = IndexableType.REINDEX
+	)
+	@Override
+	public User updateLastLogin(User user, String loginIP)
+		throws PortalException {
 
 		Date lastLoginDate = user.getLoginDate();
 
@@ -4955,16 +4965,16 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 			lastLoginIP = loginIP;
 		}
 
-		user = _updateLastLogin(
+		User updatedUser = _updateLastLogin(
 			user, new Date(), loginIP, lastLoginDate, lastLoginIP, 0);
 
-		if (user == null) {
-			return userPersistence.findByPrimaryKey(userId);
+		if (updatedUser == null) {
+			return userPersistence.findByPrimaryKey(user.getUserId());
 		}
 
-		EntityCacheUtil.putResult(UserImpl.class, user, false, false);
+		EntityCacheUtil.putResult(UserImpl.class, updatedUser, false, false);
 
-		return user;
+		return updatedUser;
 	}
 
 	/**
@@ -5411,7 +5421,14 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 			long userId, int status, ServiceContext serviceContext)
 		throws PortalException {
 
-		User user = userPersistence.findByPrimaryKey(userId);
+		return updateStatus(
+			userPersistence.findByPrimaryKey(userId), status, serviceContext);
+	}
+
+	@Override
+	public User updateStatus(
+			User user, int status, ServiceContext serviceContext)
+		throws PortalException {
 
 		String passwordUnencrypted = (String)serviceContext.getAttribute(
 			"passwordUnencrypted");
@@ -5435,7 +5452,7 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 			group.setActive(true);
 		}
 
-		_groupLocalService.updateGroup(group);
+		user.setGroup(_groupLocalService.updateGroup(group));
 
 		return user;
 	}
@@ -5662,8 +5679,9 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 			Group group = _groupLocalService.getUserGroup(
 				user.getCompanyId(), userId);
 
-			_groupLocalService.updateFriendlyURL(
-				group.getGroupId(), StringPool.SLASH + screenName);
+			user.setGroup(
+				_groupLocalService.updateFriendlyURL(
+					group.getGroupId(), StringPool.SLASH + screenName));
 		}
 
 		// Groups and organizations

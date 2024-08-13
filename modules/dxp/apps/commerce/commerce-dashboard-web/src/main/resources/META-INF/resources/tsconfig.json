@@ -1,5 +1,5 @@
 {
-	"@generated": "d1bc9d11ae778687f73402e71dd0db492a5ccb12",
+	"@generated": "30868116b6b84b9fe73380b4c8ad05f00e7845a2",
 	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
@@ -20,9 +20,10 @@
 			]
 		},
 		"rootDir": "../../../../../../../../..",
+		"skipLibCheck": true,
 		"sourceMap": false,
 		"strict": true,
-		"target": "es2020",
+		"target": "esnext",
 		"tsBuildInfoFile": "../../../../../../../../../.tsc/buildinfo/commerce-dashboard-web.tsbuildinfo",
 		"typeRoots": [
 			"../../../../../../../../../node_modules/@types"

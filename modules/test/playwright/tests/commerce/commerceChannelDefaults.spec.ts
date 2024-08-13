@@ -5,18 +5,21 @@
 
 import {expect, mergeTests} from '@playwright/test';
 
+import {accountsPagesTest} from '../../fixtures/accountsPagesTest';
 import {applicationsMenuPageTest} from '../../fixtures/applicationsMenuPageTest';
 import {commercePagesTest} from '../../fixtures/commercePagesTest';
 import {dataApiHelpersTest} from '../../fixtures/dataApiHelpersTest';
 import {featureFlagsTest} from '../../fixtures/featureFlagsTest';
 import {loginTest} from '../../fixtures/loginTest';
 import {liferayConfig} from '../../liferay.config';
+import {getRandomInt} from '../../utils/getRandomInt';
 import getRandomString from '../../utils/getRandomString';
-import performLogin, {performLogout} from '../../utils/performLogin';
+import performLogin, {performLogout, userData} from '../../utils/performLogin';
 import getPageDefinition from '../layout-content-page-editor-web/utils/getPageDefinition';
 import getWidgetDefinition from '../layout-content-page-editor-web/utils/getWidgetDefinition';
 
 export const test = mergeTests(
+	accountsPagesTest,
 	applicationsMenuPageTest,
 	commercePagesTest,
 	dataApiHelpersTest,
@@ -62,16 +65,29 @@ test('LPD-26142 A Sales Agent can manage channel defaults', async ({
 				scope: 1,
 			},
 			{
-				actionIds: ['MANAGE_AVAILABLE_ACCOUNTS'],
+				actionIds: ['MANAGE_COMMERCE_CURRENCIES'],
 				primaryKey: companyId,
-				resourceName: 'com.liferay.portal.kernel.model.Organization',
+				resourceName: 'com.liferay.commerce.currency',
+				scope: 1,
+			},
+			{
+				actionIds: ['VIEW_COMMERCE_DISCOUNTS'],
+				primaryKey: companyId,
+				resourceName: 'com.liferay.commerce.discount',
+				scope: 1,
+			},
+			{
+				actionIds: ['VIEW'],
+				primaryKey: companyId,
+				resourceName:
+					'com.liferay.commerce.discount.model.CommerceDiscount',
 				scope: 1,
 			},
 			{
 				actionIds: ['UPDATE', 'VIEW'],
 				primaryKey: companyId,
 				resourceName:
-					'com.liferay.commerce.product.model.CommerceChannel',
+					'com.liferay.commerce.payment.model.CommercePaymentMethodGroupRel',
 				scope: 1,
 			},
 			{
@@ -82,16 +98,10 @@ test('LPD-26142 A Sales Agent can manage channel defaults', async ({
 				scope: 1,
 			},
 			{
-				actionIds: ['MANAGE_COMMERCE_CURRENCIES'],
-				primaryKey: companyId,
-				resourceName: 'com.liferay.commerce.currency',
-				scope: 1,
-			},
-			{
-				actionIds: ['VIEW'],
+				actionIds: ['UPDATE', 'VIEW'],
 				primaryKey: companyId,
 				resourceName:
-					'com.liferay.commerce.term.model.CommerceTermEntry',
+					'com.liferay.commerce.product.model.CommerceChannel',
 				scope: 1,
 			},
 			{
@@ -104,26 +114,19 @@ test('LPD-26142 A Sales Agent can manage channel defaults', async ({
 				actionIds: ['VIEW'],
 				primaryKey: companyId,
 				resourceName:
-					'com.liferay.commerce.discount.model.CommerceDiscount',
+					'com.liferay.commerce.term.model.CommerceTermEntry',
 				scope: 1,
 			},
 			{
-				actionIds: ['VIEW_COMMERCE_DISCOUNTS'],
+				actionIds: ['MANAGE_AVAILABLE_ACCOUNTS'],
 				primaryKey: companyId,
-				resourceName: 'com.liferay.commerce.discount',
+				resourceName: 'com.liferay.portal.kernel.model.Organization',
 				scope: 1,
 			},
 			{
 				actionIds: ['VIEW'],
 				primaryKey: companyId,
 				resourceName: 'com.liferay.portal.kernel.model.User',
-				scope: 1,
-			},
-			{
-				actionIds: ['UPDATE', 'VIEW'],
-				primaryKey: companyId,
-				resourceName:
-					'com.liferay.commerce.payment.model.CommercePaymentMethodGroupRel',
 				scope: 1,
 			},
 			{
@@ -141,7 +144,10 @@ test('LPD-26142 A Sales Agent can manage channel defaults', async ({
 			'demo.unprivileged@liferay.com'
 		);
 
-	await apiHelpers.headlessAdminUser.assignUserToRole(role.name, user.id);
+	await apiHelpers.headlessAdminUser.assignUserToRole(
+		role.externalReferenceCode,
+		user.id
+	);
 
 	const account1 = await apiHelpers.headlessAdminUser.postAccount({
 		name: getRandomString(),
@@ -206,7 +212,9 @@ test('LPD-26142 A Sales Agent can manage channel defaults', async ({
 	).click();
 
 	await page.getByLabel('Commerce Site Type').selectOption({label: 'B2B'});
+
 	const headerActions = page.locator('.header-actions');
+
 	await headerActions.getByText('Save').click();
 
 	await expect(
@@ -217,123 +225,318 @@ test('LPD-26142 A Sales Agent can manage channel defaults', async ({
 
 	await performLogin(page, user.alternateName);
 
+	await page.goto(`/web/${site.name}/${layout.friendlyUrlPath}`);
+
+	await expect(
+		commerceAccountManagementPage.accountsTableRowLink(account1.id)
+	).toBeVisible();
+	await expect(
+		commerceAccountManagementPage.accountsTableRowLink(account2.id)
+	).toHaveCount(0);
+
+	await commerceAccountManagementPage
+		.accountsTableRowLink(account1.id)
+		.click();
+	await commerceAccountManagementPage.channelDefaultsLink.click();
+
+	await expect(
+		commerceChannelDefaultsPage.defaultBillingCommerceAddresses
+	).toBeVisible();
+
+	await commerceChannelDefaultsPage.defaultBillingCommerceAddressesActions.click();
+	await commerceChannelDefaultsPage.editMenuItem.click();
+
+	await expect(
+		commerceChannelDefaultsPage.editFrameChannelSelect
+	).not.toBeEmpty();
+
+	await commerceChannelDefaultsPage.editFrameSaveButton.click();
+	await commerceChannelDefaultsPage.defaultShippingCommerceAddressesActions.click();
+	await commerceChannelDefaultsPage.editMenuItem.click();
+
+	await expect(
+		commerceChannelDefaultsPage.editFrameChannelSelect
+	).not.toBeEmpty();
+	await commerceChannelDefaultsPage.editFrameSaveButton.click();
+
+	await commerceChannelDefaultsPage.defaultDeliveryCommerceTermEntriesButton.click();
+
+	await expect(
+		commerceChannelDefaultsPage.editFrameChannelSelect
+	).not.toBeEmpty();
+
+	await commerceChannelDefaultsPage.editFrameSaveButton.click();
+
+	await expect(
+		commerceChannelDefaultsPage.defaultDeliveryCommerceTermEntries.getByText(
+			deliveryTerms.label['en_US']
+		)
+	).toBeVisible();
+
+	await commerceChannelDefaultsPage.defaultPaymentCommerceTermEntriesButton.click();
+
+	await expect(
+		commerceChannelDefaultsPage.editFrameChannelSelect
+	).not.toBeEmpty();
+
+	await commerceChannelDefaultsPage.editFrameSaveButton.click();
+
+	await expect(
+		commerceChannelDefaultsPage.defaultPaymentCommerceTermEntries.getByText(
+			paymentTerms.label['en_US']
+		)
+	).toBeVisible();
+
+	await commerceChannelDefaultsPage.defaultCommerceShippingOptionButton.click();
+	await commerceChannelDefaultsPage.editFrameSaveButton.click();
+
+	await expect(
+		commerceChannelDefaultsPage.defaultCommerceShippingOption
+			.getByText('Use Priority Settings')
+			.first()
+	).toBeVisible();
+
+	await commerceChannelDefaultsPage.defaultCommercePriceListsButton.click();
+	await commerceChannelDefaultsPage.editFramePriceListSelect.selectOption({
+		label: 'Master Base Price List',
+	});
+	await commerceChannelDefaultsPage.editFrameSaveButton.click();
+
+	await expect(
+		commerceChannelDefaultsPage.defaultCommercePriceLists.getByText(
+			'Master Base Price List'
+		)
+	).toBeVisible();
+
+	await commerceChannelDefaultsPage.defaultCommerceDiscountsButton.click();
+
+	await expect(
+		commerceChannelDefaultsPage.editFrameChannelSelect
+	).not.toBeEmpty();
+
+	await commerceChannelDefaultsPage.editFrameSaveButton.click();
+
+	await expect(
+		commerceChannelDefaultsPage.defaultCommerceDiscounts.getByText(
+			discount.title
+		)
+	).toBeVisible();
+
+	await commerceChannelDefaultsPage.defaultCommerceCurrenciesButton.click();
+
+	await expect(
+		commerceChannelDefaultsPage.editFrameChannelSelect
+	).not.toBeEmpty();
+
+	await commerceChannelDefaultsPage.editFrameSaveButton.click();
+
+	await expect(
+		commerceChannelDefaultsPage.defaultCommerceCurrencies.getByText(
+			'US Dollar'
+		)
+	).toBeVisible();
+
+	await commerceChannelDefaultsPage.defaultCommercePaymentMethodButton.click();
+	await commerceChannelDefaultsPage.editFrameSaveButton.click();
+
+	await expect(
+		commerceChannelDefaultsPage.defaultCommercePaymentMethod
+			.getByText('Use Priority Settings')
+			.first()
+	).toBeVisible();
+
+	await commerceChannelDefaultsPage.defaultUsersButton.click();
+
+	await expect(
+		commerceChannelDefaultsPage.editFrameChannelSelect
+	).not.toBeEmpty();
+
+	await commerceChannelDefaultsPage.editFrameSaveButton.click();
+
+	await expect(
+		commerceChannelDefaultsPage.defaultUsers.getByText('Test')
+	).toBeVisible();
+});
+
+test('LPD-28220 Can user with account manager role view and manage channel defaults', async ({
+	accountManagementWidgetPage,
+	accountsPage,
+	apiHelpers,
+	commerceChannelDefaultsPage,
+	page,
+}) => {
+	const userAccount = await apiHelpers.headlessAdminUser.postUserAccount();
+
+	userData[userAccount.alternateName] = {
+		name: userAccount.givenName,
+		password: 'test',
+		surname: userAccount.familyName,
+	};
+
+	const site = await apiHelpers.headlessSite.createSite({
+		name: 'Site' + getRandomInt(),
+	});
+
+	apiHelpers.data.push({id: site.id, type: 'site'});
+
+	const layout = await apiHelpers.headlessDelivery.createSitePage({
+		pageDefinition: getPageDefinition([
+			getWidgetDefinition({
+				id: getRandomString(),
+				widgetName:
+					'com_liferay_account_admin_web_internal_portlet_AccountEntriesManagementPortlet',
+			}),
+		]),
+		siteId: site.id,
+		title: getRandomString(),
+	});
+
+	const organization = await apiHelpers.headlessAdminUser.postOrganization();
+
+	const accounts = [];
+
+	const account1 = await apiHelpers.headlessAdminUser.postAccount({
+		name: getRandomString(),
+		type: 'business',
+	});
+
+	accounts.push(account1);
+
+	apiHelpers.data.push({id: account1.id, type: 'account'});
+
+	const account2 = await apiHelpers.headlessAdminUser.postAccount({
+		name: getRandomString(),
+		type: 'business',
+	});
+
+	accounts.push(account2);
+
+	apiHelpers.data.push({id: account2.id, type: 'account'});
+
+	await apiHelpers.headlessAdminUser.assignAccountToOrganization(
+		account1.id,
+		organization.id
+	);
+	await apiHelpers.headlessAdminUser.assignAccountToOrganization(
+		account2.id,
+		organization.id
+	);
+	await apiHelpers.headlessAdminUser.assignUserToAccountByEmailAddress(
+		account1.id,
+		[userAccount.emailAddress]
+	);
+	await apiHelpers.headlessAdminUser.assignUserToOrganizationByEmailAddress(
+		organization.id,
+		userAccount.emailAddress
+	);
+
+	await apiHelpers.jsonWebServicesUser.assignUsersToSite(
+		site.id,
+		userAccount.id
+	);
+
+	await performLogout(page);
+
+	await performLogin(page, userAccount.alternateName);
+
 	try {
 		await page.goto(`/web/${site.name}/${layout.friendlyUrlPath}`);
 
 		await expect(
-			commerceAccountManagementPage.accountsTableRowLink(account1.id)
+			accountManagementWidgetPage.accountCell(account1.name)
 		).toBeVisible();
-
 		await expect(
-			commerceAccountManagementPage.accountsTableRowLink(account2.id)
+			await accountManagementWidgetPage.accountsTableRowLink(
+				account1.name
+			)
+		).toHaveCount(0);
+		await expect(
+			accountManagementWidgetPage.accountCell(account2.name)
 		).toHaveCount(0);
 
-		await commerceAccountManagementPage
-			.accountsTableRowLink(account1.id)
-			.click();
+		await performLogout(page);
 
-		await commerceAccountManagementPage.channelDefaultsLink.click();
+		await performLogin(page, 'test');
 
-		await expect(
-			commerceChannelDefaultsPage.defaultBillingCommerceAddresses
-		).toBeVisible();
+		const accountManagerRole =
+			await apiHelpers.headlessAdminUser.getRoleByName('Account Manager');
 
-		await commerceChannelDefaultsPage.defaultBillingCommerceAddressesActions.click();
-		await commerceChannelDefaultsPage.editMenuItem.click();
-		await expect(
-			commerceChannelDefaultsPage.editFrameChannelSelect
-		).not.toBeEmpty();
-		await commerceChannelDefaultsPage.editFrameSaveButton.click();
-
-		await commerceChannelDefaultsPage.defaultShippingCommerceAddressesActions.click();
-		await commerceChannelDefaultsPage.editMenuItem.click();
-		await expect(
-			commerceChannelDefaultsPage.editFrameChannelSelect
-		).not.toBeEmpty();
-		await commerceChannelDefaultsPage.editFrameSaveButton.click();
-
-		await commerceChannelDefaultsPage.defaultDeliveryCommerceTermEntriesButton.click();
-		await expect(
-			commerceChannelDefaultsPage.editFrameChannelSelect
-		).not.toBeEmpty();
-		await commerceChannelDefaultsPage.editFrameSaveButton.click();
-		await expect(
-			commerceChannelDefaultsPage.defaultDeliveryCommerceTermEntries.getByText(
-				deliveryTerms.label['en_US']
-			)
-		).toBeVisible();
-
-		await commerceChannelDefaultsPage.defaultPaymentCommerceTermEntriesButton.click();
-		await expect(
-			commerceChannelDefaultsPage.editFrameChannelSelect
-		).not.toBeEmpty();
-		await commerceChannelDefaultsPage.editFrameSaveButton.click();
-		await expect(
-			commerceChannelDefaultsPage.defaultPaymentCommerceTermEntries.getByText(
-				paymentTerms.label['en_US']
-			)
-		).toBeVisible();
-
-		await commerceChannelDefaultsPage.defaultCommerceShippingOptionButton.click();
-		await commerceChannelDefaultsPage.editFrameSaveButton.click();
-		await expect(
-			commerceChannelDefaultsPage.defaultCommerceShippingOption
-				.getByText('Use Priority Settings')
-				.first()
-		).toBeVisible();
-
-		await commerceChannelDefaultsPage.defaultCommercePriceListsButton.click();
-		await commerceChannelDefaultsPage.editFramePriceListSelect.selectOption(
-			{label: 'Master Base Price List'}
+		await apiHelpers.jsonWebServicesUser.assignUsersToRole(
+			String(accountManagerRole.id),
+			userAccount.id
 		);
-		await commerceChannelDefaultsPage.editFrameSaveButton.click();
-		await expect(
-			commerceChannelDefaultsPage.defaultCommercePriceLists.getByText(
-				'Master Base Price List'
-			)
-		).toBeVisible();
 
-		await commerceChannelDefaultsPage.defaultCommerceDiscountsButton.click();
-		await expect(
-			commerceChannelDefaultsPage.editFrameChannelSelect
-		).not.toBeEmpty();
-		await commerceChannelDefaultsPage.editFrameSaveButton.click();
-		await expect(
-			commerceChannelDefaultsPage.defaultCommerceDiscounts.getByText(
-				discount.title
-			)
-		).toBeVisible();
+		await performLogout(page);
 
-		await commerceChannelDefaultsPage.defaultCommerceCurrenciesButton.click();
-		await expect(
-			commerceChannelDefaultsPage.editFrameChannelSelect
-		).not.toBeEmpty();
-		await commerceChannelDefaultsPage.editFrameSaveButton.click();
-		await expect(
-			commerceChannelDefaultsPage.defaultCommerceCurrencies.getByText(
-				'US Dollar'
-			)
-		).toBeVisible();
+		await performLogin(page, userAccount.alternateName);
 
-		await commerceChannelDefaultsPage.defaultCommercePaymentMethodButton.click();
-		await commerceChannelDefaultsPage.editFrameSaveButton.click();
-		await expect(
-			commerceChannelDefaultsPage.defaultCommercePaymentMethod
-				.getByText('Use Priority Settings')
-				.first()
-		).toBeVisible();
+		for (const account of accounts) {
+			await page.goto(`/web/${site.name}/${layout.friendlyUrlPath}`);
 
-		await commerceChannelDefaultsPage.defaultUsersButton.click();
-		await expect(
-			commerceChannelDefaultsPage.editFrameChannelSelect
-		).not.toBeEmpty();
-		await commerceChannelDefaultsPage.editFrameSaveButton.click();
-		await expect(
-			commerceChannelDefaultsPage.defaultUsers.getByText('Test')
-		).toBeVisible();
-	}
-	catch (error: any) {
-		throw new Error(error);
+			await (
+				await accountManagementWidgetPage.accountsTableRowLink(
+					account.name
+				)
+			).click();
+
+			await accountsPage.channelDefaultsTab.click();
+
+			const channelEntryHeaderNames = [
+				'Billing Addresses',
+				'Channel Account Managers',
+				'Currencies',
+				'Delivery Terms and Conditions',
+				'Discounts',
+				'Payment Methods',
+				'Payment Terms and Conditions',
+				'Price Lists',
+				'Shipping Addresses',
+				'Shipping Options',
+			];
+
+			for (const channelEntryHeaderName of channelEntryHeaderNames) {
+				await expect(
+					commerceChannelDefaultsPage.channelEntryHeader(
+						channelEntryHeaderName
+					)
+				).toBeVisible();
+			}
+
+			const channelEntryNames = [
+				'Billing',
+				'Currencies',
+				'Delivery',
+				'Discounts',
+				'PaymentCommerceTerm',
+				'Price',
+				'ShippingCommerceAddress',
+				'Users',
+			];
+
+			for (const channelEntryName of channelEntryNames) {
+				await expect(
+					commerceChannelDefaultsPage.channelEntryAddButton(
+						channelEntryName
+					)
+				).toHaveCount(2);
+				await expect(
+					commerceChannelDefaultsPage.channelEntry(channelEntryName)
+				).toContainText('No Results Found');
+			}
+
+			const uneditableEntryNames = ['ShippingOption', 'PaymentMethod'];
+
+			for (const channelEntryName of uneditableEntryNames) {
+				await expect(
+					commerceChannelDefaultsPage.channelEntryAddButton(
+						channelEntryName
+					)
+				).toHaveCount(0);
+				await expect(
+					commerceChannelDefaultsPage.channelEntry(channelEntryName)
+				).toContainText('No Results Found');
+			}
+		}
 	}
 	finally {
 		await performLogout(page);

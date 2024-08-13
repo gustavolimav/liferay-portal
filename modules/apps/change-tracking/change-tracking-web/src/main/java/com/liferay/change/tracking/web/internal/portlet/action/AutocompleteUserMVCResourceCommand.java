@@ -32,6 +32,7 @@ import com.liferay.portal.kernel.service.permission.PortletPermissionUtil;
 import com.liferay.portal.kernel.service.permission.UserPermissionUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.Validator;
@@ -93,7 +94,7 @@ public class AutocompleteUserMVCResourceCommand extends BaseMVCResourceCommand {
 			return _userLocalService.search(
 				themeDisplay.getCompanyId(), keywords,
 				WorkflowConstants.STATUS_APPROVED, new LinkedHashMap<>(), 0, 20,
-				new UserScreenNameComparator(true));
+				UserScreenNameComparator.getInstance(true));
 		}
 
 		long ctCollectionId = ParamUtil.getLong(
@@ -108,7 +109,15 @@ public class AutocompleteUserMVCResourceCommand extends BaseMVCResourceCommand {
 			Role role = _roleLocalService.getRole(
 				themeDisplay.getCompanyId(), RoleConstants.PUBLICATIONS_USER);
 
-			return _userLocalService.getRoleUsers(role.getRoleId());
+			return _userLocalService.search(
+				themeDisplay.getCompanyId(), keywords,
+				WorkflowConstants.STATUS_APPROVED,
+				LinkedHashMapBuilder.<String, Object>put(
+					"inherit", true
+				).put(
+					"usersRoles", role.getRoleId()
+				).build(),
+				0, 20, UserScreenNameComparator.getInstance(true));
 		}
 
 		User user = themeDisplay.getUser();
@@ -122,7 +131,7 @@ public class AutocompleteUserMVCResourceCommand extends BaseMVCResourceCommand {
 
 		return _userLocalService.searchBySocial(
 			themeDisplay.getCompanyId(), groupIds, userGroupIds, keywords, 0,
-			20, new UserScreenNameComparator(true));
+			20, UserScreenNameComparator.getInstance(true));
 	}
 
 	private JSONArray _getUsersJSONArray(ResourceRequest resourceRequest)

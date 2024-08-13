@@ -33,22 +33,22 @@ public class DDMValidationUpgradeProcess extends UpgradeProcess {
 	protected void doUpgrade() throws Exception {
 		try (PreparedStatement selectPreparedStatement1 =
 				connection.prepareStatement(
-					"select structureId, definition from DDMStructure where " +
-						"classNameId = ? ");
+					"select ctCollectionId, structureId, definition from " +
+						"DDMStructure where classNameId = ? ");
 			PreparedStatement selectPreparedStatement2 =
 				connection.prepareStatement(
-					"select structureVersionId, definition from " +
-						"DDMStructureVersion where structureId = ?");
+					"select ctCollectionId, structureVersionId, definition " +
+						"from DDMStructureVersion where structureId = ?");
 			PreparedStatement updatePreparedStatement1 =
 				AutoBatchPreparedStatementUtil.concurrentAutoBatch(
 					connection,
 					"update DDMStructure set definition = ? where " +
-						"structureId = ?");
+						"ctCollectionId = ? and structureId = ?");
 			PreparedStatement updatePreparedStatement2 =
 				AutoBatchPreparedStatementUtil.concurrentAutoBatch(
 					connection,
 					"update DDMStructureVersion set definition = ? where " +
-						"structureVersionId = ?")) {
+						"ctCollectionId = ? and structureVersionId = ?")) {
 
 			_upgradeDDMStructure(
 				selectPreparedStatement1, selectPreparedStatement2,
@@ -118,10 +118,12 @@ public class DDMValidationUpgradeProcess extends UpgradeProcess {
 				if (_upgradeDefinition(definitionJSONObject)) {
 					updatePreparedStatement1.setString(
 						1, definitionJSONObject.toString());
+					updatePreparedStatement1.setLong(
+						2, resultSet.getLong("ctCollectionId"));
 
 					long structureId = resultSet.getLong("structureId");
 
-					updatePreparedStatement1.setLong(2, structureId);
+					updatePreparedStatement1.setLong(3, structureId);
 
 					updatePreparedStatement1.addBatch();
 
@@ -149,7 +151,9 @@ public class DDMValidationUpgradeProcess extends UpgradeProcess {
 					updatePreparedStatement.setString(
 						1, definitionJSONObject.toString());
 					updatePreparedStatement.setLong(
-						2, resultSet.getLong("structureVersionId"));
+						2, resultSet.getLong("ctCollectionId"));
+					updatePreparedStatement.setLong(
+						3, resultSet.getLong("structureVersionId"));
 
 					updatePreparedStatement.addBatch();
 				}

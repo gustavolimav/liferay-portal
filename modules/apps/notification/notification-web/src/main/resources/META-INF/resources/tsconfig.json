@@ -1,5 +1,5 @@
 {
-	"@generated": "55145475bb4851494fd9592a6b1b392d5185ad0a",
+	"@generated": "e0d99d7e2fe120097da8d9b01546c55b778b1125",
 	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
@@ -26,9 +26,10 @@
 			]
 		},
 		"rootDir": "../../../../../../../..",
+		"skipLibCheck": true,
 		"sourceMap": false,
 		"strict": true,
-		"target": "es2020",
+		"target": "esnext",
 		"tsBuildInfoFile": "../../../../../../../../.tsc/buildinfo/@liferay/notification-web.tsbuildinfo",
 		"typeRoots": [
 			"../../../../../../../../node_modules/@types"

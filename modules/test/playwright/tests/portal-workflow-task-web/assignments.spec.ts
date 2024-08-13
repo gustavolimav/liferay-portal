@@ -1,0 +1,171 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2024 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
+import {expect, mergeTests} from '@playwright/test';
+import {readFileSync} from 'fs';
+
+import {apiHelpersTest} from '../../fixtures/apiHelpersTest';
+import {loginTest} from '../../fixtures/loginTest';
+import {workflowPagesTest} from '../../fixtures/workflowPagesTest';
+import {getRandomInt} from '../../utils/getRandomInt';
+import getRandomString from '../../utils/getRandomString';
+import performLogin, {performLogout, userData} from '../../utils/performLogin';
+import {blogsPagesTest} from '../blogs-web/fixtures/blogsPagesTest';
+
+export const test = mergeTests(
+	apiHelpersTest,
+	blogsPagesTest,
+	loginTest(),
+	workflowPagesTest
+);
+
+let assetType: string;
+let blogTitle: string;
+let workflowDefinitionId: number;
+let workflowDefinitionName: string;
+let workflowXMLDefinition: string;
+
+test.afterEach(
+	async ({
+		apiHelpers,
+		blogsPage,
+		configurationTabPage,
+		processBuilderPage,
+	}) => {
+		if (assetType && workflowDefinitionName) {
+			await processBuilderPage.goto();
+
+			await configurationTabPage.goTo();
+
+			await configurationTabPage.unassignWorkflowFromAssetType(assetType);
+		}
+
+		if (blogTitle) {
+			await blogsPage.goto();
+			await blogsPage.deleteAllBlogEntries();
+		}
+
+		if (workflowDefinitionId) {
+			await apiHelpers.headlessAdminWorkflow.deleteWorkflowDefinition(
+				workflowDefinitionId
+			);
+		}
+
+		assetType = null;
+		blogTitle = null;
+		workflowDefinitionId = null;
+		workflowDefinitionName = null;
+		workflowXMLDefinition = null;
+	}
+);
+
+test('send user back to my workflow tasks page after assign another user to review', async ({
+	apiHelpers,
+	blogsEditBlogEntryPage,
+	blogsPage,
+	configurationTabPage,
+	diagramViewPage,
+	page,
+	processBuilderPage,
+	workflowTaskDetailsPage,
+	workflowTasksPage,
+}) => {
+	const user = await apiHelpers.headlessAdminUser.postUserAccount({
+		familyName: '<script>alert(0);</script>',
+	});
+
+	userData[user.alternateName] = {
+		name: user.givenName,
+		password: 'test',
+		surname: '&lt;script&gt;alert(0);&lt;/script&gt;',
+	};
+
+	const role =
+		await apiHelpers.headlessAdminUser.getRoleByName('Administrator');
+
+	await apiHelpers.headlessAdminUser.assignUserToRole(
+		role.externalReferenceCode,
+		user.id
+	);
+
+	await performLogout(page);
+
+	await performLogin(page, user.alternateName);
+
+	workflowDefinitionName = 'Workflow Definition' + getRandomString();
+
+	workflowXMLDefinition = readFileSync(
+		__dirname +
+			'/dependencies/administrator-role-assignments-workflow-definition.xml',
+		'utf-8'
+	);
+
+	const workflowDefinition =
+		await apiHelpers.headlessAdminWorkflow.postWorkflowDefinitionSave(
+			workflowDefinitionName,
+			{content: workflowXMLDefinition}
+		);
+
+	workflowDefinitionId = workflowDefinition.id;
+
+	await processBuilderPage.goto();
+
+	await processBuilderPage.clickWorkflowDefinitionName(
+		workflowDefinitionName
+	);
+
+	await diagramViewPage.publishWorkflowDefinition();
+
+	await diagramViewPage.goBack();
+
+	await configurationTabPage.goTo();
+
+	assetType = 'Blogs Entry';
+
+	await configurationTabPage.assignWorkflowToAssetType(
+		workflowDefinitionName,
+		assetType
+	);
+
+	await blogsPage.goto();
+
+	await blogsPage.goToCreateBlogEntry();
+
+	blogTitle = 'Blog Title' + getRandomInt();
+
+	await blogsEditBlogEntryPage.editBlogEntry({
+		content: 'Blog content.',
+		submitToWorkflow: true,
+		title: blogTitle,
+	});
+
+	await performLogout(page);
+
+	await performLogin(page, 'test');
+
+	page.on('dialog', async (dialog) => {
+		dialog.accept();
+
+		expect(dialog.message(), 'This alert should not be shown').toBeNull();
+	});
+
+	await workflowTasksPage.goToAssignedToMyRoles();
+
+	await workflowTaskDetailsPage.selectAsset(blogTitle);
+
+	await page.waitForTimeout(3000);
+
+	await workflowTaskDetailsPage.reviewActionMenu.click();
+
+	await workflowTaskDetailsPage.assignToMenuItem.click();
+
+	await page.waitForLoadState('networkidle');
+
+	await workflowTaskDetailsPage.selectAssignee(user.id.toString());
+
+	await workflowTaskDetailsPage.doneAssigneeButton.click();
+
+	await expect(workflowTasksPage.assignedToMyRolesLink).toBeVisible();
+});

@@ -25,6 +25,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -37,7 +38,7 @@ public class TestClassFactory {
 
 	public static List<JUnitTestClass> getJUnitTestClasses() {
 		List<JUnitTestClass> jUnitTestClasses = new ArrayList<>(
-			_jUnitTestClasses.values());
+			new HashSet<>(_jUnitTestClasses.values()));
 
 		Collections.sort(jUnitTestClasses);
 
@@ -83,11 +84,19 @@ public class TestClassFactory {
 	public static TestClassMethod newTestClassMethod(
 		boolean ignored, String name, TestClass testClass) {
 
+		if (testClass instanceof PlaywrightJUnitTestClass) {
+			return new PlaywrightTestClassMethod(ignored, name, testClass);
+		}
+
 		return new TestClassMethod(ignored, name, testClass);
 	}
 
 	public static TestClassMethod newTestClassMethod(
 		JSONObject jsonObject, TestClass testClass) {
+
+		if (testClass instanceof PlaywrightJUnitTestClass) {
+			return new PlaywrightTestClassMethod(jsonObject, testClass);
+		}
 
 		return new TestClassMethod(jsonObject, testClass);
 	}
@@ -211,7 +220,7 @@ public class TestClassFactory {
 				}
 
 				return new PlaywrightJUnitTestClass(
-					batchTestClassGroup, testClassFile, testClassMethodName);
+					batchTestClassGroup, testClassFile);
 			}
 			else if (batchTestClassGroup instanceof
 						PluginsBatchTestClassGroup) {

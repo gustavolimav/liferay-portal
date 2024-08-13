@@ -28,6 +28,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Properties;
 
 import org.osgi.annotation.versioning.ProviderType;
 
@@ -266,6 +267,11 @@ public interface PLOEntryLocalService
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public PLOEntry getPLOEntry(long ploEntryId) throws PortalException;
+
+	public void importPLOEntries(
+			long companyId, long userId, String languageId,
+			Properties properties)
+		throws PortalException;
 
 	public void setPLOEntries(
 			long companyId, long userId, String key,

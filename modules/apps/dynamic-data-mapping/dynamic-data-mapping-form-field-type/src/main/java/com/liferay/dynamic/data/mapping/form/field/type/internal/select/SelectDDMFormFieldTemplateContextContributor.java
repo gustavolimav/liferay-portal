@@ -18,6 +18,7 @@ import com.liferay.dynamic.data.mapping.service.DDMFormInstanceLocalService;
 import com.liferay.list.type.model.ListTypeEntry;
 import com.liferay.list.type.service.ListTypeEntryLocalService;
 import com.liferay.list.type.util.comparator.ListTypeEntryNameComparator;
+import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.service.ObjectDefinitionLocalService;
@@ -42,10 +43,12 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
+import com.liferay.portal.kernel.util.Validator;
 
 import java.text.Collator;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -69,6 +72,9 @@ public class SelectDDMFormFieldTemplateContextContributor
 		DDMFormField ddmFormField,
 		DDMFormFieldRenderingContext ddmFormFieldRenderingContext) {
 
+		ObjectField objectField = _getObjectField(
+			ddmFormField, ddmFormFieldRenderingContext);
+
 		return HashMapBuilder.<String, Object>put(
 			"alphabeticalOrder",
 			GetterUtil.getBoolean(ddmFormField.getProperty("alphabeticalOrder"))
@@ -78,7 +84,8 @@ public class SelectDDMFormFieldTemplateContextContributor
 			"defaultSearch",
 			GetterUtil.getBoolean(ddmFormField.getProperty("defaultSearch"))
 		).put(
-			"multiple", getMultiple(ddmFormField, ddmFormFieldRenderingContext)
+			"multiple",
+			getMultiple(ddmFormField, ddmFormFieldRenderingContext, objectField)
 		).put(
 			"options",
 			() -> {
@@ -88,8 +95,7 @@ public class SelectDDMFormFieldTemplateContextContributor
 
 				return getOptions(
 					ddmFormField, ddmFormFieldOptions,
-					ddmFormFieldRenderingContext.getLocale(),
-					ddmFormFieldRenderingContext);
+					ddmFormFieldRenderingContext.getLocale(), objectField);
 			}
 		).put(
 			"predefinedValue",
@@ -118,7 +124,18 @@ public class SelectDDMFormFieldTemplateContextContributor
 
 	protected boolean getMultiple(
 		DDMFormField ddmFormField,
-		DDMFormFieldRenderingContext ddmFormFieldRenderingContext) {
+		DDMFormFieldRenderingContext ddmFormFieldRenderingContext,
+		ObjectField objectField) {
+
+		if (objectField != null) {
+			if (objectField.compareBusinessType(
+					ObjectFieldConstants.BUSINESS_TYPE_MULTISELECT_PICKLIST)) {
+
+				return true;
+			}
+
+			return false;
+		}
 
 		Map<String, Object> changedProperties =
 			(Map<String, Object>)ddmFormFieldRenderingContext.getProperty(
@@ -135,16 +152,69 @@ public class SelectDDMFormFieldTemplateContextContributor
 		return ddmFormField.isMultiple();
 	}
 
+	protected List<Map<String, String>> getObjectFieldOptions(
+		DDMFormField ddmFormField, DDMFormFieldOptions ddmFormFieldOptions,
+		ObjectField objectField) {
+
+		if (objectField == null) {
+			return Collections.emptyList();
+		}
+
+		OrderByComparator<ListTypeEntry> orderByComparator = null;
+
+		Locale locale = LocaleThreadLocal.getThemeDisplayLocale();
+
+		if (GetterUtil.getBoolean(
+				ddmFormField.getProperty("alphabeticalOrder"))) {
+
+			orderByComparator = new ListTypeEntryNameComparator(true, locale);
+		}
+
+		List<Map<String, String>> options = new ArrayList<>();
+
+		for (ListTypeEntry listTypeEntry :
+				_listTypeEntryLocalService.getListTypeEntries(
+					objectField.getListTypeDefinitionId(), QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, orderByComparator)) {
+
+			Map<Locale, String> nameMap = listTypeEntry.getNameMap();
+
+			if (!nameMap.containsKey(locale)) {
+				continue;
+			}
+
+			options.add(
+				HashMapBuilder.put(
+					"label", nameMap.get(locale)
+				).put(
+					"reference", listTypeEntry.getKey()
+				).put(
+					"value",
+					() -> {
+						String optionValue = ddmFormFieldOptions.getOptionValue(
+							listTypeEntry.getKey());
+
+						if (Validator.isNotNull(optionValue)) {
+							return optionValue;
+						}
+
+						return listTypeEntry.getKey();
+					}
+				).build());
+		}
+
+		return options;
+	}
+
 	protected List<Map<String, String>> getOptions(
 		DDMFormField ddmFormField, DDMFormFieldOptions ddmFormFieldOptions,
-		Locale locale,
-		DDMFormFieldRenderingContext ddmFormFieldRenderingContext) {
+		Locale locale, ObjectField objectField) {
 
 		boolean alphabeticalOrder = GetterUtil.getBoolean(
 			ddmFormField.getProperty("alphabeticalOrder"));
 
-		List<Map<String, String>> objectFieldOptions = _getObjectFieldOptions(
-			ddmFormField, ddmFormFieldOptions, ddmFormFieldRenderingContext);
+		List<Map<String, String>> objectFieldOptions = getObjectFieldOptions(
+			ddmFormField, ddmFormFieldOptions, objectField);
 
 		if (ListUtil.isNotEmpty(objectFieldOptions)) {
 			ServiceContext serviceContext =
@@ -236,8 +306,8 @@ public class SelectDDMFormFieldTemplateContextContributor
 	@Reference
 	protected Portal portal;
 
-	private List<Map<String, String>> _getObjectFieldOptions(
-		DDMFormField ddmFormField, DDMFormFieldOptions ddmFormFieldOptions,
+	private ObjectField _getObjectField(
+		DDMFormField ddmFormField,
 		DDMFormFieldRenderingContext ddmFormFieldRenderingContext) {
 
 		DDMFormInstance ddmFormInstance =
@@ -261,48 +331,9 @@ public class SelectDDMFormFieldTemplateContextContributor
 				GetterUtil.getString(
 					ddmFormField.getProperty("objectFieldName")));
 
-			ObjectField objectField = _objectFieldLocalService.getObjectField(
+			return _objectFieldLocalService.getObjectField(
 				objectDefinition.getObjectDefinitionId(),
 				jsonArray.getString(0));
-
-			OrderByComparator<ListTypeEntry> orderByComparator = null;
-
-			Locale locale = LocaleThreadLocal.getThemeDisplayLocale();
-
-			if (GetterUtil.getBoolean(
-					ddmFormField.getProperty("alphabeticalOrder"))) {
-
-				orderByComparator = new ListTypeEntryNameComparator(
-					true, locale);
-			}
-
-			List<Map<String, String>> options = new ArrayList<>();
-
-			for (ListTypeEntry listTypeEntry :
-					_listTypeEntryLocalService.getListTypeEntries(
-						objectField.getListTypeDefinitionId(),
-						QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-						orderByComparator)) {
-
-				Map<Locale, String> nameMap = listTypeEntry.getNameMap();
-
-				if (!nameMap.containsKey(locale)) {
-					continue;
-				}
-
-				options.add(
-					HashMapBuilder.put(
-						"label", nameMap.get(locale)
-					).put(
-						"reference", listTypeEntry.getKey()
-					).put(
-						"value",
-						ddmFormFieldOptions.getOptionValue(
-							listTypeEntry.getKey())
-					).build());
-			}
-
-			return options;
 		}
 		catch (PortalException portalException) {
 			if (_log.isDebugEnabled()) {

@@ -89,18 +89,13 @@ public class SegmentsExperienceUtil {
 			HttpServletRequest httpServletRequest)
 		throws Exception {
 
+		Map<String, Object> availableSegmentsExperiences = new HashMap<>();
+
 		ThemeDisplay themeDisplay =
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
-		Map<String, Object> availableSegmentsExperiences = new HashMap<>();
-
 		Layout draftLayout = themeDisplay.getLayout();
-
-		String layoutFullURL = PortalUtil.getLayoutFullURL(
-			LayoutLocalServiceUtil.getLayout(draftLayout.getClassPK()),
-			themeDisplay);
-
 		List<SegmentsExperience> segmentsExperiences =
 			SegmentsExperienceServiceUtil.getSegmentsExperiences(
 				themeDisplay.getScopeGroupId(), themeDisplay.getPlid(), true);
@@ -129,7 +124,11 @@ public class SegmentsExperienceUtil {
 				).put(
 					"segmentsExperimentURL",
 					_getSegmentsExperimentURL(
-						themeDisplay, layoutFullURL,
+						themeDisplay,
+						PortalUtil.getLayoutFullURL(
+							LayoutLocalServiceUtil.getLayout(
+								draftLayout.getClassPK()),
+							themeDisplay),
 						segmentsExperience.getSegmentsExperienceId())
 				).build());
 		}
@@ -354,6 +353,7 @@ public class SegmentsExperienceUtil {
 				(FragmentEntryLink)fragmentEntryLink.clone();
 
 			newFragmentEntryLink.setUuid(PortalUUIDUtil.generate());
+			newFragmentEntryLink.setExternalReferenceCode(null);
 			newFragmentEntryLink.setFragmentEntryLinkId(
 				CounterLocalServiceUtil.increment());
 			newFragmentEntryLink.setCreateDate(new Date());

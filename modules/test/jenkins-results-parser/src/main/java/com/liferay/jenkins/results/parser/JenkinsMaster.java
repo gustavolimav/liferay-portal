@@ -924,6 +924,12 @@ public class JenkinsMaster implements JenkinsNode<JenkinsMaster> {
 				JenkinsResultsParserUtil.combine(
 					"jenkins.remote.url[", _masterName, "]"));
 
+			if (JenkinsResultsParserUtil.isNullOrEmpty(_masterRemoteURL) ||
+				JenkinsResultsParserUtil.isNullOrEmpty(_masterURL)) {
+
+				throw new IllegalArgumentException(masterName + " is unknown");
+			}
+
 			Integer slaveRAM = getSlaveRAMMinimumDefault();
 
 			String slaveRAMString = JenkinsResultsParserUtil.getProperty(
@@ -991,9 +997,9 @@ public class JenkinsMaster implements JenkinsNode<JenkinsMaster> {
 	}
 
 	private synchronized int _getRecentBatchSizesTotal() {
-		long currentTimestamp = JenkinsResultsParserUtil.getCurrentTimeMillis();
 		int recentBatchSizesTotal = 0;
 
+		long currentTimestamp = JenkinsResultsParserUtil.getCurrentTimeMillis();
 		List<Long> expiredTimestamps = new ArrayList<>(_batchSizes.size());
 
 		for (Map.Entry<Long, Integer> entry : _batchSizes.entrySet()) {

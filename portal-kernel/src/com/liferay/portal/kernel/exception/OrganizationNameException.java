@@ -5,24 +5,35 @@
 
 package com.liferay.portal.kernel.exception;
 
+import com.liferay.petra.string.StringBundler;
+
 /**
  * @author Brian Wing Shun Chan
  */
 public class OrganizationNameException extends PortalException {
 
-	public OrganizationNameException() {
+	public static class MustNotBeNull extends OrganizationNameException {
+
+		public MustNotBeNull() {
+			super("Name must not be null");
+		}
+
 	}
 
-	public OrganizationNameException(String msg) {
+	public static class MustNotExceedMaximumLength
+		extends OrganizationNameException {
+
+		public MustNotExceedMaximumLength(String name, int nameMaxLength) {
+			super(
+				StringBundler.concat(
+					"Name ", name, " must have fewer than ", nameMaxLength,
+					" characters"));
+		}
+
+	}
+
+	private OrganizationNameException(String msg) {
 		super(msg);
-	}
-
-	public OrganizationNameException(String msg, Throwable throwable) {
-		super(msg, throwable);
-	}
-
-	public OrganizationNameException(Throwable throwable) {
-		super(throwable);
 	}
 
 }

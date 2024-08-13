@@ -64,19 +64,13 @@ public class UserSetDigestTest {
 	}
 
 	@Test
-	public void testSetDigestAfterPrerequisites() throws Exception {
-		User user = _userLocalService.createUser(RandomTestUtil.nextLong());
+	public void testDigestIsEmptyAfterCreatingUser() throws Exception {
+		User user = _testAddUserWithWorkflowHelper(
+			RandomTestUtil.randomString(), _generateRandomEmailAddress());
 
-		user.setScreenName(RandomTestUtil.randomString());
-		user.setEmailAddress(_generateRandomEmailAddress());
+		String digest = user.getDigest();
 
-		String digest = user.getDigest(RandomTestUtil.randomString());
-
-		Assert.assertNotNull(digest);
-
-		user.setDigest(digest);
-
-		Assert.assertEquals(digest, user.getDigest());
+		Assert.assertTrue(digest.isEmpty());
 	}
 
 	private String _generateRandomEmailAddress() {
@@ -85,7 +79,7 @@ public class UserSetDigestTest {
 			RandomTestUtil.randomString(), ".com");
 	}
 
-	private void _testAddUserWithWorkflowHelper(
+	private User _testAddUserWithWorkflowHelper(
 			String screenName, String emailAddress)
 		throws Exception {
 
@@ -115,7 +109,7 @@ public class UserSetDigestTest {
 		long[] userGroupIds = null;
 		boolean sendEmail = false;
 
-		_userLocalService.addUserWithWorkflow(
+		return _userLocalService.addUserWithWorkflow(
 			creatorUserId, TestPropsValues.getCompanyId(), autoPassword,
 			password1, password2, autoScreenName, screenName, emailAddress,
 			locale, firstName, middleName, lastName, prefixListTypeId,

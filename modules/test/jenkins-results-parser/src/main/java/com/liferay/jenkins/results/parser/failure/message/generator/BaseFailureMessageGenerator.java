@@ -29,12 +29,28 @@ public abstract class BaseFailureMessageGenerator
 	implements FailureMessageGenerator {
 
 	@Override
+	public String getMessage(Build build) {
+		return getMessage(build.getConsoleText());
+	}
+
+	@Override
+	public String getMessage(String consoleText) {
+		return null;
+	}
+
+	@Override
 	public Element getMessageElement(Build build) {
 		return getMessageElement(build.getConsoleText());
 	}
 
 	@Override
 	public Element getMessageElement(String consoleText) {
+		String errorMessage = getMessage(consoleText);
+
+		if (errorMessage != null) {
+			return Dom4JUtil.toCodeSnippetElement(errorMessage);
+		}
+
 		return null;
 	}
 
@@ -114,9 +130,26 @@ public abstract class BaseFailureMessageGenerator
 	protected String getConsoleTextSnippet(
 		String consoleText, boolean truncateTop, int start, int end) {
 
-		return "<pre><code>" +
-			_getConsoleTextSnippet(consoleText, truncateTop, start, end) +
-				"</code></pre>";
+		return _getConsoleTextSnippet(consoleText, truncateTop, start, end);
+	}
+
+	protected String getConsoleTextSnippetByEnd(
+		String consoleText, boolean truncateTop, int end) {
+
+		if (end == -1) {
+			end = consoleText.length();
+		}
+
+		int start = getSnippetStart(consoleText, end);
+
+		return getConsoleTextSnippet(consoleText, truncateTop, start, end);
+	}
+
+	protected String getConsoleTextSnippetByStart(
+		String consoleText, int start) {
+
+		return _getConsoleTextSnippet(
+			consoleText, false, start, consoleText.length() - 1);
 	}
 
 	protected Element getConsoleTextSnippetElement(

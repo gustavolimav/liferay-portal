@@ -215,7 +215,7 @@ import org.skyscreamer.jsonassert.JSONCompareMode;
  * @author Marco Leo
  * @author Brian Wing Shun Chan
  */
-@FeatureFlags({"LPS-187142", "LPS-187854"})
+@FeatureFlags("LPS-187142")
 @RunWith(Arquillian.class)
 public class ObjectEntryLocalServiceTest {
 
@@ -1834,6 +1834,70 @@ public class ObjectEntryLocalServiceTest {
 			_objectDefinition.getObjectDefinitionId(), values, serviceContext);
 
 		_assertCount(8);
+	}
+
+	@FeatureFlags("LPD-31212")
+	@Test
+	public void testAddObjectEntryWithRichTextObjectField() throws Exception {
+		ObjectDefinition objectDefinition = _publishCustomObjectDefinition(
+			true,
+			Arrays.asList(
+				ObjectFieldUtil.createObjectField(
+					ObjectFieldConstants.BUSINESS_TYPE_TEXT,
+					ObjectFieldConstants.DB_TYPE_STRING, true, true, null,
+					RandomTestUtil.randomString(), "name",
+					Arrays.asList(
+						new ObjectFieldSettingBuilder(
+						).name(
+							ObjectFieldSettingConstants.NAME_UNIQUE_VALUES
+						).value(
+							Boolean.TRUE.toString()
+						).build()),
+					false)));
+
+		_addCustomObjectField(
+			new RichTextObjectFieldBuilder(
+			).labelMap(
+				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString())
+			).name(
+				"richText"
+			).objectDefinitionId(
+				objectDefinition.getObjectDefinitionId()
+			).build());
+
+		objectDefinition.setScope(ObjectDefinitionConstants.SCOPE_SITE);
+
+		objectDefinition = _objectDefinitionLocalService.updateObjectDefinition(
+			objectDefinition);
+
+		Map<String, Serializable> expectedValues =
+			HashMapBuilder.<String, Serializable>put(
+				"richText",
+				StringBundler.concat(
+					"<div class=\"embed-responsive embed-responsive-16by9\" ",
+					"data-embed-id=",
+					"\"https://www.youtube.com/embed/6LjQ7Z99N74?rel=0\" ",
+					"data-styles=\"{&quot;width&quot;:&quot;81%&quot;}",
+					"\" style=\"width:81%\"><iframe allow=\"autoplay; ",
+					"encrypted-media\" allowfullscreen=\"\" frameborder=\"0\" ",
+					"height=\"315\" src=",
+					"\"https://www.youtube.com/embed/6LjQ7Z99N74?rel=0\" ",
+					"width=\"560\"></iframe></div><p>&nbsp;</p>")
+			).build();
+
+		ObjectEntry objectEntry = _addObjectEntry(
+			TestPropsValues.getGroupId(),
+			objectDefinition.getObjectDefinitionId(),
+			HashMapBuilder.create(
+				expectedValues
+			).build());
+
+		Map<String, Serializable> actualValues = objectEntry.getValues();
+
+		Assert.assertEquals(
+			expectedValues.get("richText"), actualValues.get("richText"));
+
+		_objectDefinitionLocalService.deleteObjectDefinition(objectDefinition);
 	}
 
 	@Test

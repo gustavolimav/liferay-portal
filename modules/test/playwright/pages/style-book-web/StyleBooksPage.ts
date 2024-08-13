@@ -14,12 +14,13 @@ export class StyleBooksPage {
 		this.page = page;
 	}
 
-	async createStyleBook(
-		styleBookName: string,
-		siteUrl?: Site['friendlyUrlPath']
-	) {
-		await this.goto(siteUrl);
+	async goto(siteUrl?: Site['friendlyUrlPath']) {
+		await this.page.goto(
+			`/group${siteUrl || '/guest'}${PORTLET_URLS.styleBooks}`
+		);
+	}
 
+	async createStyleBook(styleBookName: string) {
 		await this.page.getByRole('button', {exact: true, name: 'Add'}).click();
 
 		await this.page.getByPlaceholder('Name').fill(styleBookName);
@@ -39,8 +40,6 @@ export class StyleBooksPage {
 	}
 
 	async deleteStyleBook(styleBookName: string) {
-		await this.goto();
-
 		await this.page
 			.locator(
 				'input[name=_com_liferay_style_book_web_internal_portlet_StyleBookPortlet_keywords][type=search]'
@@ -58,11 +57,5 @@ export class StyleBooksPage {
 		await this.page.getByRole('menuitem', {name: 'Delete'}).click();
 
 		await this.page.getByRole('button', {name: 'Delete'}).click();
-	}
-
-	async goto(siteUrl?: Site['friendlyUrlPath']) {
-		await this.page.goto(
-			`/group${siteUrl || '/guest'}${PORTLET_URLS.styleBooks}`
-		);
 	}
 }

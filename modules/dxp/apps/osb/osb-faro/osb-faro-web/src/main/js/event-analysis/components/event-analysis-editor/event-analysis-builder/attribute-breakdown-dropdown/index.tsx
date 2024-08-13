@@ -17,7 +17,11 @@ import {
 	Breakdown,
 	DataTypes
 } from 'event-analysis/utils/types';
-import {BREAKDOWN_FNS_MAP} from 'event-analysis/utils/utils';
+import {
+	BREAKDOWN_FNS_MAP,
+	getModifiedEventAttributeDefinitions,
+	getTabs
+} from 'event-analysis/utils/utils';
 import {close, modalTypes, open} from 'shared/actions/modals';
 import {connect, ConnectedProps} from 'react-redux';
 import {CSSTransition, TransitionGroup} from 'react-transition-group';
@@ -121,16 +125,7 @@ const AttributeBreakdownDropdown: React.FC<IAttributeBreakdownDropdownProps> = (
 							<div className='d-flex flex-column'>
 								<BaseDropdown.Header
 									activeTabId={attributeOwnerType}
-									tabs={[
-										{
-											onClick: () =>
-												setAttributeOwnerType(
-													AttributeOwnerTypes.Event
-												),
-											tabId: AttributeOwnerTypes.Event,
-											title: Liferay.Language.get('event')
-										}
-									]}
+									tabs={getTabs(setAttributeOwnerType)}
 									title={Liferay.Language.get('attributes')}
 								/>
 
@@ -148,27 +143,20 @@ const AttributeBreakdownDropdown: React.FC<IAttributeBreakdownDropdownProps> = (
 											eventAttributeDefinitions: Attribute[];
 										};
 									}) => {
-										const modifieldEventAttributeDefinitions = attribute
-											? eventAttributeDefinitions.map(
-													eventAttributeDefinition => {
-														if (
-															attribute.id ===
-															eventAttributeDefinition.id
-														) {
-															return attribute;
-														}
-
-														return eventAttributeDefinition;
-													}
-											  )
-											: eventAttributeDefinitions;
+										const modifiedEventAttributeDefinitions = getModifiedEventAttributeDefinitions(
+											{
+												attribute,
+												attributeOwnerType,
+												eventAttributeDefinitions
+											}
+										);
 
 										return (
 											<BaseDropdown.SearchableList
 												activeId={attributeId}
 												disabledIds={disabledIds}
 												items={
-													modifieldEventAttributeDefinitions
+													modifiedEventAttributeDefinitions
 												}
 												onEditClick={(
 													attribute: Attribute
@@ -219,6 +207,10 @@ const AttributeBreakdownDropdown: React.FC<IAttributeBreakdownDropdownProps> = (
 												}
 												onQueryChange={setQuery}
 												query={query}
+												showInfoCard={
+													attributeOwnerType ===
+													AttributeOwnerTypes.Event
+												}
 												showOptionsCondition={
 													hasOptions
 												}

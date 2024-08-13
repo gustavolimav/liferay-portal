@@ -56,7 +56,7 @@ class GroovyRole {
 		}
 
 		role = RoleLocalServiceUtil.addRole(
-			groovyScriptingContext.guestUserId, null, 0, name,
+			null, groovyScriptingContext.guestUserId, null, 0, name,
 			GroovyScriptingContext.getLocalizationMap(name),
 			GroovyScriptingContext.getLocalizationMap(description), type, null,
 			groovyScriptingContext.serviceContext);

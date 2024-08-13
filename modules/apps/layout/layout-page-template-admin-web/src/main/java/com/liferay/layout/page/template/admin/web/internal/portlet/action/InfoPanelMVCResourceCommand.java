@@ -58,11 +58,11 @@ public class InfoPanelMVCResourceCommand extends BaseMVCResourceCommand {
 			_getLayoutPageTemplateCollections(ResourceRequest resourceRequest)
 		throws Exception {
 
-		long[] layoutPageTemplateCollectionIds = ParamUtil.getLongValues(
-			resourceRequest, "rowIdsLayoutPageTemplateCollection");
-
 		List<LayoutPageTemplateCollection> layoutPageTemplateCollections =
 			new ArrayList<>();
+
+		long[] layoutPageTemplateCollectionIds = ParamUtil.getLongValues(
+			resourceRequest, "rowIdsLayoutPageTemplateCollection");
 
 		for (long layoutPageTemplateCollectionId :
 				layoutPageTemplateCollectionIds) {
@@ -84,11 +84,11 @@ public class InfoPanelMVCResourceCommand extends BaseMVCResourceCommand {
 			ResourceRequest resourceRequest)
 		throws Exception {
 
-		long[] layoutPageTemplateEntryIds = ParamUtil.getLongValues(
-			resourceRequest, "rowIds");
-
 		List<LayoutPageTemplateEntry> layoutPageTemplateEntries =
 			new ArrayList<>();
+
+		long[] layoutPageTemplateEntryIds = ParamUtil.getLongValues(
+			resourceRequest, "rowIds");
 
 		for (long layoutPageTemplateEntryId : layoutPageTemplateEntryIds) {
 			LayoutPageTemplateEntry layoutPageTemplateEntry =

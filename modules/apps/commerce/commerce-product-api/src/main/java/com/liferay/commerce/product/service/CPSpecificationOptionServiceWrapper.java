@@ -31,7 +31,8 @@ public class CPSpecificationOptionServiceWrapper
 
 	@Override
 	public CPSpecificationOption addCPSpecificationOption(
-			long cpOptionCategoryId, long listTypeDefinitionId,
+			String externalReferenceCode, long cpOptionCategoryId,
+			long listTypeDefinitionId,
 			java.util.Map<java.util.Locale, String> titleMap,
 			java.util.Map<java.util.Locale, String> descriptionMap,
 			boolean facetable, String key, double priority,
@@ -39,8 +40,8 @@ public class CPSpecificationOptionServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _cpSpecificationOptionService.addCPSpecificationOption(
-			cpOptionCategoryId, listTypeDefinitionId, titleMap, descriptionMap,
-			facetable, key, priority, serviceContext);
+			externalReferenceCode, cpOptionCategoryId, listTypeDefinitionId,
+			titleMap, descriptionMap, facetable, key, priority, serviceContext);
 	}
 
 	@Override
@@ -58,6 +59,17 @@ public class CPSpecificationOptionServiceWrapper
 
 		return _cpSpecificationOptionService.fetchCPSpecificationOption(
 			companyId, key);
+	}
+
+	@Override
+	public CPSpecificationOption
+			fetchCPSpecificationOptionByExternalReferenceCode(
+				String externalReferenceCode, long companyId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _cpSpecificationOptionService.
+			fetchCPSpecificationOptionByExternalReferenceCode(
+				externalReferenceCode, companyId);
 	}
 
 	@Override
@@ -101,8 +113,8 @@ public class CPSpecificationOptionServiceWrapper
 
 	@Override
 	public CPSpecificationOption updateCPSpecificationOption(
-			long cpSpecificationOptionId, long cpOptionCategoryId,
-			long listTypeDefinitionId,
+			String externalReferenceCode, long cpSpecificationOptionId,
+			long cpOptionCategoryId, long listTypeDefinitionId,
 			java.util.Map<java.util.Locale, String> titleMap,
 			java.util.Map<java.util.Locale, String> descriptionMap,
 			boolean facetable, String key, double priority,
@@ -110,8 +122,9 @@ public class CPSpecificationOptionServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _cpSpecificationOptionService.updateCPSpecificationOption(
-			cpSpecificationOptionId, cpOptionCategoryId, listTypeDefinitionId,
-			titleMap, descriptionMap, facetable, key, priority, serviceContext);
+			externalReferenceCode, cpSpecificationOptionId, cpOptionCategoryId,
+			listTypeDefinitionId, titleMap, descriptionMap, facetable, key,
+			priority, serviceContext);
 	}
 
 	@Override

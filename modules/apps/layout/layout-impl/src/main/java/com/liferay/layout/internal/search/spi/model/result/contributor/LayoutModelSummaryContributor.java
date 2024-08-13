@@ -34,6 +34,8 @@ public class LayoutModelSummaryContributor implements ModelSummaryContributor {
 	public Summary getSummary(
 		Document document, Locale locale, String snippet) {
 
+		Summary summary = null;
+
 		String localizedFieldName = Field.getLocalizedName(locale, Field.NAME);
 
 		if (Validator.isNull(document.getField(localizedFieldName))) {
@@ -66,8 +68,6 @@ public class LayoutModelSummaryContributor implements ModelSummaryContributor {
 			content, ArrayUtil.toStringArray(highlights),
 			HighlightUtil.HIGHLIGHT_TAG_OPEN,
 			HighlightUtil.HIGHLIGHT_TAG_CLOSE);
-
-		Summary summary = null;
 
 		if (Validator.isBlank(snippet)) {
 			summary = new Summary(locale, name, content);

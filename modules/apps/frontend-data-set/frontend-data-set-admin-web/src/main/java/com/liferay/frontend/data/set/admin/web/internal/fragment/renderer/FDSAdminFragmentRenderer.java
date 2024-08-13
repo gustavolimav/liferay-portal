@@ -618,20 +618,12 @@ public class FDSAdminFragmentRenderer implements FragmentRenderer {
 					);
 				}
 
-				String listTypeDefinitionERC = null;
-				String sourceType = null;
+				String source = MapUtil.getString(properties, "source");
 
-				if (FeatureFlagManagerUtil.isEnabled("LPD-10754")) {
-					listTypeDefinitionERC = MapUtil.getString(
-						properties, "source");
-					sourceType = MapUtil.getString(properties, "sourceType");
-				}
-				else {
-					listTypeDefinitionERC = MapUtil.getString(
-						properties, "listTypeDefinitionERC");
-				}
+				if (Validator.isNotNull(source)) {
+					String sourceType = MapUtil.getString(
+						properties, "sourceType");
 
-				if (Validator.isNotNull(listTypeDefinitionERC)) {
 					JSONObject selectionFilterJSONObject = JSONUtil.put(
 						"autocompleteEnabled", true
 					).put(
@@ -647,10 +639,10 @@ public class FDSAdminFragmentRenderer implements FragmentRenderer {
 					);
 
 					if (Validator.isNotNull(sourceType) &&
-						Objects.equals(sourceType, "API_HEADLESS")) {
+						Objects.equals(sourceType, "API_REST_APPLICATION")) {
 
 						return selectionFilterJSONObject.put(
-							"apiURL", properties.get("source")
+							"apiURL", source
 						).put(
 							"itemKey", properties.get("itemKey")
 						).put(
@@ -685,8 +677,7 @@ public class FDSAdminFragmentRenderer implements FragmentRenderer {
 					ListTypeDefinition listTypeDefinition =
 						_listTypeDefinitionLocalService.
 							getListTypeDefinitionByExternalReferenceCode(
-								listTypeDefinitionERC,
-								themeDisplay.getCompanyId());
+								source, themeDisplay.getCompanyId());
 
 					List<ListTypeEntry> listTypeEntries =
 						_listTypeEntryLocalService.getListTypeEntries(
@@ -879,8 +870,8 @@ public class FDSAdminFragmentRenderer implements FragmentRenderer {
 
 		DTOConverterContext dtoConverterContext =
 			new DefaultDTOConverterContext(
-				false, null, null, null, null, LocaleUtil.getSiteDefault(),
-				null, null);
+				false, null, null, null, null,
+				LocaleUtil.getMostRelevantLocale(), null, null);
 
 		DefaultObjectEntryManager defaultObjectEntryManager =
 			DefaultObjectEntryManagerProvider.provide(
@@ -918,8 +909,8 @@ public class FDSAdminFragmentRenderer implements FragmentRenderer {
 
 		DTOConverterContext dtoConverterContext =
 			new DefaultDTOConverterContext(
-				false, null, null, null, null, LocaleUtil.getSiteDefault(),
-				null, null);
+				false, null, null, null, null,
+				LocaleUtil.getMostRelevantLocale(), null, null);
 
 		DefaultObjectEntryManager defaultObjectEntryManager =
 			DefaultObjectEntryManagerProvider.provide(
@@ -946,11 +937,12 @@ public class FDSAdminFragmentRenderer implements FragmentRenderer {
 			preselectedValues);
 
 		for (int i = 0; i < preselectedValuesJSONArray.length(); i++) {
-			String key = preselectedValuesJSONArray.getString(i);
+			JSONObject jsonObject = preselectedValuesJSONArray.getJSONObject(i);
 
 			for (ListTypeEntry listTypeEntry : listTypeEntries) {
 				if (Objects.equals(
-						listTypeEntry.getExternalReferenceCode(), key)) {
+						listTypeEntry.getExternalReferenceCode(),
+						jsonObject.getString("value"))) {
 
 					jsonArray.put(
 						JSONUtil.put(
@@ -1006,24 +998,26 @@ public class FDSAdminFragmentRenderer implements FragmentRenderer {
 			(ObjectEntry objectEntry) -> {
 				Map<String, Object> properties = objectEntry.getProperties();
 
-				if (FeatureFlagManagerUtil.isEnabled("LPD-19465")) {
-					return JSONUtil.put(
-						"active", properties.get("default")
-					).put(
-						"default", properties.get("default")
-					).put(
-						"direction", properties.get("orderType")
-					).put(
-						"key", properties.get("fieldName")
-					).put(
-						"label", properties.get("label")
-					);
+				String label = (String)properties.get("label");
+
+				if (Validator.isNull(label)) {
+					Map<String, String> labelI18n =
+						(Map<String, String>)properties.get("label_i18n");
+
+					label = labelI18n.get(
+						LocaleUtil.toLanguageId(LocaleUtil.getSiteDefault()));
 				}
 
 				return JSONUtil.put(
-					"direction", properties.get("sortingDirection")
+					"active", properties.get("default")
+				).put(
+					"default", properties.get("default")
+				).put(
+					"direction", properties.get("orderType")
 				).put(
 					"key", properties.get("fieldName")
+				).put(
+					"label", label
 				);
 			});
 	}

@@ -268,6 +268,45 @@ public class LayoutStructure {
 		return dropZoneLayoutStructureItem;
 	}
 
+	public LayoutStructureItem addFormStepContainerStyledLayoutStructureItem(
+		String parentItemId, int position) {
+
+		return addFormStepContainerStyledLayoutStructureItem(
+			PortalUUIDUtil.generate(), parentItemId, position);
+	}
+
+	public LayoutStructureItem addFormStepContainerStyledLayoutStructureItem(
+		String itemId, String parentItemId, int position) {
+
+		FormStepContainerStyledLayoutStructureItem
+			formStepContainerStyledLayoutStructureItem =
+				new FormStepContainerStyledLayoutStructureItem(
+					itemId, parentItemId);
+
+		_updateLayoutStructure(
+			formStepContainerStyledLayoutStructureItem, position);
+
+		return formStepContainerStyledLayoutStructureItem;
+	}
+
+	public LayoutStructureItem addFormStepLayoutStructureItem(
+		String parentItemId, int position) {
+
+		return addFormStepLayoutStructureItem(
+			PortalUUIDUtil.generate(), parentItemId, position);
+	}
+
+	public LayoutStructureItem addFormStepLayoutStructureItem(
+		String itemId, String parentItemId, int position) {
+
+		FormStepLayoutStructureItem formStepLayoutStructureItem =
+			new FormStepLayoutStructureItem(itemId, parentItemId);
+
+		_updateLayoutStructure(formStepLayoutStructureItem, position);
+
+		return formStepLayoutStructureItem;
+	}
+
 	public LayoutStructureItem addFormStyledLayoutStructureItem(
 		String parentItemId, int position) {
 
@@ -742,6 +781,89 @@ public class LayoutStructure {
 		_deletedLayoutStructureItems.remove(itemId);
 	}
 
+	public void updateFormStyledLayoutStructureItemMultiStep(
+		String itemId, boolean multiStep, int numberOfSteps) {
+
+		FormStyledLayoutStructureItem formStyledLayoutStructureItem =
+			(FormStyledLayoutStructureItem)_layoutStructureItems.get(itemId);
+
+		List<String> childrenItemIds =
+			formStyledLayoutStructureItem.getChildrenItemIds();
+
+		if (ListUtil.isEmpty(childrenItemIds) && !multiStep) {
+			return;
+		}
+
+		FormStepContainerStyledLayoutStructureItem
+			formStepContainerStyledLayoutStructureItem =
+				_findFormStepContainerLayoutStructureItem(childrenItemIds);
+
+		if (multiStep) {
+			if (formStepContainerStyledLayoutStructureItem != null) {
+				List<String> formStepContainerChildrenItemIds =
+					formStepContainerStyledLayoutStructureItem.
+						getChildrenItemIds();
+
+				if (numberOfSteps == formStepContainerChildrenItemIds.size()) {
+					return;
+				}
+
+				if (numberOfSteps > formStepContainerChildrenItemIds.size()) {
+					for (int i = formStepContainerChildrenItemIds.size();
+						 i < numberOfSteps; i++) {
+
+						addFormStepLayoutStructureItem(
+							formStepContainerStyledLayoutStructureItem.
+								getItemId(),
+							i);
+					}
+				}
+				else {
+					for (int i = formStepContainerChildrenItemIds.size() - 1;
+						 i >= numberOfSteps; i--) {
+
+						deleteLayoutStructureItem(
+							formStepContainerChildrenItemIds.get(i));
+					}
+				}
+			}
+			else {
+				_addFormStepContainerStyledLayoutStructureItem(
+					formStyledLayoutStructureItem, numberOfSteps);
+			}
+		}
+		else if (formStepContainerStyledLayoutStructureItem != null) {
+			List<String> formStepChildrenItemIds = new ArrayList<>();
+
+			for (String childrenItemId :
+					formStepContainerStyledLayoutStructureItem.
+						getChildrenItemIds()) {
+
+				LayoutStructureItem layoutStructureItem =
+					_layoutStructureItems.get(childrenItemId);
+
+				formStepChildrenItemIds.addAll(
+					layoutStructureItem.getChildrenItemIds());
+
+				layoutStructureItem.setChildrenItemIds(new ArrayList<>());
+			}
+
+			for (String formStepChildrenItemId : formStepChildrenItemIds) {
+				LayoutStructureItem layoutStructureItem =
+					_layoutStructureItems.get(formStepChildrenItemId);
+
+				layoutStructureItem.setParentItemId(
+					formStyledLayoutStructureItem.getItemId());
+
+				formStyledLayoutStructureItem.addChildrenItem(
+					formStepChildrenItemId);
+			}
+
+			deleteLayoutStructureItem(
+				formStepContainerStyledLayoutStructureItem.getItemId());
+		}
+	}
+
 	public LayoutStructureItem updateItemConfig(
 		JSONObject itemConfigJSONObject, String itemId) {
 
@@ -959,6 +1081,42 @@ public class LayoutStructure {
 		_updateLayoutStructure(columnLayoutStructureItem, position);
 	}
 
+	private void _addFormStepContainerStyledLayoutStructureItem(
+		FormStyledLayoutStructureItem formStyledLayoutStructureItem,
+		int numberOfSteps) {
+
+		List<String> childrenItemIds =
+			formStyledLayoutStructureItem.getChildrenItemIds();
+
+		formStyledLayoutStructureItem.setChildrenItemIds(new ArrayList<>());
+
+		FormStepContainerStyledLayoutStructureItem
+			formStepContainerStyledLayoutStructureItem =
+				(FormStepContainerStyledLayoutStructureItem)
+					addFormStepContainerStyledLayoutStructureItem(
+						formStyledLayoutStructureItem.getItemId(), 0);
+
+		FormStepLayoutStructureItem firstFormStepLayoutStructureItem =
+			(FormStepLayoutStructureItem)addFormStepLayoutStructureItem(
+				formStepContainerStyledLayoutStructureItem.getItemId(), 0);
+
+		for (String childrenId : childrenItemIds) {
+			LayoutStructureItem layoutStructureItem = _layoutStructureItems.get(
+				childrenId);
+
+			layoutStructureItem.setParentItemId(
+				firstFormStepLayoutStructureItem.getItemId());
+
+			firstFormStepLayoutStructureItem.addChildrenItem(
+				layoutStructureItem.getItemId());
+		}
+
+		for (int i = 1; i < numberOfSteps; i++) {
+			addFormStepLayoutStructureItem(
+				formStepContainerStyledLayoutStructureItem.getItemId(), i);
+		}
+	}
+
 	private List<LayoutStructureItem> _duplicateLayoutStructureItem(
 		String itemId, String parentItemId, int position) {
 
@@ -988,6 +1146,25 @@ public class LayoutStructure {
 		}
 
 		return duplicatedLayoutStructureItems;
+	}
+
+	private FormStepContainerStyledLayoutStructureItem
+		_findFormStepContainerLayoutStructureItem(
+			List<String> childrenItemIds) {
+
+		for (String childItemId : childrenItemIds) {
+			LayoutStructureItem layoutStructureItem = _layoutStructureItems.get(
+				childItemId);
+
+			if (layoutStructureItem instanceof
+					FormStepContainerStyledLayoutStructureItem) {
+
+				return (FormStepContainerStyledLayoutStructureItem)
+					layoutStructureItem;
+			}
+		}
+
+		return null;
 	}
 
 	private Set<String> _getChildrenItemIds(String itemId) {

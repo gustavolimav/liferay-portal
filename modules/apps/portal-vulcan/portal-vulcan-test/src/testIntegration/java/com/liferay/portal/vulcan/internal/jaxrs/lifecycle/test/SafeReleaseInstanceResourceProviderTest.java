@@ -19,6 +19,8 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
 import java.util.Collections;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.NotFoundException;
@@ -164,7 +166,7 @@ public class SafeReleaseInstanceResourceProviderTest {
 
 		System.runFinalization();
 
-		Assert.assertEquals(0, _instances);
+		Assert.assertTrue(_instancesCountDownLatch.await(5, TimeUnit.SECONDS));
 	}
 
 	public static class TestApplication extends Application {
@@ -173,7 +175,8 @@ public class SafeReleaseInstanceResourceProviderTest {
 	public static class TestResource implements EntityModelResource {
 
 		public TestResource() {
-			_instances++;
+			_instancesCountDownLatch = new CountDownLatch(
+				(int)(_instancesCountDownLatch.getCount() + 1));
 		}
 
 		@Override
@@ -202,12 +205,13 @@ public class SafeReleaseInstanceResourceProviderTest {
 		protected void finalize() throws Throwable {
 			super.finalize();
 
-			_instances--;
+			_instancesCountDownLatch.countDown();
 		}
 
 	}
 
-	private static int _instances;
+	private static CountDownLatch _instancesCountDownLatch = new CountDownLatch(
+		0);
 
 	private ServiceRegistration<Application> _applicationServiceRegistration;
 	private ServiceRegistration<TestResource> _resourceServiceRegistration;

@@ -383,6 +383,10 @@ public interface User extends PersistedModel, UserModel {
 
 	public void setContact(Contact contact);
 
+	public void setGroup(Group group);
+
+	public void setGroupId(long groupId);
+
 	public void setGroupIds(long[] groupIds);
 
 	public void setOrganizationIds(long[] organizationIds);

@@ -47,11 +47,16 @@ export const PORTLET_URLS = {
 	scriptManagement:
 		'/~/control_panel/manage?p_p_id=com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet&p_p_lifecycle=0&p_p_state=maximized&p_p_mode=view&_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_mvcRenderCommandName=%2Fconfiguration_admin%2Fview_configuration_screen&_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_configurationScreenKey=script-management',
 	selectSites: '/~/control_panel/manage/-/sites/sites/select_site',
+	serviceAccessPolicy:
+		'/~/control_panel/manage?p_p_id=com_liferay_portal_security_service_access_policy_web_portlet_SAPPortlet&p_p_lifecycle=0&p_p_state=maximized',
 	siteSettings: '/~/control_panel/manage/-/site/settings',
 	styleBooks: '/~/control_panel/manage/-/style_books/style_books',
 	tagsAdmin: '/~/control_panel/manage/-/tags_admin/tags',
+	teams: '/~/control_panel/manage/-/site_teams/teams',
 	utilityPages:
 		'/~/control_panel/manage?p_p_id=com_liferay_layout_admin_web_portlet_GroupPagesPortlet&_com_liferay_layout_admin_web_portlet_GroupPagesPortlet_tabs1=utility-pages',
+	widgetPageTemplates:
+		'/group/global/~/control_panel/manage?p_p_id=com_liferay_layout_page_template_admin_web_portlet_LayoutPageTemplatesPortlet&_com_liferay_layout_page_template_admin_web_portlet_LayoutPageTemplatesPortlet_tabs1=page-templates',
 	wikiAdmin:
 		'/~/control_panel/manage?p_p_id=com_liferay_wiki_web_portlet_WikiAdminPortlet',
 	workflow:

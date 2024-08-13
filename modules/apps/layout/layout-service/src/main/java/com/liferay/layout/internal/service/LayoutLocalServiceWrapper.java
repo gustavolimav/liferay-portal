@@ -19,7 +19,10 @@ import com.liferay.friendly.url.service.FriendlyURLEntryLocalService;
 import com.liferay.layout.constants.LayoutTypeSettingsConstants;
 import com.liferay.layout.friendly.url.LayoutFriendlyURLEntryHelper;
 import com.liferay.layout.model.LayoutClassedModelUsage;
+import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
+import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.model.LayoutPageTemplateStructure;
+import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
 import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocalService;
 import com.liferay.layout.seo.model.LayoutSEOEntry;
 import com.liferay.layout.seo.service.LayoutSEOEntryLocalService;
@@ -65,6 +68,7 @@ import com.liferay.portal.kernel.service.permission.PortletPermissionUtil;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.TransactionConfig;
 import com.liferay.portal.kernel.transaction.TransactionInvokerUtil;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.CopyLayoutThreadLocal;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
@@ -233,6 +237,7 @@ public class LayoutLocalServiceWrapper
 					LayoutClassedModelUsage layoutClassedModelUsage =
 						_layoutClassedModelUsageLocalService.
 							fetchLayoutClassedModelUsage(
+								targetLayout.getGroupId(),
 								sourceLayoutLayoutClassedModelUsage.
 									getClassNameId(),
 								sourceLayoutLayoutClassedModelUsage.
@@ -597,13 +602,14 @@ public class LayoutLocalServiceWrapper
 		}
 	}
 
-	private void _deletePortletPermissions(
+	private List<String> _deletePortletPermissions(
 			Layout layout, long[] segmentsExperiencesIds)
 		throws Exception {
 
-		for (String portletId :
-				_getLayoutPortletIds(layout, segmentsExperiencesIds)) {
+		List<String> portletIds = _getLayoutPortletIds(
+			layout, segmentsExperiencesIds);
 
+		for (String portletId : portletIds) {
 			_resourcePermissionLocalService.deleteResourcePermissions(
 				layout.getCompanyId(),
 				PortletIdCodec.decodePortletName(portletId),
@@ -611,6 +617,8 @@ public class LayoutLocalServiceWrapper
 				PortletPermissionUtil.getPrimaryKey(
 					layout.getPlid(), portletId));
 		}
+
+		return portletIds;
 	}
 
 	private Layout _fetchLayoutByFriendlyURL(
@@ -961,6 +969,7 @@ public class LayoutLocalServiceWrapper
 					(FragmentEntryLink)sourceLayoutfragmentEntryLink.clone();
 
 				newFragmentEntryLink.setUuid(serviceContext.getUuid());
+				newFragmentEntryLink.setExternalReferenceCode(null);
 				newFragmentEntryLink.setFragmentEntryLinkId(
 					_counterLocalService.increment());
 				newFragmentEntryLink.setUserId(user.getUserId());
@@ -1049,6 +1058,10 @@ public class LayoutLocalServiceWrapper
 	private LayoutFriendlyURLEntryHelper _layoutFriendlyURLEntryHelper;
 
 	@Reference
+	private LayoutPageTemplateEntryLocalService
+		_layoutPageTemplateEntryLocalService;
+
+	@Reference
 	private LayoutPageTemplateStructureLocalService
 		_layoutPageTemplateStructureLocalService;
 
@@ -1095,7 +1108,7 @@ public class LayoutLocalServiceWrapper
 				_sites.copyPortletPermissions(_targetLayout, _sourceLayout);
 			}
 			else {
-				_deletePortletPermissions(
+				List<String> oldPortletIds = _deletePortletPermissions(
 					_targetLayout, _targetSegmentsExperiencesIds);
 
 				// LPS-108378 Copy structure before permissions and preferences
@@ -1119,6 +1132,8 @@ public class LayoutLocalServiceWrapper
 
 				_copyPortletPreferences(
 					portletIds, _sourceLayout, _targetLayout);
+
+				_deleteOrphanPortletPreferences(portletIds, oldPortletIds);
 			}
 
 			// Copy classedModelUsages after copying the structure
@@ -1193,6 +1208,54 @@ public class LayoutLocalServiceWrapper
 					clientExtensionEntryRel.getType(),
 					clientExtensionEntryRel.getTypeSettings(),
 					ServiceContextThreadLocal.getServiceContext());
+			}
+		}
+
+		private void _deleteOrphanPortletPreferences(
+			List<String> portletIds, List<String> oldPortletIds) {
+
+			String[] deletedPortletIds = TransformUtil.transformToArray(
+				oldPortletIds,
+				portletId -> {
+					if (portletIds.contains(portletId)) {
+						return null;
+					}
+
+					return portletId;
+				},
+				String.class);
+
+			if (ArrayUtil.isEmpty(deletedPortletIds)) {
+				return;
+			}
+
+			LayoutPageTemplateEntry layoutPageTemplateEntry =
+				_layoutPageTemplateEntryLocalService.
+					fetchLayoutPageTemplateEntryByPlid(_targetLayout.getPlid());
+
+			if ((layoutPageTemplateEntry == null) ||
+				!Objects.equals(
+					layoutPageTemplateEntry.getType(),
+					LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT)) {
+
+				return;
+			}
+
+			for (String portletId : deletedPortletIds) {
+				for (PortletPreferences portletPreferences :
+						_portletPreferencesLocalService.
+							getPortletPreferencesByPortletId(portletId)) {
+
+					try {
+						_portletPreferencesLocalService.
+							deletePortletPreferences(portletPreferences);
+					}
+					catch (Exception exception) {
+						if (_log.isDebugEnabled()) {
+							_log.debug(exception);
+						}
+					}
+				}
 			}
 		}
 

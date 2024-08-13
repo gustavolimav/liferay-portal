@@ -1,4 +1,4 @@
-@component-name = "portal-wcm"
+@component-name = "portal-page-management"
 definition {
 
 	property ci.retries.disabled = "true";
@@ -153,6 +153,8 @@ definition {
 
 		task ("Assert the drop zone is shown in dropdown panel when click the toggle button") {
 			PageEditor.clickConfigurableField(fragmentName = "Dropdown");
+
+			PageEditor.gotoTab(tabName = "Browser");
 
 			Click.javaScriptClick(locator1 = "Fragment#DROPDOWN_FRAGMENT_TOGGLE");
 
@@ -357,6 +359,8 @@ definition {
 
 		task ("Assert the panel type of Dropdown fragment") {
 			PageEditor.clickConfigurableField(fragmentName = "Dropdown");
+
+			PageEditor.gotoTab(tabName = "Browser");
 
 			Click.javaScriptClick(locator1 = "Fragment#DROPDOWN_FRAGMENT_TOGGLE");
 

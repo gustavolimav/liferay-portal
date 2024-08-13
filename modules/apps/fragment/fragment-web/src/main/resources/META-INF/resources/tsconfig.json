@@ -1,5 +1,5 @@
 {
-	"@generated": "b37bfef7936146a4b14205ecae0782aa2007710f",
+	"@generated": "0228e7f2f0c1ce5633edfe077c571090709d54b3",
 	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
@@ -29,9 +29,10 @@
 			]
 		},
 		"rootDir": "../../../../../../../..",
+		"skipLibCheck": true,
 		"sourceMap": false,
 		"strict": true,
-		"target": "es2020",
+		"target": "esnext",
 		"tsBuildInfoFile": "../../../../../../../../.tsc/buildinfo/fragment-web.tsbuildinfo",
 		"typeRoots": [
 			"../../../../../../../../node_modules/@types"

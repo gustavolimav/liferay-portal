@@ -1,4 +1,4 @@
-@component-name = "portal-wcm"
+@component-name = "portal-page-management"
 definition {
 
 	property ci.retries.disabled = "true";
@@ -774,6 +774,8 @@ definition {
 
 			PageEditor.clickConfigurableField(fragmentName = "Heading");
 
+			PageEditor.gotoTab(tabName = "Browser");
+
 			PageEditor.viewFragmentHeaderVisible(fragmentName = "Heading");
 
 			PageEditor.viewFragmentHeaderNotVisible(fragmentName = "Asset Publisher");
@@ -788,6 +790,8 @@ definition {
 
 		task ("Assert only header of Asset Publisher shown when Asset Publisher selected") {
 			PageEditor.clickConfigurableField(fragmentName = "Asset Publisher");
+
+			PageEditor.gotoTab(tabName = "Browser");
 
 			PageEditor.viewFragmentHeaderVisible(fragmentName = "Asset Publisher");
 
@@ -986,6 +990,8 @@ definition {
 		task ("Move the fragment") {
 			PageEditor.clickConfigurableField(fragmentName = "Button");
 
+			PageEditor.gotoTab(tabName = "Browser");
+
 			DragAndDrop.javaScriptDragAndDropToUp(
 				fragmentName = "heading",
 				id = "element-text",
@@ -1085,58 +1091,6 @@ definition {
 				locator1 = "Panel#PANEL");
 
 			Breadcrumb.viewActiveEntry(breadcrumbName = "Grid");
-		}
-	}
-
-	@description = "This is a test for LPS-129536. View the configuration settings of widget after execute Clean Up Orphaned Theme Portlet Preferences."
-	@priority = 4
-	test ViewConfigurationSettingsOfWidgetAfterCleanUpOrphanedThemePortletPreferences {
-		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
-
-		task ("Add a web content") {
-			JSONWebcontent.addWebContent(
-				content = "Web Content Content",
-				groupName = ${randomSiteName},
-				title = "Web Content Title");
-		}
-
-		task ("Add an Asset Publisher widget to the page") {
-			ContentPagesNavigator.openEditContentPage(
-				pageName = "Test Content Page Name",
-				siteName = ${randomSiteName});
-
-			PageEditor.addWidget(portletName = "Asset Publisher");
-		}
-
-		task ("Change the display template to Title List") {
-			Portlet.gotoPortletOptions(
-				portletName = "Asset Publisher",
-				portletOption = "Configuration");
-
-			AssetPublisherPortlet.configureDisplayTemplatePG(displayTemplate = "Title List");
-
-			IFrame.closeFrame();
-		}
-
-		task ("View web content displayed at Title List in Asset Publisher at edit mode") {
-			AssertTextEquals.assertText(
-				locator1 = "Relatedassets#ASSET_ROW_ENTRY_TITLE",
-				rowNumber = 1,
-				value1 = "Web Content Title");
-
-			PageEditor.publish();
-		}
-
-		task ("View web content displayed at Title List in Asset Publisher at view mode") {
-			ContentPagesNavigator.openViewContentPage(
-				pageName = "Test Content Page Name",
-				siteName = ${randomSiteName});
-
-			AssertTextEquals.assertText(
-				locator1 = "Relatedassets#ASSET_ROW_ENTRY_TITLE",
-				rowNumber = 1,
-				value1 = "Web Content Title");
 		}
 	}
 
@@ -1446,6 +1400,8 @@ definition {
 			for (var fragmentName : list "Heading,Button,Paragraph") {
 				PageEditor.clickConfigurableField(fragmentName = ${fragmentName});
 
+				PageEditor.gotoTab(tabName = "Browser");
+
 				AssertVisible(
 					key_fragmentName = ${fragmentName},
 					locator1 = "Fragment#FRAGMENT_HEADER_ELLIPSIS");
@@ -1515,6 +1471,8 @@ definition {
 
 			PageEditor.clickConfigurableField(fragmentName = "Card");
 
+			PageEditor.gotoTab(tabName = "Browser");
+
 			AssertElementNotPresent(
 				key_fragmentName = "Card",
 				locator1 = "Fragment#FRAGMENT_HEADER_INSET_STYLE");
@@ -1563,6 +1521,8 @@ definition {
 				locator1 = "Fragment#FRAGMENT_LABEL");
 
 			PageEditor.clickConfigurableField(fragmentName = "Blogs");
+
+			PageEditor.gotoTab(tabName = "Browser");
 
 			AssertElementNotPresent(
 				key_fragmentName = "Blogs",

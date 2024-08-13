@@ -57,14 +57,16 @@ public class ProductSpecificationResourceTest
 			testGroup.getGroupId(), "simple", true, false);
 
 		_cpOptionCategory = _cpOptionCategoryLocalService.addCPOptionCategory(
-			_user.getUserId(), RandomTestUtil.randomLocaleStringMap(),
+			RandomTestUtil.randomString(), _user.getUserId(),
+			RandomTestUtil.randomLocaleStringMap(),
 			RandomTestUtil.randomLocaleStringMap(),
 			RandomTestUtil.randomDouble(), RandomTestUtil.randomString(),
 			_serviceContext);
 
 		_cpSpecificationOption =
 			_cpSpecificationOptionLocalService.addCPSpecificationOption(
-				_user.getUserId(), _cpOptionCategory.getCPOptionCategoryId(), 0,
+				RandomTestUtil.randomString(), _user.getUserId(),
+				_cpOptionCategory.getCPOptionCategoryId(), 0,
 				RandomTestUtil.randomLocaleStringMap(),
 				RandomTestUtil.randomLocaleStringMap(), true,
 				RandomTestUtil.randomString(), RandomTestUtil.randomDouble(),

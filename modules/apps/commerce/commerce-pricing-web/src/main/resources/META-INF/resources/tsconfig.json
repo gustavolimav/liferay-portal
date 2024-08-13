@@ -1,5 +1,5 @@
 {
-	"@generated": "294d96cac15fcdefefd0651d2c9a6e7e741861fe",
+	"@generated": "a30ac6f34e274ebcf0ce340d291b28625880402c",
 	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
@@ -20,9 +20,10 @@
 			]
 		},
 		"rootDir": "../../../../../../../..",
+		"skipLibCheck": true,
 		"sourceMap": false,
 		"strict": true,
-		"target": "es2020",
+		"target": "esnext",
 		"tsBuildInfoFile": "../../../../../../../../.tsc/buildinfo/@liferay/commerce-pricing-web.tsbuildinfo",
 		"typeRoots": [
 			"../../../../../../../../node_modules/@types"

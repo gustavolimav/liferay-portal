@@ -45,6 +45,8 @@ definition {
 				layoutName = "Test Page Name",
 				site = "false",
 				type = "content");
+
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/site-name-staging/test-page-name");
 		}
 
 		task ("Add a Navigation Menu widget to content page") {
@@ -882,7 +884,7 @@ definition {
 
 	@priority = 4
 	test StagingPublishLast {
-		property app.server.types = "jboss,tcserver,tomcat,weblogic,websphere,wildfly";
+		property app.server.types = "jboss,tcserver,tomcat,weblogic,wildfly";
 		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 		property environment.acceptance = "true";
 		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,rockylinux,solaris,suse,ubuntu,windows";

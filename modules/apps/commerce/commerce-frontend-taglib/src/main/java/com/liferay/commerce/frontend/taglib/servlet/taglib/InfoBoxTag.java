@@ -8,6 +8,8 @@ package com.liferay.commerce.frontend.taglib.servlet.taglib;
 import com.liferay.commerce.frontend.taglib.internal.servlet.ServletContextUtil;
 import com.liferay.taglib.util.IncludeTag;
 
+import java.util.Map;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.PageContext;
@@ -22,19 +24,25 @@ public class InfoBoxTag extends IncludeTag {
 		HttpServletRequest httpServletRequest = getRequest();
 
 		httpServletRequest.setAttribute(
-			"liferay-commerce:info-box:actionLabel", _actionLabel);
+			"liferay-commerce:info-box:actionContext", getActionContext());
 		httpServletRequest.setAttribute(
-			"liferay-commerce:info-box:actionTargetId", _actionTargetId);
+			"liferay-commerce:info-box:actionLabel", getActionLabel());
 		httpServletRequest.setAttribute(
-			"liferay-commerce:info-box:actionUrl", _actionUrl);
+			"liferay-commerce:info-box:actionTargetId", getActionTargetId());
 		httpServletRequest.setAttribute(
-			"liferay-commerce:info-box:elementClasses", _elementClasses);
+			"liferay-commerce:info-box:actionUrl", getActionUrl());
 		httpServletRequest.setAttribute(
-			"liferay-commerce:info-box:title", _title);
+			"liferay-commerce:info-box:elementClasses", getElementClasses());
+		httpServletRequest.setAttribute(
+			"liferay-commerce:info-box:title", getTitle());
 
 		super.doStartTag();
 
 		return EVAL_BODY_INCLUDE;
+	}
+
+	public Map<String, Object> getActionContext() {
+		return _actionContext;
 	}
 
 	public String getActionLabel() {
@@ -55,6 +63,10 @@ public class InfoBoxTag extends IncludeTag {
 
 	public String getTitle() {
 		return _title;
+	}
+
+	public void setActionContext(Map<String, Object> actionContext) {
+		_actionContext = actionContext;
 	}
 
 	public void setActionLabel(String actionLabel) {
@@ -88,6 +100,7 @@ public class InfoBoxTag extends IncludeTag {
 	protected void cleanUp() {
 		super.cleanUp();
 
+		_actionContext = null;
 		_actionLabel = null;
 		_actionTargetId = null;
 		_actionUrl = null;
@@ -109,6 +122,7 @@ public class InfoBoxTag extends IncludeTag {
 
 	private static final String _START_PAGE = "/info_box/start.jsp";
 
+	private Map<String, Object> _actionContext;
 	private String _actionLabel;
 	private String _actionTargetId;
 	private String _actionUrl;

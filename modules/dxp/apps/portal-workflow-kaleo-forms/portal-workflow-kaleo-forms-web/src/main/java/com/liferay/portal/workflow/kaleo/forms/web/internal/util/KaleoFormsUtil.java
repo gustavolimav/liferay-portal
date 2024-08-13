@@ -375,7 +375,7 @@ public class KaleoFormsUtil {
 		long companyId, String name, int version) {
 
 		try {
-			return WorkflowDefinitionManagerUtil.getWorkflowDefinition(
+			return WorkflowDefinitionManagerUtil.liberalGetWorkflowDefinition(
 				companyId, name, version);
 		}
 		catch (Exception exception) {
@@ -417,10 +417,8 @@ public class KaleoFormsUtil {
 		String taskSessionKey = _getTaskSessionKey(
 			ddmStructureId, workflowDefinition, taskName);
 
-		long ddmTemplateId = 0;
-
 		if (portletSession.getAttribute(taskSessionKey) != null) {
-			ddmTemplateId = GetterUtil.getLong(
+			return GetterUtil.getLong(
 				portletSession.getAttribute(taskSessionKey));
 		}
 		else if (kaleoProcessId > 0) {
@@ -440,12 +438,12 @@ public class KaleoFormsUtil {
 						kaleoProcessId, taskName);
 
 				if (kaleoProcessLink != null) {
-					ddmTemplateId = kaleoProcessLink.getDDMTemplateId();
+					return kaleoProcessLink.getDDMTemplateId();
 				}
 			}
 		}
 
-		return ddmTemplateId;
+		return 0;
 	}
 
 	private static String _getDefaultLanguageId() {
@@ -461,7 +459,7 @@ public class KaleoFormsUtil {
 		throws Exception {
 
 		WorkflowDefinition workflowDefinition =
-			WorkflowDefinitionManagerUtil.getWorkflowDefinition(
+			WorkflowDefinitionManagerUtil.liberalGetWorkflowDefinition(
 				companyId, workflowDefinitionName, workflowDefinitionVersion);
 
 		return TransformUtil.transform(

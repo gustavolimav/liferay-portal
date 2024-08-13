@@ -1,5 +1,5 @@
 {
-	"@generated": "b2ca5e90151eedbb735c4cb553eb3717cb215705",
+	"@generated": "7592bdcec6ef559c9d1e0d6a9d55f9267c8dbe64",
 	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
@@ -17,9 +17,10 @@
 			]
 		},
 		"rootDir": "../../../../../../../..",
+		"skipLibCheck": true,
 		"sourceMap": false,
 		"strict": true,
-		"target": "es2020",
+		"target": "esnext",
 		"tsBuildInfoFile": "../../../../../../../../.tsc/buildinfo/item-selector-upload-web.tsbuildinfo",
 		"typeRoots": [
 			"../../../../../../../../node_modules/@types"

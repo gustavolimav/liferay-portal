@@ -2,33 +2,64 @@
  * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
-export type AsyncActionMethod = 'DELETE' | 'GET' | 'PATCH' | 'POST';
-export type CreationActionTypes = 'link' | 'modal' | 'sidePanel';
-export type ItemActionTypes =
-	| 'async'
-	| 'headless'
-	| 'link'
-	| 'modal'
-	| 'sidePanel';
-export type ModalVariantTypes = 'full-screen' | 'lg' | 'sm';
+
+export enum ECreationActionType {
+	LINK = 'link',
+	MODAL = 'modal',
+	SIDE_PANEL = 'sidePanel',
+}
+
+export enum EItemActionType {
+	ASYNC = 'async',
+	HEADLESS = 'headless',
+	LINK = 'link',
+	MODAL = 'modal',
+	SIDE_PANEL = 'sidePanel',
+}
+
+export enum EAsyncActionMethod {
+	DELETE = 'DELETE',
+	GET = 'GET',
+	PATCH = 'PATCH',
+	POST = 'POST',
+	PUT = 'PUT',
+}
+
+export enum EModalActionVariant {
+	FULL_SCREEN = 'full-screen',
+	LARGE = 'lg',
+	SMALL = 'sm',
+}
+
+export enum EConfirmationMessageType {
+	INFO = 'info',
+	SECONDARY = 'secondary',
+	SUCCESS = 'success',
+	DANGER = 'danger',
+	WARNING = 'warning',
+}
+
 export type VisualizationMode = 'Cards' | 'List' | 'Table';
 interface IBaseAction {
+	headlessActionKey?: string;
 	icon: string;
-	name: string;
+	label: string;
 	title?: string;
 	url?: string;
-	variant?: ModalVariantTypes;
+	variant?: EModalActionVariant;
 }
 
 export interface ICreationAction extends IBaseAction {
-	type: CreationActionTypes;
+	type: ECreationActionType;
 }
 
 export interface IItemAction extends IBaseAction {
 	confirmationMessage?: string;
-	method?: AsyncActionMethod;
-	permissionKey?: string;
-	type: ItemActionTypes;
+	confirmationMessageType?: string;
+	errorStatusMessage?: string;
+	method?: EAsyncActionMethod;
+	successStatusMessage?: string;
+	type: EItemActionType;
 }
 
 interface IBaseFilter {
@@ -42,7 +73,7 @@ export interface IDateRangeFilter extends IBaseFilter {
 }
 
 export interface ISelectionFilter extends IBaseFilter {
-	filterMode: 'Include' | 'Exclude';
+	filterMode?: 'Include' | 'Exclude';
 	preselectedValues: string[];
 	selectionType: 'Multiple' | 'Single';
 }
@@ -59,6 +90,10 @@ export interface ISelectionFilterApiHeadless extends ISelectionFilter {
 	restEndpoint: string;
 	restSchema: string;
 	sourceType: 'API REST Application';
+}
+
+export interface IClientExtensionFilter extends IBaseFilter {
+	clientExtension: string;
 }
 
 export interface IDateRangeFilter extends IBaseFilter {

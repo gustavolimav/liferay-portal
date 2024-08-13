@@ -11,6 +11,8 @@ import {dataApiHelpersTest} from '../../fixtures/dataApiHelpersTest';
 import {loginTest} from '../../fixtures/loginTest';
 import {getRandomInt} from '../../utils/getRandomInt';
 import getRandomString from '../../utils/getRandomString';
+import performLogin, {performLogout} from '../../utils/performLogin';
+import {waitForSuccessAlert} from '../../utils/waitForSuccessAlert';
 
 export const test = mergeTests(
 	applicationsMenuPageTest,
@@ -71,259 +73,228 @@ test('LPD-5780 Modal title and product name appear properly in product menu', as
 test('COMMERCE-12809 As a buyer, I want to be able to verify the included and excluded option values by combining the Products Limit rule', async ({
 	apiHelpers,
 	applicationsMenuPage,
-	commerceAdminProductDetailsProductRelationsPage,
 	commerceAdminProductPage,
+	commerceInstanceSettingsPage,
 	commerceLayoutsPage,
 	page,
 	productDetailsPage,
 }) => {
-	await applicationsMenuPage.goToInstanceSettings();
+	await commerceInstanceSettingsPage.toggleShowUnselectableOptions(true);
 
-	await page.getByRole('link', {name: 'Catalog'}).click();
-	await page.getByText('Show Unselectable Options').click();
-	await page.getByTestId('submitConfiguration').click();
+	try {
+		const site = await apiHelpers.headlessSite.createSite({
+			name: 'ProductDetailsSite',
+		});
 
-	const site = await apiHelpers.headlessSite.createSite({
-		name: 'ProductDetailsSite',
-	});
+		apiHelpers.data.push({id: site.id, type: 'site'});
 
-	apiHelpers.data.push({id: site.id, type: 'site'});
+		await apiHelpers.headlessCommerceAdminChannel.postChannel({
+			name: 'ProductDetailsSite',
+			siteGroupId: site.id,
+		});
 
-	await apiHelpers.headlessCommerceAdminChannel.postChannel({
-		name: 'ProductDetailsSite',
-		siteGroupId: site.id,
-	});
+		const catalog =
+			await apiHelpers.headlessCommerceAdminCatalog.postCatalog({
+				name: 'ProductDetailsSite',
+			});
 
-	const catalog = await apiHelpers.headlessCommerceAdminCatalog.postCatalog({
-		name: 'ProductDetailsSite',
-	});
+		const product1 =
+			await apiHelpers.headlessCommerceAdminCatalog.postProduct({
+				catalogId: catalog.id,
+				name: {en_US: 'Product1'},
+			});
+		const product2 =
+			await apiHelpers.headlessCommerceAdminCatalog.postProduct({
+				catalogId: catalog.id,
+				name: {en_US: 'Product2'},
+			});
+		const product3 =
+			await apiHelpers.headlessCommerceAdminCatalog.postProduct({
+				catalogId: catalog.id,
+				name: {en_US: 'Product3'},
+			});
+		const product4 =
+			await apiHelpers.headlessCommerceAdminCatalog.postProduct({
+				catalogId: catalog.id,
+				name: {en_US: 'Product4'},
+			});
 
-	const product1 = await apiHelpers.headlessCommerceAdminCatalog.postProduct({
-		catalogId: catalog.id,
-		name: {en_US: 'Product1'},
-	});
+		await Promise.all([
+			apiHelpers.headlessCommerceAdminCatalog.postProductRelatedProduct(
+				product1.productId,
+				{productId: product3.productId, type: 'requires-in-bundle'}
+			),
+			apiHelpers.headlessCommerceAdminCatalog.postProductRelatedProduct(
+				product2.productId,
+				{productId: product4.productId, type: 'incompatible-in-bundle'}
+			),
+		]);
 
-	const product2 = await apiHelpers.headlessCommerceAdminCatalog.postProduct({
-		catalogId: catalog.id,
-		name: {en_US: 'Product2'},
-	});
+		const option1 =
+			await apiHelpers.headlessCommerceAdminCatalog.postOption(
+				'select',
+				'option1',
+				'Option1',
+				1
+			);
+		const option2 =
+			await apiHelpers.headlessCommerceAdminCatalog.postOption(
+				'select',
+				'option2',
+				'Option2',
+				1
+			);
 
-	const product3 = await apiHelpers.headlessCommerceAdminCatalog.postProduct({
-		catalogId: catalog.id,
-		name: {en_US: 'Product3'},
-	});
-
-	const product4 = await apiHelpers.headlessCommerceAdminCatalog.postProduct({
-		catalogId: catalog.id,
-		name: {en_US: 'Product4'},
-	});
-
-	await commerceAdminProductPage.gotoProduct(product1.name.en_US);
-
-	await commerceAdminProductDetailsProductRelationsPage.addRequiresInBundleProductRelation();
-
-	await (
-		await commerceAdminProductPage.validProductCheckbox(product3.name.en_US)
-	).check();
-
-	await commerceAdminProductPage.modalAddButton.click();
-
-	await commerceAdminProductPage.gotoProduct(product2.name.en_US);
-
-	await commerceAdminProductDetailsProductRelationsPage.addIncompatibleInBundleProductRelation();
-
-	await (
-		await commerceAdminProductPage.validProductCheckbox(product4.name.en_US)
-	).check();
-
-	await commerceAdminProductPage.modalAddButton.click();
-
-	const option1 = await apiHelpers.headlessCommerceAdminCatalog.postOption(
-		'select',
-		'option1',
-		'Option1',
-		1
-	);
-
-	const option2 = await apiHelpers.headlessCommerceAdminCatalog.postOption(
-		'select',
-		'option2',
-		'Option2',
-		1
-	);
-
-	await apiHelpers.headlessCommerceAdminCatalog.postProduct({
-		catalogId: catalog.id,
-		name: {en_US: 'ProductBundle'},
-		productOptions: [
-			{
-				fieldType: 'select',
-				key: 'option1',
-				name: {
-					en_US: 'Option1',
-				},
-				optionId: option1.id,
-				priceType: 'static',
-				priority: 1,
-				productOptionValues: [
+		const bundleProduct =
+			await apiHelpers.headlessCommerceAdminCatalog.postProduct({
+				catalogId: catalog.id,
+				name: {en_US: 'ProductBundle'},
+				productOptions: [
 					{
-						deltaPrice: 0.0,
-						key: 'value1',
+						fieldType: 'select',
+						key: 'option1',
 						name: {
-							en_US: 'Value1',
+							en_US: 'Option1',
 						},
+						optionId: option1.id,
+						priceType: 'static',
 						priority: 1,
-						quantity: 1,
-						skuId: product1.skus[0].id,
+						productOptionValues: [
+							{
+								deltaPrice: 0.0,
+								key: 'value1',
+								name: {
+									en_US: 'Value1',
+								},
+								priority: 1,
+								quantity: 1,
+								skuId: product1.skus[0].id,
+							},
+							{
+								deltaPrice: 0.0,
+								key: 'value2',
+								name: {
+									en_US: 'Value2',
+								},
+								priority: 2,
+								quantity: 1,
+								skuId: product2.skus[0].id,
+							},
+						],
+						skuContributor: true,
 					},
 					{
-						deltaPrice: 0.0,
-						key: 'value2',
+						fieldType: 'select',
+						key: 'option2',
 						name: {
-							en_US: 'Value2',
+							en_US: 'Option2',
 						},
+						optionId: option2.id,
+						priceType: 'static',
 						priority: 2,
-						quantity: 1,
-						skuId: product2.skus[0].id,
+						productOptionValues: [
+							{
+								deltaPrice: 0.0,
+								key: 'value3',
+								name: {
+									en_US: 'Value3',
+								},
+								priority: 1,
+								quantity: 1,
+								skuId: product3.skus[0].id,
+							},
+							{
+								deltaPrice: 0.0,
+								key: 'value4',
+								name: {
+									en_US: 'Value4',
+								},
+								priority: 2,
+								quantity: 1,
+								skuId: product4.skus[0].id,
+							},
+						],
+						skuContributor: true,
 					},
 				],
-				skuContributor: true,
-			},
-			{
-				fieldType: 'select',
-				key: 'option2',
-				name: {
-					en_US: 'Option2',
-				},
-				optionId: option2.id,
-				priceType: 'static',
-				priority: 2,
-				productOptionValues: [
-					{
-						deltaPrice: 0.0,
-						key: 'value3',
-						name: {
-							en_US: 'Value3',
-						},
-						priority: 1,
-						quantity: 1,
-						skuId: product3.skus[0].id,
-					},
-					{
-						deltaPrice: 0.0,
-						key: 'value4',
-						name: {
-							en_US: 'Value4',
-						},
-						priority: 2,
-						quantity: 1,
-						skuId: product4.skus[0].id,
-					},
-				],
-				skuContributor: true,
-			},
-		],
-	});
+			});
 
-	await apiHelpers.headlessCommerceAdminOrder.postOrderRule({
-		type: 'products-limit',
-		typeSettings:
-			'products-limit-field-product-ids=' +
-			product3.productId +
-			'\nproducts-limit-field-product-quantity=0.9\n',
-	});
+		await apiHelpers.headlessCommerceAdminOrder.postOrderRule({
+			type: 'products-limit',
+			typeSettings:
+				'products-limit-field-product-ids=' +
+				product3.productId +
+				'\nproducts-limit-field-product-quantity=0.9\n',
+		});
 
-	await applicationsMenuPage.goToProducts();
+		await applicationsMenuPage.goToProducts();
 
-	await commerceAdminProductPage.managementToolbarSearchInput.fill(
-		'ProductBundle'
-	);
-	await commerceAdminProductPage.managementToolbarSearchInput.press('Enter');
+		await commerceAdminProductPage.managementToolbarSearchInput.fill(
+			bundleProduct.name.en_US
+		);
+		await commerceAdminProductPage.managementToolbarSearchInput.press(
+			'Enter'
+		);
 
-	await page.getByRole('link', {exact: true, name: 'ProductBundle'}).click();
+		await page
+			.getByRole('link', {exact: true, name: bundleProduct.name.en_US})
+			.click();
 
-	await commerceAdminProductPage.generateSkus();
+		await commerceAdminProductPage.generateSkus();
 
-	const account = await apiHelpers.headlessAdminUser.postAccount({
-		name: getRandomString(),
-		type: 'person',
-	});
+		const account = await apiHelpers.headlessAdminUser.postAccount({
+			name: getRandomString(),
+			type: 'person',
+		});
 
-	apiHelpers.data.push({id: account.id, type: 'account'});
+		apiHelpers.data.push({id: account.id, type: 'account'});
 
-	await apiHelpers.headlessAdminUser.assignUserToAccountByEmailAddress(
-		account.id,
-		['test@liferay.com']
-	);
+		await apiHelpers.headlessAdminUser.assignUserToAccountByEmailAddress(
+			account.id,
+			['test@liferay.com']
+		);
 
-	await applicationsMenuPage.goToSite('ProductDetailsSite');
+		await applicationsMenuPage.goToSite('ProductDetailsSite');
 
-	await commerceLayoutsPage.goToPages(false);
+		await commerceLayoutsPage.goToPages(false);
+		await commerceLayoutsPage.createWidgetPage('ProductDetailsSite');
 
-	await commerceLayoutsPage.createWidgetPage('ProductDetailsSite');
+		await page.goto(`/web/${site.name}`);
 
-	await page.goto(`/web/${site.name}`);
+		await productDetailsPage.addProductDetailsWidget();
 
-	await productDetailsPage.addProductDetailsWidget();
+		await page.goto(`/web/${site.name}/p/productbundle`);
 
-	await page.goto(`/web/${site.name}/p/productbundle`);
+		await expect(page.getByText('Value1', {exact: true})).toBeVisible();
+		await expect(page.getByText('Value3', {exact: true})).toBeVisible();
 
-	await expect(page.getByText('Value1', {exact: true})).toBeVisible();
+		await page.getByLabel('Option2').click();
 
-	await expect(page.getByText('Value3', {exact: true})).toBeVisible();
+		await expect(
+			page.getByRole('option', {
+				name: 'Value3 No more than 0.9 products in this product range can be purchased together.',
+			})
+		).toBeVisible();
 
-	await page.getByLabel('Option2').click();
+		await expect(page.getByRole('option', {name: 'Value4'})).toBeVisible();
 
-	await expect(
-		page.getByRole('option', {
-			name: 'Value3 No more than 0.9 products in this product range can be purchased together.',
-		})
-	).toBeVisible();
+		await page.getByRole('option', {name: 'Value4'}).click();
+		await page.getByLabel('Option1').click();
 
-	await expect(page.getByRole('option', {name: 'Value4'})).toBeVisible();
-
-	await page.getByRole('option', {name: 'Value4'}).click();
-
-	await page.getByLabel('Option1').click();
-
-	await expect(
-		page.getByRole('option', {
-			name: 'Value1 Product1 requires Product3 to be purchased also.',
-		})
-	).toBeVisible();
-
-	await expect(
-		page.getByRole('option', {
-			name: 'Value2 Product2 cannot be combined with Product4.',
-		})
-	).toBeVisible();
-
-	await commerceAdminProductPage.gotoProduct(product2.name.en_US);
-
-	await commerceAdminProductDetailsProductRelationsPage.productRelationsLink.click();
-	await expect(
-		(
-			await commerceAdminProductDetailsProductRelationsPage.tableRow(
-				2,
-				product4.name.en_US,
-				true
-			)
-		).row
-	).toBeVisible();
-
-	await commerceAdminProductDetailsProductRelationsPage.selectItemsInput.check();
-
-	await expect(
-		commerceAdminProductDetailsProductRelationsPage.deleteBulkButton
-	).toBeVisible();
-
-	await commerceAdminProductDetailsProductRelationsPage.deleteBulkButton.click();
-
-	await applicationsMenuPage.goToInstanceSettings();
-
-	await page.getByRole('link', {name: 'Catalog'}).click();
-	await page.getByText('Show Unselectable Options').click();
-	await page.getByTestId('submitConfiguration').click();
+		await expect(
+			page.getByRole('option', {
+				name: 'Value1 Product1 requires Product3 to be purchased also.',
+			})
+		).toBeVisible();
+		await expect(
+			page.getByRole('option', {
+				name: 'Value2 Product2 cannot be combined with Product4.',
+			})
+		).toBeVisible();
+	}
+	finally {
+		await commerceInstanceSettingsPage.toggleShowUnselectableOptions(false);
+	}
 });
 
 test('COMMERCE-8153 Verify the visibility rules', async ({
@@ -469,4 +440,293 @@ test('COMMERCE-8153 Verify the visibility rules', async ({
 	expect(productPins2.items[1].mappedProduct.productId).toEqual(
 		product2.productId
 	);
+});
+
+test('COMMERCE-12805 As a buyer, I want to be able to verify the included and excluded option values are disabled with reason messages', async ({
+	apiHelpers,
+	applicationsMenuPage,
+	commerceAdminProductPage,
+	commerceInstanceSettingsPage,
+	commerceLayoutsPage,
+	page,
+	productDetailsPage,
+}) => {
+	await commerceInstanceSettingsPage.toggleShowUnselectableOptions(true);
+
+	try {
+		const site = await apiHelpers.headlessSite.createSite({
+			name: getRandomString(),
+		});
+
+		apiHelpers.data.push({id: site.id, type: 'site'});
+
+		await apiHelpers.headlessCommerceAdminChannel.postChannel({
+			siteGroupId: site.id,
+		});
+
+		const catalog =
+			await apiHelpers.headlessCommerceAdminCatalog.postCatalog();
+
+		const product1 =
+			await apiHelpers.headlessCommerceAdminCatalog.postProduct({
+				catalogId: catalog.id,
+				name: {en_US: 'Product1'},
+			});
+		const product2 =
+			await apiHelpers.headlessCommerceAdminCatalog.postProduct({
+				catalogId: catalog.id,
+				name: {en_US: 'Product2'},
+			});
+		const product3 =
+			await apiHelpers.headlessCommerceAdminCatalog.postProduct({
+				catalogId: catalog.id,
+				name: {en_US: 'Product3'},
+			});
+		const product4 =
+			await apiHelpers.headlessCommerceAdminCatalog.postProduct({
+				catalogId: catalog.id,
+				name: {en_US: 'Product4'},
+			});
+
+		await Promise.all([
+			apiHelpers.headlessCommerceAdminCatalog.postProductRelatedProduct(
+				product1.productId,
+				{productId: product3.productId, type: 'requires-in-bundle'}
+			),
+			apiHelpers.headlessCommerceAdminCatalog.postProductRelatedProduct(
+				product2.productId,
+				{productId: product4.productId, type: 'incompatible-in-bundle'}
+			),
+		]);
+
+		const option1 =
+			await apiHelpers.headlessCommerceAdminCatalog.postOption(
+				'select',
+				'option1',
+				'Option1',
+				1
+			);
+		const option2 =
+			await apiHelpers.headlessCommerceAdminCatalog.postOption(
+				'select',
+				'option2',
+				'Option2',
+				1
+			);
+
+		const bundleProduct =
+			await apiHelpers.headlessCommerceAdminCatalog.postProduct({
+				catalogId: catalog.id,
+				name: {en_US: 'ProductBundle'},
+				productOptions: [
+					{
+						fieldType: 'select',
+						key: 'option1',
+						name: {
+							en_US: 'Option1',
+						},
+						optionId: option1.id,
+						priceType: 'static',
+						priority: 1,
+						productOptionValues: [
+							{
+								deltaPrice: 0.0,
+								key: 'value1',
+								name: {
+									en_US: 'Value1',
+								},
+								priority: 1,
+								quantity: 1,
+								skuId: product1.skus[0].id,
+							},
+							{
+								deltaPrice: 0.0,
+								key: 'value2',
+								name: {
+									en_US: 'Value2',
+								},
+								preselected: true,
+								priority: 2,
+								quantity: 1,
+								skuId: product2.skus[0].id,
+							},
+						],
+						skuContributor: true,
+					},
+					{
+						fieldType: 'select',
+						key: 'option2',
+						name: {
+							en_US: 'Option2',
+						},
+						optionId: option2.id,
+						priceType: 'static',
+						priority: 2,
+						productOptionValues: [
+							{
+								deltaPrice: 0.0,
+								key: 'value3',
+								name: {
+									en_US: 'Value3',
+								},
+								priority: 1,
+								quantity: 1,
+								skuId: product3.skus[0].id,
+							},
+							{
+								deltaPrice: 0.0,
+								key: 'value4',
+								name: {
+									en_US: 'Value4',
+								},
+								preselected: true,
+								priority: 2,
+								quantity: 1,
+								skuId: product4.skus[0].id,
+							},
+						],
+						skuContributor: true,
+					},
+				],
+			});
+
+		await applicationsMenuPage.goToProducts();
+
+		await commerceAdminProductPage.managementToolbarSearchInput.fill(
+			bundleProduct.name.en_US
+		);
+		await commerceAdminProductPage.managementToolbarSearchInput.press(
+			'Enter'
+		);
+
+		await page
+			.getByRole('link', {exact: true, name: bundleProduct.name.en_US})
+			.click();
+
+		await commerceAdminProductPage.generateSkus();
+
+		const account = await apiHelpers.headlessAdminUser.postAccount({
+			name: getRandomString(),
+			type: 'person',
+		});
+
+		apiHelpers.data.push({id: account.id, type: 'account'});
+
+		await apiHelpers.headlessAdminUser.assignUserToAccountByEmailAddress(
+			account.id,
+			['test@liferay.com']
+		);
+
+		await applicationsMenuPage.goToSite(site.name);
+
+		await commerceLayoutsPage.goToPages(false);
+		await commerceLayoutsPage.createWidgetPage(getRandomString());
+
+		await page.goto(`/web/${site.name}`);
+
+		await productDetailsPage.addProductDetailsWidget();
+
+		await page.goto(`/web/${site.name}/p/productbundle`);
+
+		await expect(page.getByText('Value2', {exact: true})).toBeVisible();
+		await expect(page.getByText('Value4', {exact: true})).toBeVisible();
+
+		await productDetailsPage.addToCartButton.click();
+
+		await expect(
+			page.getByText('Danger:Product4 cannot be combined with Product2.')
+		).toBeVisible();
+	}
+	finally {
+		await commerceInstanceSettingsPage.toggleShowUnselectableOptions(false);
+	}
+});
+
+test('LPD-33075 Verify buyers can view the SKU of a product on the product card if it set.', async ({
+	apiHelpers,
+	applicationsMenuPage,
+	commerceAdminChannelsPage,
+	commerceLayoutsPage,
+	page,
+	productPublisherPage,
+}) => {
+	const site = await apiHelpers.headlessSite.createSite({
+		name: getRandomString(),
+	});
+
+	apiHelpers.data.push({id: site.id, type: 'site'});
+
+	const account = await apiHelpers.headlessAdminUser.postAccount({
+		name: getRandomString(),
+		type: 'business',
+	});
+	apiHelpers.data.push({id: account.id, type: 'account'});
+
+	const user =
+		await apiHelpers.headlessAdminUser.getUserAccountByEmailAddress(
+			'demo.unprivileged@liferay.com'
+		);
+	const rolesResponse = await apiHelpers.headlessAdminUser.getAccountRoles(
+		account.id
+	);
+
+	const accountRoleBuyer = rolesResponse?.items?.filter((role) => {
+		return role.name === 'Buyer';
+	});
+
+	await apiHelpers.headlessAdminUser.assignAccountRoles(
+		account.externalReferenceCode,
+		accountRoleBuyer[0].id,
+		user.emailAddress
+	);
+	const siteRole =
+		await apiHelpers.headlessAdminUser.getRoleByName('Site Member');
+	await apiHelpers.headlessAdminUser.assignUserToSite(
+		siteRole.id,
+		site.id,
+		user.id
+	);
+	await apiHelpers.headlessAdminUser.assignUserToAccountByEmailAddress(
+		account.id,
+		[user.emailAddress]
+	);
+
+	const channel = await apiHelpers.headlessCommerceAdminChannel.postChannel({
+		name: getRandomString(),
+		siteGroupId: site.id,
+	});
+
+	const catalog = await apiHelpers.headlessCommerceAdminCatalog.postCatalog({
+		name: getRandomString(),
+	});
+	const product = await apiHelpers.headlessCommerceAdminCatalog.postProduct({
+		catalogId: catalog.id,
+		name: {en_US: getRandomString()},
+	});
+
+	await commerceAdminChannelsPage.changeCommerceChannelSiteType(
+		channel.name,
+		'B2B'
+	);
+
+	await waitForSuccessAlert(page);
+
+	await applicationsMenuPage.goToSite(site.name);
+
+	await commerceLayoutsPage.goToPages(false);
+	await commerceLayoutsPage.createWidgetPage('View product Sku');
+
+	await page.goto(`/web/${site.name}`);
+
+	await productPublisherPage.addProductPublisherWidget();
+
+	await performLogout(page);
+
+	await performLogin(page, 'demo.unprivileged');
+
+	await page.goto(`/web/${site.name}/` + 'view-product-sku');
+
+	await expect(
+		await productPublisherPage.productSku(product.skus[0].sku)
+	).toBeVisible();
 });

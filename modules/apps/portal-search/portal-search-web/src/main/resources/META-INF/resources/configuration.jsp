@@ -11,6 +11,18 @@
 
 <liferay-portlet:renderURL portletConfiguration="<%= true %>" var="configurationRenderURL" />
 
+<clay:stripe
+	displayType="warning"
+	title="warning"
+>
+	<liferay-ui:message key="feature.flag.LPD-13778.description" />
+
+	<liferay-learn:message
+		key="search-pages-and-widgets"
+		resource="portal-search-web"
+	/>
+</clay:stripe>
+
 <liferay-frontend:edit-form
 	action="<%= configurationActionURL %>"
 	method="post"

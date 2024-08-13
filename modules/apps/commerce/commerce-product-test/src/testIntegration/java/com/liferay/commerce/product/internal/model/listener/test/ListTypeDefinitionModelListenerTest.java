@@ -64,7 +64,8 @@ public class ListTypeDefinitionModelListenerTest {
 			_group.getGroupId());
 
 		_cpOptionCategory = _cpOptionCategoryLocalService.addCPOptionCategory(
-			TestPropsValues.getUserId(), RandomTestUtil.randomLocaleStringMap(),
+			RandomTestUtil.randomString(), TestPropsValues.getUserId(),
+			RandomTestUtil.randomLocaleStringMap(),
 			RandomTestUtil.randomLocaleStringMap(),
 			RandomTestUtil.randomDouble(),
 			CPDefinitionSpecificationOptionValueTableReferenceDefinitionTest.
@@ -92,7 +93,7 @@ public class ListTypeDefinitionModelListenerTest {
 		);
 
 		_cpSpecificationOptionLocalService.addCPSpecificationOption(
-			TestPropsValues.getUserId(),
+			RandomTestUtil.randomString(), TestPropsValues.getUserId(),
 			_cpOptionCategory.getCPOptionCategoryId(),
 			_listTypeDefinition.getListTypeDefinitionId(),
 			RandomTestUtil.randomLocaleStringMap(),

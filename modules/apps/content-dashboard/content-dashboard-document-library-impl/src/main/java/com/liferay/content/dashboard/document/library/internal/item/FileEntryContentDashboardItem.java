@@ -21,15 +21,22 @@ import com.liferay.content.dashboard.item.type.ContentDashboardItemSubtype;
 import com.liferay.document.library.constants.DLPortletKeys;
 import com.liferay.document.library.display.context.DLDisplayContextProvider;
 import com.liferay.document.library.display.context.DLEditFileEntryDisplayContext;
+import com.liferay.document.library.kernel.model.DLFileEntryMetadata;
+import com.liferay.document.library.kernel.service.DLFileEntryMetadataLocalService;
 import com.liferay.document.library.util.DLURLHelper;
+import com.liferay.dynamic.data.mapping.model.DDMField;
+import com.liferay.dynamic.data.mapping.model.DDMFieldAttribute;
+import com.liferay.dynamic.data.mapping.service.DDMFieldLocalService;
 import com.liferay.info.field.InfoFieldValue;
 import com.liferay.info.item.InfoItemClassDetails;
 import com.liferay.info.item.InfoItemFieldValues;
 import com.liferay.info.item.InfoItemReference;
 import com.liferay.info.item.provider.InfoItemFieldValuesProvider;
 import com.liferay.petra.function.transform.TransformUtil;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
@@ -52,6 +59,7 @@ import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
@@ -84,7 +92,9 @@ public class FileEntryContentDashboardItem
 		ContentDashboardItemVersionActionProviderRegistry
 			contentDashboardItemVersionActionProviderRegistry,
 		ContentDashboardItemSubtype contentDashboardItemSubtype,
+		DDMFieldLocalService ddmFieldLocalService,
 		DLDisplayContextProvider dlDisplayContextProvider,
+		DLFileEntryMetadataLocalService dlFileEntryMetadataLocalService,
 		DLURLHelper dlURLHelper, FileEntry fileEntry, Group group,
 		InfoItemFieldValuesProvider<FileEntry> infoItemFieldValuesProvider,
 		Language language, Portal portal) {
@@ -108,7 +118,9 @@ public class FileEntryContentDashboardItem
 		_contentDashboardItemVersionActionProviderRegistry =
 			contentDashboardItemVersionActionProviderRegistry;
 		_contentDashboardItemSubtype = contentDashboardItemSubtype;
+		_ddmFieldLocalService = ddmFieldLocalService;
 		_dlDisplayContextProvider = dlDisplayContextProvider;
+		_dlFileEntryMetadataLocalService = dlFileEntryMetadataLocalService;
 		_dlURLHelper = dlURLHelper;
 		_fileEntry = fileEntry;
 		_group = group;
@@ -374,7 +386,25 @@ public class FileEntryContentDashboardItem
 	public List<SpecificInformation<?>> getSpecificInformationList(
 		Locale locale) {
 
+		List<DLFileEntryMetadata> dlFileEntryMetadatas =
+			_getDLFileEntryMetadatas();
+
+		long tiffImageLength = _getDDMFormFieldsValueValue(
+			dlFileEntryMetadatas, "TIFF_IMAGE_LENGTH");
+
+		long tiffImageWidth = _getDDMFormFieldsValueValue(
+			dlFileEntryMetadatas, "TIFF_IMAGE_WIDTH");
+
 		return Arrays.asList(
+			new SpecificInformation<>(
+				"size", SpecificInformation.Type.STRING, _getSize(locale)),
+			new SpecificInformation<>(
+				"resolution", SpecificInformation.Type.STRING,
+				_getResolution(tiffImageLength, tiffImageWidth)),
+			new SpecificInformation<>(
+				"content-dashboard-aspect-ratio",
+				SpecificInformation.Type.STRING,
+				_getAspectRatio(tiffImageLength, tiffImageWidth, locale)),
 			new SpecificInformation<>(
 				"extension", SpecificInformation.Type.STRING, _getExtension()),
 			new SpecificInformation<>(
@@ -382,8 +412,6 @@ public class FileEntryContentDashboardItem
 			new SpecificInformation<>(
 				"latest-version-url", SpecificInformation.Type.URL,
 				_getLatestVersionURL()),
-			new SpecificInformation<>(
-				"size", SpecificInformation.Type.STRING, _getSize(locale)),
 			new SpecificInformation<>(
 				"webdav-help", "web-dav-url", SpecificInformation.Type.URL,
 				_getWebDAVURL()));
@@ -481,6 +509,23 @@ public class FileEntryContentDashboardItem
 			_fileEntry, httpServletRequest);
 	}
 
+	private String _getAspectRatio(
+		long imageLength, long imageWidth, Locale locale) {
+
+		if ((imageLength <= 0) && (imageWidth <= 0)) {
+			return null;
+		}
+
+		if (imageLength > imageWidth) {
+			return _language.get(locale, "tall");
+		}
+		else if (imageLength < imageWidth) {
+			return _language.get(locale, "wide");
+		}
+
+		return _language.get(locale, "square");
+	}
+
 	private ContentDashboardItemAction _getContentDashboardItemAction(
 		HttpServletRequest httpServletRequest) {
 
@@ -551,6 +596,77 @@ public class FileEntryContentDashboardItem
 		return contentDashboardItemVersionActions;
 	}
 
+	private long _getDDMFormFieldsValueValue(
+		List<DLFileEntryMetadata> dlFileEntryMetadatas, String fieldName) {
+
+		if (ListUtil.isEmpty(dlFileEntryMetadatas)) {
+			return 0;
+		}
+
+		for (DLFileEntryMetadata dlFileEntryMetadata : dlFileEntryMetadatas) {
+			Long ddmFormFieldsValueValue = _getDDMFormFieldsValueValue(
+				dlFileEntryMetadata.getDDMStorageId(), fieldName);
+
+			if (ddmFormFieldsValueValue != null) {
+				return ddmFormFieldsValueValue;
+			}
+		}
+
+		return 0;
+	}
+
+	private Long _getDDMFormFieldsValueValue(
+		long ddmStorageId, String fieldName) {
+
+		List<DDMField> ddmFields = _ddmFieldLocalService.getDDMFields(
+			ddmStorageId, fieldName);
+
+		if (ListUtil.isEmpty(ddmFields)) {
+			return null;
+		}
+
+		DDMField ddmField = ddmFields.get(0);
+
+		DDMFieldAttribute ddmFieldAttribute =
+			_ddmFieldLocalService.fetchDDMFieldAttribute(
+				ddmField.getFieldId(), StringPool.BLANK, StringPool.BLANK);
+
+		if ((ddmFieldAttribute == null) ||
+			(ddmFieldAttribute.getAttributeValue() == null) ||
+			!Validator.isNumber(ddmFieldAttribute.getAttributeValue())) {
+
+			return null;
+		}
+
+		return Long.valueOf(ddmFieldAttribute.getAttributeValue());
+	}
+
+	private List<DLFileEntryMetadata> _getDLFileEntryMetadatas() {
+		if (!FeatureFlagManagerUtil.isEnabled(
+				_fileEntry.getCompanyId(), "LPD-30087")) {
+
+			return null;
+		}
+
+		FileVersion fileVersion = null;
+
+		try {
+			fileVersion = _fileEntry.getFileVersion();
+		}
+		catch (PortalException portalException) {
+			_log.error(portalException);
+
+			return null;
+		}
+
+		if (fileVersion == null) {
+			return null;
+		}
+
+		return _dlFileEntryMetadataLocalService.
+			getFileVersionFileEntryMetadatas(fileVersion.getFileVersionId());
+	}
+
 	private String _getExtension() {
 		return FileUtil.getExtension(_getFileName());
 	}
@@ -613,6 +729,20 @@ public class FileEntryContentDashboardItem
 		}
 
 		return null;
+	}
+
+	private String _getResolution(long imageLength, long imageWidth) {
+		if ((imageLength <= 0) && (imageWidth <= 0)) {
+			return null;
+		}
+
+		StringBundler sb = new StringBundler(3);
+
+		sb.append(imageWidth);
+		sb.append("x");
+		sb.append(imageLength);
+
+		return sb.toString();
 	}
 
 	private String _getSize(Locale locale) {
@@ -711,7 +841,10 @@ public class FileEntryContentDashboardItem
 	private final ContentDashboardItemSubtype _contentDashboardItemSubtype;
 	private final ContentDashboardItemVersionActionProviderRegistry
 		_contentDashboardItemVersionActionProviderRegistry;
+	private final DDMFieldLocalService _ddmFieldLocalService;
 	private final DLDisplayContextProvider _dlDisplayContextProvider;
+	private final DLFileEntryMetadataLocalService
+		_dlFileEntryMetadataLocalService;
 	private final DLURLHelper _dlURLHelper;
 	private final FileEntry _fileEntry;
 	private final Group _group;

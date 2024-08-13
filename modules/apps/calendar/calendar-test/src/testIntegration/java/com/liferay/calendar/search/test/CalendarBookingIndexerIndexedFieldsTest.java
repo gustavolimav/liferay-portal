@@ -15,12 +15,16 @@ import com.liferay.calendar.model.CalendarResource;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.search.Field;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.settings.LocalizedValuesMap;
 import com.liferay.portal.kernel.test.rule.DataGuard;
 import com.liferay.portal.kernel.test.rule.Sync;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -94,9 +98,22 @@ public class CalendarBookingIndexerIndexedFieldsTest
 		map.put(Field.RELATED_ENTRY, "true");
 		map.put(Field.STAGING_GROUP, "false");
 		map.put(Field.STATUS, "0");
+
+		Group group = _groupLocalService.getGroup(calendarBooking.getGroupId());
+
+		map.put("groupExternalReferenceCode", group.getExternalReferenceCode());
+		map.put(
+			"scopeGroupExternalReferenceCode",
+			group.getExternalReferenceCode());
+
 		map.put(
 			"statusByUserId",
 			String.valueOf(calendarBooking.getStatusByUserId()));
+
+		User user = TestPropsValues.getUser();
+
+		map.put("userExternalReferenceCode", user.getExternalReferenceCode());
+
 		map.put("viewActionId", CalendarActionKeys.VIEW_BOOKING_DETAILS);
 
 		populateTitle(originalTitle, map);
@@ -262,5 +279,8 @@ public class CalendarBookingIndexerIndexedFieldsTest
 
 	@Inject
 	private AssetEntryLocalService _assetEntryLocalService;
+
+	@Inject
+	private GroupLocalService _groupLocalService;
 
 }

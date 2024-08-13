@@ -878,6 +878,7 @@
 			"template_ar": {
 				"mapping": {
 					"analyzer": "arabic",
+					"search_analyzer": "liferay_analyzer_ar",
 					"store": true,
 					"term_vector": "with_positions_offsets",
 					"type": "text"
@@ -904,6 +905,7 @@
 			"template_ca": {
 				"mapping": {
 					"analyzer": "catalan",
+					"search_analyzer": "liferay_analyzer_ca",
 					"store": true,
 					"term_vector": "with_positions_offsets",
 					"type": "text"
@@ -943,6 +945,7 @@
 			"template_de": {
 				"mapping": {
 					"analyzer": "german",
+					"search_analyzer": "liferay_analyzer_de",
 					"store": true,
 					"term_vector": "with_positions_offsets",
 					"type": "text"
@@ -1036,6 +1039,7 @@
 			"template_fi": {
 				"mapping": {
 					"analyzer": "finnish",
+					"search_analyzer": "liferay_analyzer_fi",
 					"store": true,
 					"term_vector": "with_positions_offsets",
 					"type": "text"
@@ -1049,6 +1053,7 @@
 			"template_fr": {
 				"mapping": {
 					"analyzer": "french",
+					"search_analyzer": "liferay_analyzer_fr",
 					"store": true,
 					"term_vector": "with_positions_offsets",
 					"type": "text"
@@ -1088,6 +1093,7 @@
 			"template_hu": {
 				"mapping": {
 					"analyzer": "hungarian",
+					"search_analyzer": "liferay_analyzer_hu",
 					"store": true,
 					"term_vector": "with_positions_offsets",
 					"type": "text"
@@ -1179,6 +1185,7 @@
 			"template_nl": {
 				"mapping": {
 					"analyzer": "dutch",
+					"search_analyzer": "liferay_analyzer_nl",
 					"store": true,
 					"term_vector": "with_positions_offsets",
 					"type": "text"
@@ -1231,6 +1238,7 @@
 			"template_pt_br": {
 				"mapping": {
 					"analyzer": "brazilian",
+					"search_analyzer": "liferay_analyzer_pt_BR",
 					"store": true,
 					"term_vector": "with_positions_offsets",
 					"type": "text"
@@ -1269,6 +1277,7 @@
 			"template_sv": {
 				"mapping": {
 					"analyzer": "swedish",
+					"search_analyzer": "liferay_analyzer_sv",
 					"store": true,
 					"term_vector": "with_positions_offsets",
 					"type": "text"
@@ -1650,6 +1659,10 @@
 			"store": true,
 			"type": "keyword"
 		},
+		"externalReferenceCode": {
+			"store": true,
+			"type": "keyword"
+		},
 		"fileEntryTypeId": {
 			"store": true,
 			"type": "keyword"
@@ -1671,6 +1684,22 @@
 			},
 			"store": true,
 			"type": "geo_point"
+		},
+		"groupAssetCategoryExternalReferenceCodes": {
+			"store": true,
+			"type": "keyword"
+		},
+		"groupAssetInternalCategoryExternalReferenceCodes": {
+			"store": true,
+			"type": "keyword"
+		},
+		"groupAssetVocabularyCategoryExternalReferenceCodes": {
+			"store": true,
+			"type": "keyword"
+		},
+		"groupExternalReferenceCode": {
+			"store": true,
+			"type": "keyword"
 		},
 		"groupId": {
 			"store": true,
@@ -1854,6 +1883,10 @@
 			"store": true,
 			"type": "keyword"
 		},
+		"scopeGroupExternalReferenceCode": {
+			"store": true,
+			"type": "keyword"
+		},
 		"scopeGroupId": {
 			"store": true,
 			"type": "keyword"
@@ -1909,6 +1942,10 @@
 			"type": "keyword"
 		},
 		"uid": {
+			"store": true,
+			"type": "keyword"
+		},
+		"userExternalReferenceCode": {
 			"store": true,
 			"type": "keyword"
 		},

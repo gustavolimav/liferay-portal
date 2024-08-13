@@ -16,7 +16,7 @@ public class StartupFailureMessageGenerator
 	extends BaseFailureMessageGenerator {
 
 	@Override
-	public Element getMessageElement(String consoleText) {
+	public String getMessage(String consoleText) {
 		if (!consoleText.contains(_TOKEN_UNRESOLVED_REQUIREMENT)) {
 			return null;
 		}
@@ -43,13 +43,24 @@ public class StartupFailureMessageGenerator
 			end = newLineIndex;
 		}
 
+		return getConsoleTextSnippet(consoleText, true, start, end);
+	}
+
+	@Override
+	public Element getMessageElement(String consoleText) {
+		Element messageElement = super.getMessageElement(consoleText);
+
+		if (messageElement == null) {
+			return null;
+		}
+
 		return Dom4JUtil.getNewElement(
 			"div", null,
 			Dom4JUtil.getNewElement(
 				"p", null, "Startup error: ",
 				Dom4JUtil.getNewElement(
 					"strong", null, "Unresolved Requirement(s)")),
-			getConsoleTextSnippetElement(consoleText, true, start, end));
+			messageElement);
 	}
 
 	private static final String _TOKEN_COULD_NOT_RESOLVE_MODULE =

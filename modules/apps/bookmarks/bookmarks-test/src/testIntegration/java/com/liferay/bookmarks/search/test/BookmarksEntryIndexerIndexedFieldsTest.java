@@ -203,9 +203,20 @@ public class BookmarksEntryIndexerIndexedFieldsTest {
 			"assetEntryId_sortable",
 			String.valueOf(_getAssetEntryId(bookmarksEntry))
 		).put(
+			"groupExternalReferenceCode", _group.getExternalReferenceCode()
+		).put(
+			"scopeGroupExternalReferenceCode", _group.getExternalReferenceCode()
+		).put(
 			"statusByUserId", String.valueOf(bookmarksEntry.getStatusByUserId())
 		).put(
 			"title_sortable", StringUtil.lowerCase(bookmarksEntry.getName())
+		).put(
+			"userExternalReferenceCode",
+			() -> {
+				User user = _users.get(0);
+
+				return user.getExternalReferenceCode();
+			}
 		).put(
 			"visible", "true"
 		).build();

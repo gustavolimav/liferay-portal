@@ -1256,6 +1256,10 @@ definition {
 		}
 
 		task ("Execute SP initiated SSO") {
+			Navigator.openSpecificURL(url = "http://www.able.com:9080");
+
+			Refresh();
+
 			SAML.executeSPInitiatedSSO(
 				password = PropsUtil.get("default.admin.password"),
 				spURL = "http://www.able.com:9080",
@@ -1353,6 +1357,103 @@ definition {
 			}
 
 			AssertConsoleTextPresent(value1 = "org.opensaml.messaging.handler.MessageHandlerException: Message context was not authenticated");
+		}
+	}
+
+	@description = "This is a use case for LPD-31188: ClassCastException after non-graceful shutdown."
+	@priority = 4
+	test AssertUserLoggedInAfterNonGracefulShutdown {
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		task ("Edit user screen name") {
+			MyAccount.openMyAccountAdmin();
+
+			User.editUserInformation(userScreenNameEdit = "tester");
+		}
+
+		task ("Add virtual instance able.com") {
+			HeadlessPortalInstanceAPI.addPortalInstance(
+				domain = "www.able.com",
+				portalInstanceId = "www.able.com",
+				virtualHost = "www.able.com");
+
+			User.logoutPG();
+
+			User.viewLoggedOutPG();
+		}
+
+		task ("Setup IdP") {
+			SAML.setupIDP(
+				idpURL = "http://localhost:8080",
+				samlEntityId = "samlidp",
+				userEmailAddress = "test@liferay.com");
+		}
+
+		task ("Setup SP") {
+			SAML.setupSP(
+				encryptionCertificate = "true",
+				samlEntityId = "samlsp",
+				spURL = "http://www.able.com:8080",
+				userEmailAddress = "test@www.able.com");
+		}
+
+		task ("Add IdP configurations to service provider") {
+			SAML.addIDPConfigurationsToServiceProvider(
+				idpAttributeMapping = "UUID,emailAddress,firstName,lastName,screenName",
+				idpEntityId = "samlidp",
+				idpKeepAliveURL = "http://localhost:8080/c/portal/saml/keep_alive",
+				idpURL = "http://localhost:8080",
+				nameIdentifierFormat = "Email Address",
+				spURL = "http://www.able.com:8080",
+				userEmailAddress = "test@www.able.com",
+				userResolution = "dynamic");
+		}
+
+		task ("Enable SP roles and SP configurations to IdP") {
+			SAML.enableSPRoles(
+				samlEntityId = "samlsp",
+				spURL = "http://www.able.com:8080",
+				userEmailAddress = "test@www.able.com");
+
+			SAML.addSPConfigurationsToIdentityProvider(
+				idpURL = "http://localhost:8080",
+				nameIdentifierAttributeName = "emailAddress",
+				nameIdentifierFormat = "Email Address",
+				spAttributes = '''emailAddress
+				firstName
+				lastName
+				screenName
+				uuid''',
+				spEntityId = "samlsp",
+				spKeepAliveURL = "http://www.able.com:8080/c/portal/saml/keep_alive",
+				spURL = "http://www.able.com:8080",
+				userEmailAddress = "test@liferay.com");
+		}
+
+		task ("Login at able.com:8080 and assert Logged in") {
+			User.firstLoginUI(
+				password = PropsUtil.get("default.admin.password"),
+				specificURL = "http://www.able.com:8080",
+				userEmailAddress = "test@liferay.com");
+
+			User.viewLoggedInPG();
+		}
+
+		task ("Kill server and start it") {
+			AntCommands.runCommand("build-test.xml", "terminate-one-java-process -Dprocess.name=Bootstrap");
+
+			Portlet.startServer(deleteLiferayHome = "false");
+		}
+
+		task ("Refresh and assert logged in") {
+			Navigator.openSpecificURL(url = "http://www.able.com:8080");
+
+			Refresh();
+
+			User.viewLoggedInPG();
+
+			Portlet.shutdownServer();
 		}
 	}
 
@@ -1802,9 +1903,10 @@ definition {
 		}
 
 		task ("Open able.com:9080 and add LDAP server") {
-			Navigator.openSpecificURL(url = "http://www.able.com:9080");
-
-			Navigator.gotoLoginPage();
+			User.firstLoginUI(
+				password = PropsUtil.get("default.admin.password"),
+				specificURL = "http://www.able.com:9080",
+				userEmailAddress = "test@liferay.com");
 
 			PortalSettings.addLDAPServer(
 				baseURL = "http://www.able.com:9080",
@@ -2308,169 +2410,6 @@ definition {
 			Navigator.openURL(baseURL = "http://www.baker.com:8080");
 
 			User.viewLoggedInPG();
-		}
-	}
-
-	@description = "LPS-128600 TC-1. Custom fields and their values will sync on SAML connection."
-	@priority = 4
-	test CustomFieldsCanBeConfiguredForSAML {
-		property app.server.bundles.size = "0";
-		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
-
-		task ("Given: User adds 1 virtual instance") {
-			HeadlessPortalInstanceAPI.addPortalInstance(
-				domain = "www.able.com",
-				portalInstanceId = "www.able.com",
-				virtualHost = "www.able.com");
-		}
-
-		task ("And: Add new custom fields on localhost") {
-			CustomFields.openCustomFieldAdmin();
-
-			CustomFields.addCP(
-				customFieldName = "inputfield",
-				customFieldType = "Input Field",
-				customInputDataType = "Text",
-				nameLocalization = "false",
-				resourceName = "User",
-				startingValue = "more text");
-
-			CustomFields.openCustomFieldAdmin();
-
-			CustomFields.addCP(
-				customFieldName = "Dropdown",
-				customFieldType = "Dropdown",
-				resourceName = "User",
-				startingValue = '''Option2
-						Option1
-						Option3''');
-
-			CustomFields.openCustomFieldAdmin();
-
-			CustomFields.addCP(
-				customBooleanDefaultValue = "False",
-				customFieldName = "Boolean",
-				customFieldType = "True",
-				resourceName = "User");
-		}
-
-		task ("And: Add a new user on localhost") {
-			JSONUser.addUser(
-				userEmailAddress = "usera@liferay.com",
-				userFirstName = "user",
-				userLastName = "a",
-				userScreenName = "usera");
-
-			JSONUser.setFirstPassword(
-				agreeToTermsAndAnswerReminderQuery = "true",
-				requireReset = "false",
-				userEmailAddress = "usera@liferay.com");
-
-			User.logoutPG();
-		}
-
-		task ("And: Add the same custom fields on able.com") {
-			User.firstLoginUI(
-				specificURL = "http://www.able.com:8080",
-				userEmailAddress = "test@www.able.com");
-
-			CustomFields.openCustomFieldAdmin(baseURL = "http://www.able.com:8080");
-
-			CustomFields.addCP(
-				baseURL = "http://www.able.com:8080",
-				customFieldName = "inputfield",
-				customFieldType = "Input Field",
-				customInputDataType = "Text",
-				nameLocalization = "false",
-				resourceName = "User");
-
-			CustomFields.openCustomFieldAdmin(baseURL = "http://www.able.com:8080");
-
-			CustomFields.addCP(
-				baseURL = "http://www.able.com:8080",
-				customFieldName = "dropdown",
-				customFieldType = "Dropdown",
-				nameLocalization = "false",
-				resourceName = "User",
-				startingValue = '''Option1
-						Option2
-						Option3''');
-
-			CustomFields.openCustomFieldAdmin(baseURL = "http://www.able.com:8080");
-
-			CustomFields.addCP(
-				baseURL = "http://www.able.com:8080",
-				customBooleanDefaultValue = "True",
-				customFieldName = "boolean",
-				customFieldType = "True",
-				nameLocalization = "false",
-				resourceName = "User");
-		}
-
-		task ("When: The SAML connection is established ") {
-			SAML.configureLiferaySAMLAsIdP(
-				idpURL = "http://localhost:8080",
-				samlEntityId = "samlidp");
-
-			SAML.setupSP(
-				encryptionCertificate = "true",
-				samlEntityId = "samlsp",
-				spURL = "http://www.able.com:8080",
-				userEmailAddress = "test@www.able.com");
-
-			SAML.connectSPAndIdP(
-				idpAttributeMapping = "UUID,screenName,firstName,lastName,emailAddress",
-				idpCustomFieldAttributeMapping = "Boolean,Dropdown,inputfield",
-				idpCustomFieldAttributeMappingText = "boolean,dropdown,inputfield",
-				idpEntityId = "samlidp",
-				idpKeepAliveURL = "http://localhost:8080/c/portal/saml/keep_alive",
-				idpURL = "http://localhost:8080",
-				spAttributes = '''emailAddress
-			firstName
-			lastName
-			screenName
-			uuid
-			expando:dropdown
-			expando:inputfield
-			expando:boolean''',
-				spEntityId = "samlsp",
-				spKeepAliveURL = "http://www.able.com:8080/c/portal/saml/keep_alive",
-				spURL = "http://www.able.com:8080",
-				sPUserEmailAddress = "test@www.able.com",
-				userResolution = "dynamic");
-		}
-
-		task ("And: User executes SP initiated SSO on able.com:8080") {
-			User.logoutPG();
-
-			SAML.executeSPInitiatedSSO(
-				spURL = "http://www.able.com:8080",
-				userEmailAddress = "usera@liferay.com");
-
-			User.logoutPG(specificURL = "http://www.able.com:8080");
-		}
-
-		task ("Then: The custom field values are updated on user profile at able.com:8080") {
-			User.firstLoginUI(
-				specificURL = "http://www.able.com:8080/web/guest/home?p_p_id=com_liferay_login_web_portlet_LoginPortlet&p_p_lifecycle=0&p_p_state=maximized&p_p_mode=view&saveLastPath=false&_com_liferay_login_web_portlet_LoginPortlet_mvcRenderCommandName=%2Flogin%2Flogin",
-				userEmailAddress = "test@www.able.com");
-
-			User.openUsersAdmin(baseURL = "http://www.able.com:8080");
-
-			UserNavigator.gotoUser(userScreenName = "usera");
-
-			User.viewUserCustomFieldsCP(
-				customFieldName = "inputfield",
-				customFieldValue = "more text");
-
-			User.viewUserCustomFieldsCP(
-				customFieldName = "boolean",
-				customFieldValue = "False");
-
-			User.viewUserCustomFieldsCP(
-				customFieldName = "dropdown",
-				customFieldValue = "Option2");
 		}
 	}
 
@@ -3498,6 +3437,107 @@ definition {
 		}
 	}
 
+	@description = "This is a use case for LPD-32196. Certificate file should be migrated when fileStore change to GCS and Keystore Manager Target is Document Library Keystore Manager"
+	@priority = 5
+	test KeystoreManagerTargetShouldWorkAfterChangeFromDefaultAndMigratedToGCSStore {
+		property app.server.bundles.size = "0";
+		property gcs.store.enabled = "true";
+		property store.migration.test = "true";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		task ("Given: Deploy the OSGI configuration file") {
+			SAML.deployConfigFile(osgiConfigFileName = "com.liferay.saml.runtime.configuration.SamlKeyStoreManagerConfiguration.config");
+
+			OSGiConfig.waitForOSGiConfig();
+		}
+
+		task ("When: Generate a certificate") {
+			SAML.goToSAMLAdmin();
+
+			SAMLRole.configure(
+				samlEntityId = "samlidp",
+				samlRoleType = "Identity Provider");
+
+			SAMLRole.configureCertificateAndPrivateKey(
+				certificateUsage = "SIGNING",
+				samlKeyPassword = "samlidp");
+		}
+
+		task ("Then: Verify that the certificate file should be saved to DL root folder") {
+			SAML.validateFolderExist();
+		}
+
+		task ("And the user cannot migrate data to GCS store without setting up a connection configuration") {
+			ServerAdministration.openServerAdmin();
+
+			Navigator.gotoNavItem(navItem = "Data Migration");
+
+			AssertElementNotPresent(
+				key_fieldLabel = "dl.store.impl",
+				key_value = "com.liferay.portal.store.gcs.GCSStore",
+				locator1 = "Select#GENERIC_SELECT_VALUE");
+		}
+
+		task ("When the user adds the configuration") {
+			var bucketId = PropsUtil.get("gcs.bucket.id");
+
+			AntCommands.runCommand("build-test.xml", "prepare-gcs-store-configuration -Dgcs.bucket.id=${bucketId}");
+
+			while ((IsElementNotPresent(locator1 = "Select#SELECT_VALUE_ID", option = "com.liferay.portal.store.gcs.GCSStore", selectFieldId = "dl-store-impl")) && (maxIterations = "2")) {
+				OSGiConfig.waitForOSGiConfig();
+
+				Refresh();
+			}
+		}
+
+		task ("Then the user can now migrate data over to the GCS bucket") {
+			SelectField.select(
+				selectFieldLabel = "dl.store.impl",
+				selectFieldValue = "com.liferay.portal.store.gcs.GCSStore");
+		}
+
+		task ("When the user executes the data migration") {
+			Button.click(button = "Execute");
+
+			AssertTextPresent(
+				locator1 = "//body",
+				value1 = "Executing com.liferay.document.library.internal.convert.document.library.DocumentLibraryConvertProcess");
+
+			WaitForConsoleTextPresent(value1 = "Please set dl.store.impl in your portal-ext.properties to use com.liferay.portal.store.gcs.GCSStore");
+
+			WaitForConsoleTextPresent(value1 = "Finished conversion for com.liferay.document.library.internal.convert.document.library.DocumentLibraryConvertProcess");
+		}
+
+		task ("Then the document is migrated over from the default store to the GCS bucket") {
+			var companyId = JSONCompany.getCompanyId();
+			var folderName = "saml/keystore.jks";
+			var groupId = 0;
+
+			AntCommands.runCommand("build-test-gcs-store.xml", "assert-document-in-bucket-folder -Dcompany.id=${companyId} -Dfolder.name=${folderName} -Dgcs.bucket.id=${bucketId} -Dgroup.id=${groupId}");
+		}
+
+		task ("And the user can configure the portal to use GCS store without issue") {
+			Portlet.shutdownServer();
+
+			var newProperty = "dl.store.impl=com.liferay.portal.store.gcs.GCSStore";
+
+			AntCommands.runCommand("build-test.xml", "portal-ext-properties-update -Dadd.new.properties=true -Dupdate.properties=${newProperty}");
+
+			Portlet.startServer(deleteLiferayHome = "false");
+
+			User.firstLoginPG();
+		}
+
+		task ("Assert certificate is migrated.") {
+			SAML.goToSAMLAdmin();
+
+			AssertElementPresent(
+				key_certificateUsage = "SIGNING",
+				locator1 = "CPSAMLAdmin#DOWNLOAD_CERTIFICATE");
+		}
+	}
+
 	@description = "This is a use case for LPS-147809. TC2: Metadata source is changed after changed from XML File To URL."
 	@priority = 4
 	test MetadataSourceIsChangedAfterChangedFromXMLFileToURL {
@@ -4008,7 +4048,7 @@ definition {
 	@priority = 4
 	test SPInitiatedSSOSyncsUserAttributesFromIdPToSPDefaultMapping {
 		property app.server.bundles.size = "0";
-		property app.server.types = "jboss,tcserver,tomcat,weblogic,websphere,wildfly";
+		property app.server.types = "jboss,tcserver,tomcat,weblogic,wildfly";
 		property database.types = "hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 		property environment.acceptance = "true";
 		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,rockylinux,solaris,suse,ubuntu,windows";
@@ -5103,55 +5143,6 @@ definition {
 			User.viewLoggedOutPG();
 
 			AssertConsoleTextPresent(value1 = "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST");
-		}
-	}
-
-	@description = "This is a use case for LPS-50687. Sign into portal by executing a SP initiated SSO login. This is done by clicking on the 'Sign In' link in the top menu on the SP. After the SP is logged in, and if both instances has the same user and email address, the IdP will also be logged in."
-	@priority = 4
-	test ViewSPInitiatedSSO {
-		property app.server.types = "jboss,tcserver,tomcat,wildfly";
-		property database.types = "hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
-		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
-
-		task ("Configure samlidp as IdP and samlsp as SP") {
-			SAML.configureLiferaySAMLAsIdP(samlEntityId = "samlidp");
-
-			SAML.configureLiferaySAMLAsSP(
-				samlEntityId = "samlsp",
-				spURL = "http://www.able.com:9080",
-				userEmailAddress = "test@liferay.com");
-		}
-
-		task ("Logout and execute Sp initiated SSO") {
-			User.logoutPG();
-
-			User.viewLoggedOutPG();
-
-			SAML.executeSPInitiatedSSO(
-				password = PropsUtil.get("default.admin.password"),
-				spURL = "http://www.able.com:9080",
-				userEmailAddress = "test@liferay.com");
-
-			User.viewLoggedInPG();
-		}
-
-		task ("Verify IdP is also logged in") {
-			Navigator.openURL();
-
-			User.viewLoggedInPG();
-		}
-
-		task ("Initiate Single Logout via SP") {
-			User.logoutPG(specificURL = "http://www.able.com:9080");
-
-			User.viewLoggedOutPG();
-		}
-
-		task ("Verify IdP is also logged out") {
-			Navigator.openURL();
-
-			User.viewLoggedOutPG();
 		}
 	}
 

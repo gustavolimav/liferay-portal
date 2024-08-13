@@ -14,6 +14,8 @@ import com.liferay.jenkins.results.parser.test.clazz.group.BatchTestClassGroup;
 import java.io.File;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 
@@ -24,6 +26,11 @@ import org.json.JSONObject;
  * @author Michael Hashimoto
  */
 public abstract class BaseTestClass implements TestClass {
+
+	@Override
+	public void addTestClassMethod(TestClassMethod testClassMethod) {
+		_testClassMethods.add(testClassMethod);
+	}
 
 	@Override
 	public int compareTo(TestClass testClass) {
@@ -125,7 +132,12 @@ public abstract class BaseTestClass implements TestClass {
 
 	@Override
 	public List<TestClassMethod> getTestClassMethods() {
-		return _testClassMethods;
+		List<TestClassMethod> testClassMethods = new ArrayList<>(
+			new HashSet<>(_testClassMethods));
+
+		Collections.sort(testClassMethods);
+
+		return testClassMethods;
 	}
 
 	@Override
@@ -149,9 +161,9 @@ public abstract class BaseTestClass implements TestClass {
 
 	@Override
 	public int hashCode() {
-		JSONObject jsonObject = getJSONObject();
+		File testClassFile = getTestClassFile();
 
-		return jsonObject.hashCode();
+		return testClassFile.hashCode();
 	}
 
 	@Override
@@ -211,10 +223,6 @@ public abstract class BaseTestClass implements TestClass {
 
 	protected void addTestClassMethod(String methodName) {
 		addTestClassMethod(false, methodName);
-	}
-
-	protected void addTestClassMethod(TestClassMethod testClassMethod) {
-		_testClassMethods.add(testClassMethod);
 	}
 
 	protected BatchTestClassGroup getBatchTestClassGroup() {

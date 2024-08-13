@@ -88,33 +88,35 @@ public class DLFileEntryTypeLocalServiceUtil {
 	}
 
 	public static DLFileEntryType addFileEntryType(
-			long userId, long groupId, long dataDefinitionId,
-			String fileEntryTypeKey, Map<java.util.Locale, String> nameMap,
+			String externalReferenceCode, long userId, long groupId,
+			long dataDefinitionId, String fileEntryTypeKey,
+			Map<java.util.Locale, String> nameMap,
 			Map<java.util.Locale, String> descriptionMap, int scope,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().addFileEntryType(
-			userId, groupId, dataDefinitionId, fileEntryTypeKey, nameMap,
-			descriptionMap, scope, serviceContext);
+			externalReferenceCode, userId, groupId, dataDefinitionId,
+			fileEntryTypeKey, nameMap, descriptionMap, scope, serviceContext);
 	}
 
 	/**
 	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
-	 #addFileEntryType(long, long, long, String, Map, Map, long,
+	 #addFileEntryType(String, long, long, long, String, Map, Map, int,
 	 ServiceContext)}
 	 */
 	@Deprecated
 	public static DLFileEntryType addFileEntryType(
-			long userId, long groupId, long dataDefinitionId,
-			String fileEntryTypeKey, Map<java.util.Locale, String> nameMap,
+			String externalReferenceCode, long userId, long groupId,
+			long dataDefinitionId, String fileEntryTypeKey,
+			Map<java.util.Locale, String> nameMap,
 			Map<java.util.Locale, String> descriptionMap,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().addFileEntryType(
-			userId, groupId, dataDefinitionId, fileEntryTypeKey, nameMap,
-			descriptionMap, serviceContext);
+			externalReferenceCode, userId, groupId, dataDefinitionId,
+			fileEntryTypeKey, nameMap, descriptionMap, serviceContext);
 	}
 
 	public static void cascadeFileEntryTypes(
@@ -220,6 +222,14 @@ public class DLFileEntryTypeLocalServiceUtil {
 		throws PortalException {
 
 		getService().deleteFileEntryType(fileEntryTypeId);
+	}
+
+	public static void deleteFileEntryTypeByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		getService().deleteFileEntryTypeByExternalReferenceCode(
+			externalReferenceCode, groupId);
 	}
 
 	public static void deleteFileEntryTypes(long groupId)
@@ -334,6 +344,13 @@ public class DLFileEntryTypeLocalServiceUtil {
 		return getService().fetchDLFileEntryType(fileEntryTypeId);
 	}
 
+	public static DLFileEntryType fetchDLFileEntryTypeByExternalReferenceCode(
+		String externalReferenceCode, long groupId) {
+
+		return getService().fetchDLFileEntryTypeByExternalReferenceCode(
+			externalReferenceCode, groupId);
+	}
+
 	/**
 	 * Returns the document library file entry type matching the UUID and group.
 	 *
@@ -387,6 +404,14 @@ public class DLFileEntryTypeLocalServiceUtil {
 		throws PortalException {
 
 		return getService().getDLFileEntryType(fileEntryTypeId);
+	}
+
+	public static DLFileEntryType getDLFileEntryTypeByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		return getService().getDLFileEntryTypeByExternalReferenceCode(
+			externalReferenceCode, groupId);
 	}
 
 	/**

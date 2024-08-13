@@ -5,25 +5,25 @@
 
 package com.liferay.jenkins.results.parser.test.suite;
 
+import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
 import com.liferay.jenkins.results.parser.PortalAcceptancePullRequestJob;
 import com.liferay.jenkins.results.parser.PortalGitWorkingDirectory;
+import com.liferay.jenkins.results.parser.job.property.JobProperty;
 import com.liferay.jenkins.results.parser.test.batch.TestBatch;
 
 import java.io.File;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author Kenji Heigel
  */
 public class RelevantTestSuite {
-
-	public RelevantTestSuite(File baseDir, List<File> modifiedFiles) {
-		_modifiedFiles = modifiedFiles;
-
-		_relevantRuleEngine = RelevantRuleEngine.getInstance(baseDir);
-	}
 
 	public RelevantTestSuite(
 		PortalAcceptancePullRequestJob portalAcceptancePullRequestJob) {
@@ -38,10 +38,35 @@ public class RelevantTestSuite {
 	}
 
 	public List<TestBatch> getTestBatches() {
+		File baseTestPropertiesFile = new File(
+			_relevantRuleEngine.getBaseDir(), "test.properties");
+
+		String testBatchNamesPropertyValue =
+			JenkinsResultsParserUtil.getProperty(
+				JenkinsResultsParserUtil.getProperties(baseTestPropertiesFile),
+				"test.batch.names[relevant]");
+
+		if (testBatchNamesPropertyValue == null) {
+			throw new RuntimeException(
+				"Please set test.batch.names[relevant] in " +
+					baseTestPropertiesFile);
+		}
+
+		List<String> validTestBatchNames = Arrays.asList(
+			testBatchNamesPropertyValue.split(","));
+
 		List<TestBatch> testBatches = new ArrayList<>();
 
 		List<RelevantRule> relevantRules =
 			_relevantRuleEngine.getMatchingRelevantRules(_modifiedFiles);
+
+		RelevantRuleValidation.validate(relevantRules);
+
+		Collections.sort(relevantRules);
+
+		System.out.println(
+			"There are " + relevantRules.size() + " matching relevant rules: " +
+				_relevantRuleEngine.getRelevantRuleNames(relevantRules));
 
 		for (RelevantRule relevantRule : relevantRules) {
 			for (TestBatch testBatch : relevantRule.getTestBatches()) {
@@ -54,11 +79,24 @@ public class RelevantTestSuite {
 					continue;
 				}
 
-				testBatches.add(testBatch);
+				if (!validTestBatchNames.isEmpty() &&
+					validTestBatchNames.contains(testBatch.getName())) {
+
+					testBatches.add(testBatch);
+				}
 			}
+
+			_testBatchNamesJobProperties.addAll(
+				relevantRule.getTestBatchNamesJobProperties());
 		}
 
+		Collections.sort(testBatches);
+
 		return testBatches;
+	}
+
+	public Set<JobProperty> getTestBatchNamesJobProperties() {
+		return _testBatchNamesJobProperties;
 	}
 
 	public void setModifiedFiles(List<File> modifiedFiles) {
@@ -67,5 +105,7 @@ public class RelevantTestSuite {
 
 	private List<File> _modifiedFiles;
 	private final RelevantRuleEngine _relevantRuleEngine;
+	private final Set<JobProperty> _testBatchNamesJobProperties =
+		new HashSet<>();
 
 }

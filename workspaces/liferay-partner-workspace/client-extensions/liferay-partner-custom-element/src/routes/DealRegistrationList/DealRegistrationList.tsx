@@ -18,7 +18,8 @@ import Modal from '../../common/components/Modal';
 import Table from '../../common/components/Table';
 import TableHeader from '../../common/components/TableHeader';
 import DropDownWithDrillDown from '../../common/components/TableHeader/Filter/components/DropDownWithDrillDown';
-import DateFilter from '../../common/components/TableHeader/Filter/components/filters/DateFilter';
+import {FilterTypes} from '../../common/components/TableHeader/Filter/components/FilterSelector/FilterSelector';
+import {Dates} from '../../common/components/TableHeader/Filter/components/filters/DateFilter/DateFilter';
 import Search from '../../common/components/TableHeader/Search';
 import {DealRegistrationColumnKey} from '../../common/enums/dealRegistrationColumnKey';
 import {ObjectActionName} from '../../common/enums/objectActionName';
@@ -39,11 +40,11 @@ import {
 } from '../../common/utils/constants/filters';
 import {maxPagination} from '../../common/utils/constants/maxPagination';
 import getDoubleParagraph from '../../common/utils/getDoubleParagraph';
-import getDropDownFilterMenus from '../../common/utils/getDropDownFilterMenus';
 import ModalContent from './components/ModalContent';
 import useFilters from './hooks/useFilters';
 import useGetListItemsFromDealRegistration from './hooks/useGetListItemsFromDealRegistration';
 import {INITIAL_FILTER} from './utils/constants/initialFilter';
+
 export type DealRegistrationItem = {
 	[key in DealRegistrationColumnKey]?: any;
 };
@@ -215,24 +216,21 @@ const DealRegistrationList = () => {
 
 	const filterFields = [
 		{
-			component: (
-				<DateFilter
-					clearInputs={filters?.dataSubmitted}
-					dateFilters={(dates: {
-						endDate: string;
-						startDate: string;
-					}) => {
-						onFilter({
-							dataSubmitted: {
-								dates,
-							},
-						});
-					}}
-					filterDescription="Date Submitted "
-					initialDates={filters.dataSubmitted?.dates}
-					years={rangeDataPicker}
-				/>
-			),
+			component: {
+				initialValues: filters.dataSubmitted?.dates,
+				props: {
+					clearInputs: filters?.dataSubmitted,
+					filterDescription: 'Date Submitted',
+					years: rangeDataPicker,
+				},
+				type: FilterTypes.DATE,
+				updateFilter: (dates: Dates) =>
+					onFilter({
+						dataSubmitted: {
+							dates,
+						},
+					}),
+			},
 			name: 'Date Submitted',
 		},
 	];
@@ -307,9 +305,7 @@ const DealRegistrationList = () => {
 					</div>
 
 					<DropDownWithDrillDown
-						className=""
-						initialActiveMenu="x0a0"
-						menus={getDropDownFilterMenus(filterFields)}
+						menuItems={filterFields}
 						trigger={
 							<ClayButton borderless className="btn-secondary">
 								<span className="inline-item inline-item-before">

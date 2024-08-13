@@ -6,19 +6,11 @@
 import {expect, mergeTests} from '@playwright/test';
 
 import {apiHelpersTest} from '../../fixtures/apiHelpersTest';
-import {featureFlagsTest} from '../../fixtures/featureFlagsTest';
 import {loginTest} from '../../fixtures/loginTest';
 import {objectPagesTest} from '../../fixtures/objectPagesTest';
 import {getRandomInt} from '../../utils/getRandomInt';
 
-export const test = mergeTests(
-	apiHelpersTest,
-	featureFlagsTest({
-		'LPS-187854': true,
-	}),
-	loginTest(),
-	objectPagesTest
-);
+export const test = mergeTests(apiHelpersTest, loginTest(), objectPagesTest);
 
 const createdEntities = {
 	listTypeDefinitionIds: [],
@@ -77,7 +69,7 @@ test.describe('Manage object fields through Model Builder', () => {
 
 		await viewObjectDefinitionsPage.openObjectFolder('default');
 
-		await viewObjectDefinitionsPage.viewInModelBuilder();
+		await viewObjectDefinitionsPage.viewInModelBuilderButton.click();
 
 		const objectFieldLabel = 'objectFieldLabel' + getRandomInt();
 
@@ -102,15 +94,24 @@ test.describe('Manage object fields through Model Builder', () => {
 	}) => {
 		const {listTypeDefinitionIds, objectDefinition} = createdEntities;
 
-		const listTypeDefinitions = await Promise.all(
-			Array(22)
-				.fill(null)
-				.map(() =>
-					apiHelpers.listTypeAdmin.postRandomListTypeDefinition()
-				)
+		const existingListTypeDefinitions = (
+			await apiHelpers.listTypeAdmin.getListTypeDefinitions()
+		).items;
+
+		const allListTypeDefinitions = existingListTypeDefinitions.concat(
+			await Promise.all(
+				Array(22)
+					.fill(null)
+					.map(
+						async () =>
+							await apiHelpers.listTypeAdmin.postRandomListTypeDefinition()
+					)
+			)
 		);
 
-		listTypeDefinitions.forEach(({id}) => listTypeDefinitionIds.push(id));
+		allListTypeDefinitions.forEach(({id}) =>
+			listTypeDefinitionIds.push(id)
+		);
 
 		await modelBuilderPage.goto({objectFolderName: 'Default'});
 
@@ -131,8 +132,8 @@ test.describe('Manage object fields through Model Builder', () => {
 
 		await expect(listTypeDefinitionBox).toBeVisible();
 
-		await expect(listTypeDefinitionBox.getByRole('listitem')).toHaveCount(
-			22
+		await expect(listTypeDefinitionBox.getByRole('option')).toHaveCount(
+			allListTypeDefinitions.length
 		);
 	});
 
@@ -334,6 +335,77 @@ test.describe('Manage object fields through Model Builder', () => {
 				.filter({hasText: objectDefinition.name})
 				.getByText('intField')
 		).toBeHidden();
+	});
+
+	test('can edit picklist object field from draft object definition', async ({
+		apiHelpers,
+		modelBuilderPage,
+		page,
+	}) => {
+		const {listTypeDefinitionIds} = createdEntities;
+
+		const draftObjectDefinition =
+			await apiHelpers.objectAdmin.postRandomObjectDefinition({
+				objectFolderExternalReferenceCode: 'default',
+				status: {code: 2},
+			});
+
+		const listTypeDefinition =
+			await apiHelpers.listTypeAdmin.postRandomListTypeDefinition();
+
+		listTypeDefinitionIds.push(listTypeDefinition.id);
+
+		let picklistFieldName = 'picklistField' + getRandomInt();
+
+		await apiHelpers.objectAdmin.postObjectFieldByExternalReferenceCode(
+			draftObjectDefinition.externalReferenceCode,
+			{
+				DBType: 'String',
+				businessType: 'Picklist',
+				externalReferenceCode: picklistFieldName,
+				indexed: true,
+				indexedAsKeyword: false,
+				indexedLanguageId: '',
+				label: {en_US: picklistFieldName},
+				listTypeDefinitionExternalReferenceCode:
+					listTypeDefinition.externalReferenceCode,
+				listTypeDefinitionId: listTypeDefinition.id,
+				localized: false,
+				name: picklistFieldName,
+				readOnly: 'false',
+				required: false,
+				state: false,
+				system: false,
+			}
+		);
+
+		await modelBuilderPage.goto({objectFolderName: 'Default'});
+
+		await modelBuilderPage.clickLeftSideBarItem(
+			draftObjectDefinition.label['en_US']
+		);
+
+		await modelBuilderPage.clickShowAllFieldsButton(
+			draftObjectDefinition.label['en_US']
+		);
+
+		await page.getByText(picklistFieldName).click();
+
+		picklistFieldName = 'picklistField' + getRandomInt();
+
+		await page
+			.getByPlaceholder('Text to translate...')
+			.fill(picklistFieldName);
+
+		await modelBuilderPage.clickLeftSideBarItem(
+			draftObjectDefinition.label['en_US']
+		);
+
+		await expect(page.getByText(picklistFieldName)).toBeVisible();
+
+		await apiHelpers.objectAdmin.deleteObjectDefinition(
+			draftObjectDefinition.id
+		);
 	});
 });
 

@@ -1,5 +1,5 @@
 {
-	"@generated": "0c78dad401c7d75dd8582aece2127d47f0393cff",
+	"@generated": "0d4403032063a58fcfb5eaf678c32fe4f67636bd",
 	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
@@ -14,9 +14,10 @@
 		"paths": {
 		},
 		"rootDir": "../../../../../../../..",
+		"skipLibCheck": true,
 		"sourceMap": false,
 		"strict": true,
-		"target": "es2020",
+		"target": "esnext",
 		"tsBuildInfoFile": "../../../../../../../../.tsc/buildinfo/frontend-js-node-shims.tsbuildinfo",
 		"typeRoots": [
 			"../../../../../../../../node_modules/@types"

@@ -1,5 +1,5 @@
 {
-	"@generated": "7a879c0bd892988d10a99f732b637337c2e36e70",
+	"@generated": "b87a9556f3209695ad204383653efa3143e60bdb",
 	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
@@ -20,9 +20,10 @@
 			]
 		},
 		"rootDir": "../../../../../../../..",
+		"skipLibCheck": true,
 		"sourceMap": false,
 		"strict": true,
-		"target": "es2020",
+		"target": "esnext",
 		"tsBuildInfoFile": "../../../../../../../../.tsc/buildinfo/@liferay/frontend-js-walkthrough-web.tsbuildinfo",
 		"typeRoots": [
 			"../../../../../../../../node_modules/@types"

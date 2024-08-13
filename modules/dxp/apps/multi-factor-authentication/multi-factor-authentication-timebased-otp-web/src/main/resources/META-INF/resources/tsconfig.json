@@ -1,5 +1,5 @@
 {
-	"@generated": "4c87b7dc7e0595ca90eb405a8814fde3b129f805",
+	"@generated": "d8856ce8f4ebd7963a03b2c6f5c8181ad0d1b4db",
 	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
@@ -14,9 +14,10 @@
 		"paths": {
 		},
 		"rootDir": "../../../../../../../../..",
+		"skipLibCheck": true,
 		"sourceMap": false,
 		"strict": true,
-		"target": "es2020",
+		"target": "esnext",
 		"tsBuildInfoFile": "../../../../../../../../../.tsc/buildinfo/multi-factor-authentication-timebased-otp-web.tsbuildinfo",
 		"typeRoots": [
 			"../../../../../../../../../node_modules/@types"

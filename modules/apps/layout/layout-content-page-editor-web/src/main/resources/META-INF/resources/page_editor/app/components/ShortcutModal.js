@@ -54,6 +54,16 @@ export default function ShortcutModal({onCloseModal}) {
 					keyCombinations={[KEY_LABEL, 'S']}
 				/>
 
+				<KeyboardShorcut
+					description={Liferay.Language.get('show-hide-fragment')}
+					keyCombinations={[KEY_LABEL, OPTION_KEY_LABEL, 'H']}
+				/>
+
+				<KeyboardShorcut
+					description={Liferay.Language.get('rename')}
+					keyCombinations={[KEY_LABEL, OPTION_KEY_LABEL, 'R']}
+				/>
+
 				<p className="sheet-subtitle text-secondary">
 					{Liferay.Language.get('selection')}
 				</p>
@@ -83,11 +93,9 @@ function KeyboardShorcut({description, keyCombinations}) {
 				<kbd className="c-kbd text-secondary">
 					{keyCombinations.map((key, index) => (
 						<React.Fragment key={index}>
-							<kbd className="c-kbd">{key}</kbd>
+							{key}
 
-							{index < keyCombinations.length - 1 ? (
-								<span className="c-kbd-separator">+</span>
-							) : null}
+							{index < keyCombinations.length - 1 ? <>+</> : null}
 						</React.Fragment>
 					))}
 				</kbd>

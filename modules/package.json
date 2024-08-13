@@ -27,8 +27,10 @@
 		"webpack": "5.89.0"
 	},
 	"scripts": {
-		"checkFormat": "node-scripts format --check",
+		"checkFormat": "node-scripts check:ci",
 		"format": "node-scripts format",
+		"formatCurrentBranch": "node-scripts format --current-branch",
+		"formatLocalChanges": "node-scripts format --local-changes",
 		"test:all": "node-scripts test"
 	},
 	"workspaces": {

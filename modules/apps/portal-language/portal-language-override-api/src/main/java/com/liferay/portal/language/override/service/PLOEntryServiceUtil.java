@@ -69,6 +69,13 @@ public class PLOEntryServiceUtil {
 		return getService().getPLOEntriesCount(companyId);
 	}
 
+	public static void importPLOEntries(
+			String languageId, java.util.Properties properties)
+		throws java.io.IOException, PortalException {
+
+		getService().importPLOEntries(languageId, properties);
+	}
+
 	public static void setPLOEntries(
 			String key, Map<java.util.Locale, String> localizationMap)
 		throws PortalException {

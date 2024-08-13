@@ -14,8 +14,9 @@ export default {
 		jsx: 'react',
 		module: 'es6',
 		moduleResolution: 'node',
+		skipLibCheck: true,
 		sourceMap: false,
 		strict: true,
-		target: 'es2020',
+		target: 'esnext',
 	},
 };

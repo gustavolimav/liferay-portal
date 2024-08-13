@@ -40,6 +40,7 @@ import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portal.test.rule.TransactionalTestRule;
+import com.liferay.portal.util.PortalInstances;
 
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
@@ -101,6 +102,7 @@ public class CompanyLocalServiceDBPartitionTest
 	@Test
 	public void testAddCompany() throws Exception {
 		int dbPartitionsCount = _getDBPartitionsCount();
+		int rulesCount = _getRulesCount(defaultPartitionName);
 
 		_company1 = CompanyTestUtil.addCompany();
 
@@ -109,6 +111,9 @@ public class CompanyLocalServiceDBPartitionTest
 				_getCompanyIdsBySQL(), _company1.getCompanyId()));
 
 		Assert.assertEquals(dbPartitionsCount + 1, _getDBPartitionsCount());
+		Assert.assertEquals(
+			rulesCount,
+			_getRulesCount(getPartitionName(_company1.getCompanyId())));
 	}
 
 	@Test
@@ -342,6 +347,8 @@ public class CompanyLocalServiceDBPartitionTest
 
 	@Test
 	public void testCopyDBPartitionCompany() throws Exception {
+		int rulesCount = _getRulesCount(defaultPartitionName);
+
 		Company company = CompanyTestUtil.addCompany();
 
 		Configuration configuration = _createFactoryConfiguration(
@@ -375,6 +382,15 @@ public class CompanyLocalServiceDBPartitionTest
 
 			_assertCopyDBPartitionCompany(
 				copiedCompany, name, virtualHostname, webId);
+
+			Assert.assertEquals(
+				rulesCount,
+				_getRulesCount(getPartitionName(copiedCompany.getCompanyId())));
+
+			SafeCloseable safeCloseable =
+				PortalInstances.setCopyInProcessCompanyId(copiedCompanyId);
+
+			safeCloseable.close();
 		}
 		finally {
 			companyLocalService.deleteCompany(company.getCompanyId());
@@ -405,6 +421,11 @@ public class CompanyLocalServiceDBPartitionTest
 				ArrayUtil.contains(_getCompanyIdsBySQL(), toCompanyId));
 
 			_checkPartitionDoesNotExist(toCompanyId);
+
+			SafeCloseable safeCloseable =
+				PortalInstances.setCopyInProcessCompanyId(toCompanyId);
+
+			safeCloseable.close();
 		}
 		finally {
 			companyLocalService.deleteCompany(company);
@@ -452,6 +473,11 @@ public class CompanyLocalServiceDBPartitionTest
 				ArrayUtil.contains(_getCompanyIdsBySQL(), toCompanyId));
 
 			_checkPartitionDoesNotExist(toCompanyId);
+
+			SafeCloseable safeCloseable =
+				PortalInstances.setCopyInProcessCompanyId(toCompanyId);
+
+			safeCloseable.close();
 		}
 		finally {
 			companyLocalService.deleteCompany(company);
@@ -745,9 +771,9 @@ public class CompanyLocalServiceDBPartitionTest
 	private List<String> _getObjectNames(String objectType, long companyId)
 		throws Exception {
 
-		DatabaseMetaData databaseMetaData = connection.getMetaData();
-
 		List<String> objectNames = new ArrayList<>();
+
+		DatabaseMetaData databaseMetaData = connection.getMetaData();
 
 		String partitionName = getPartitionName(companyId);
 
@@ -762,6 +788,28 @@ public class CompanyLocalServiceDBPartitionTest
 		}
 
 		return objectNames;
+	}
+
+	private int _getRulesCount(String partitionName) throws SQLException {
+		if (db.getDBType() != DBType.POSTGRESQL) {
+			return 0;
+		}
+
+		try (PreparedStatement preparedStatement = connection.prepareStatement(
+				StringBundler.concat(
+					"select count(pg_catalog.pg_rewrite.rulename) from ",
+					"pg_catalog.pg_rewrite join pg_catalog.pg_class on ",
+					"pg_catalog.pg_rewrite.ev_class = pg_catalog.pg_class.oid ",
+					"where pg_catalog.pg_class.relnamespace = '", partitionName,
+					"'::regnamespace and (pg_catalog.pg_rewrite.rulename like ",
+					"'update_%' or pg_catalog.pg_rewrite.rulename like ",
+					"'delete_%')"));
+			ResultSet resultSet = preparedStatement.executeQuery()) {
+
+			resultSet.next();
+
+			return resultSet.getInt(1);
+		}
 	}
 
 	private int _getTablesCount(long companyId) throws Exception {

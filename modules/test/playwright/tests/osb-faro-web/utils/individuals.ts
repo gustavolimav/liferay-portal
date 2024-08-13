@@ -4,25 +4,70 @@
  */
 
 import {ApiHelpers} from '../../../helpers/ApiHelpers';
+import getRandomString from '../../../utils/getRandomString';
+
+const modifiedDate = new Date().toISOString();
 
 export async function createIndividuals({
 	apiHelpers,
-	names,
+	individuals,
 }: {
 	apiHelpers: ApiHelpers;
-	names: string[];
+	individuals: {
+		birthDate?: string;
+		dataSourceId?: number;
+		familyName?: string;
+		id: string;
+		name: string;
+	}[];
 }) {
-	const individuals = names.map((name) => ({
-		emailAddress: `${name}@liferay.com`,
-		fields: [
-			{dataSourceId: 0, name: 'givenName', value: name},
-			{dataSourceId: 0, name: 'familyName', value: name},
-			{dataSourceId: 0, name: 'email', value: `${name}@liferay.com`},
-		],
-		firstName: name,
-		id: `${name}@liferay.com`,
-		lastName: name,
+	const formattedIndividuals = individuals.map(
+		({
+			birthDate = '1970-01-01T00:00:00.000Z',
+			dataSourceId = 0,
+			familyName = 'Smith',
+			id,
+			name,
+		}) => ({
+			birthday: birthDate,
+			emailAddress: `${name}@liferay.com`,
+			fields: [
+				{dataSourceId, name: 'birthday', value: birthDate},
+				{
+					dataSourceId,
+					name: 'emailAddress',
+					value: `${name}@liferay.com`,
+				},
+				{dataSourceId, name: 'firstName', value: name},
+				{dataSourceId, name: 'lastName', value: familyName},
+			],
+			firstName: name,
+			id,
+			lastName: familyName,
+			modifiedDate,
+		})
+	);
+
+	await apiHelpers.jsonWebServicesOSBAsah.createIndividuals(
+		formattedIndividuals
+	);
+
+	const individualIdentities = individuals.map(({id}) => ({
+		createDate: modifiedDate,
+		id,
+		individualId: id,
 	}));
 
-	await apiHelpers.jsonWebServicesOSBAsah.createIndividuals(individuals);
+	await apiHelpers.jsonWebServicesOSBAsah.createIdentities(
+		individualIdentities
+	);
+}
+
+export function generateIndividual({name}: {name: any}) {
+	const id = getRandomString();
+
+	return {
+		id,
+		name,
+	};
 }

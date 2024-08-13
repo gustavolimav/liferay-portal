@@ -1,0 +1,14 @@
+import com.liferay.gradle.util.FileUtil
+
+task runGradleTest
+
+runGradleTest {
+	dependsOn ":client-extension:assembleClientExtension"
+
+	doLast {
+		Project clientExtensionProject = project(":client-extension")
+
+		assert !FileUtil.exists(clientExtensionProject, "build/liferay-client-extension-build/static/dummy.txt")
+		assert FileUtil.exists(clientExtensionProject, "build/liferay-client-extension-build/static/foo.txt")
+	}
+}

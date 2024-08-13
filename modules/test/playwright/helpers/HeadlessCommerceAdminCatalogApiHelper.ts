@@ -26,12 +26,12 @@ type TChannel = {
 
 type TCategory = {
 	checked?: boolean;
-	externalReferenceCode: string;
+	externalReferenceCode?: string;
 	id: number;
 	label?: string;
 	name: string;
 	value?: string;
-	vocabulary: string;
+	vocabulary?: string;
 };
 
 export type TPin = {
@@ -49,7 +49,7 @@ export type TPin = {
 	sequence: string;
 };
 
-type TProduct = {
+export type TProduct = {
 	active?: boolean;
 	catalogId: number;
 	categories?: TCategory[];
@@ -83,6 +83,7 @@ type TProduct = {
 		[key: string]: string;
 	};
 	skus?: TSku[];
+	tags?: [string];
 	version?: number;
 };
 
@@ -152,6 +153,12 @@ export class HeadlessCommerceAdminCatalogApiHelper {
 		);
 	}
 
+	async deleteProductAccountGroup(id: number) {
+		return this.apiHelpers.delete(
+			`${this.apiHelpers.baseUrl}${this.basePath}/product-account-groups/${id}`
+		);
+	}
+
 	async deleteCatalog(catalogId: number | string) {
 		return this.apiHelpers.delete(
 			`${this.apiHelpers.baseUrl}${this.basePath}/catalog/${catalogId}`
@@ -185,6 +192,12 @@ export class HeadlessCommerceAdminCatalogApiHelper {
 	async deleteProductByVersion(productId: number, version: number) {
 		return this.apiHelpers.delete(
 			`${this.apiHelpers.baseUrl}${this.basePath}/products/${productId}/by-version/${version}`
+		);
+	}
+
+	async deleteRelatedProduct(relatedProductId: string) {
+		return this.apiHelpers.delete(
+			`${this.apiHelpers.baseUrl}${this.basePath}/relatedProducts/${relatedProductId}`
 		);
 	}
 
@@ -241,6 +254,12 @@ export class HeadlessCommerceAdminCatalogApiHelper {
 			`${this.apiHelpers.baseUrl}${
 				this.basePath
 			}/products?${searchParams.toString()}`
+		);
+	}
+
+	async getProductAccountGroups(productId: number) {
+		return this.apiHelpers.get(
+			`${this.apiHelpers.baseUrl}${this.basePath}/products/${productId}/product-account-groups`
 		);
 	}
 
@@ -477,7 +496,7 @@ export class HeadlessCommerceAdminCatalogApiHelper {
 		productId: number,
 		relatedProduct: TRelatedProduct
 	): Promise<TRelatedProduct> {
-		return await this.apiHelpers.post(
+		relatedProduct = await this.apiHelpers.post(
 			`${this.apiHelpers.baseUrl}${this.basePath}/products/${productId}/relatedProducts`,
 			{
 				data: {
@@ -487,6 +506,15 @@ export class HeadlessCommerceAdminCatalogApiHelper {
 				},
 			}
 		);
+
+		if (this.apiHelpers instanceof DataApiHelpers) {
+			this.apiHelpers.data.push({
+				id: relatedProduct.id,
+				type: 'relatedProduct',
+			});
+		}
+
+		return relatedProduct;
 	}
 
 	async postSkuUnitOfMeasure(

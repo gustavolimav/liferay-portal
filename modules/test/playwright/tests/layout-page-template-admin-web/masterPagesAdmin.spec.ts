@@ -10,13 +10,13 @@ import {loginTest} from '../../fixtures/loginTest';
 import {pageEditorPagesTest} from '../../fixtures/pageEditorPagesTest';
 import {pagesAdminPagesTest} from '../../fixtures/pagesAdminPagesTest';
 import getRandomString from '../../utils/getRandomString';
-import {masterPagesTest} from './fixtures/masterPagesTest';
+import {masterPagesPagesTest} from './fixtures/masterPagesPagesTest';
 
 export const test = mergeTests(
 	pagesAdminPagesTest,
 	isolatedSiteTest,
 	loginTest(),
-	masterPagesTest,
+	masterPagesPagesTest,
 	pageEditorPagesTest
 );
 
@@ -24,7 +24,12 @@ test('Validate if the Blank page template can not be edited and deleted', async 
 	masterPagesPage,
 	site,
 }) => {
+
+	// Go to master pages administration
+
 	await masterPagesPage.goto(site.friendlyUrlPath);
+
+	// Check Blank can not be edited or deleted
 
 	const templateCard = masterPagesPage.getMasterCard('Blank');
 
@@ -90,7 +95,10 @@ test('Add a page based on custom master', async ({
 	await test.step('Assert custom masters as an option when add a new page', async () => {
 		await pagesAdminPage.goto(site.friendlyUrlPath);
 
-		await pagesAdminPage.createNewPage(pageName, masterName);
+		await pagesAdminPage.createNewPage({
+			name: pageName,
+			template: masterName,
+		});
 	});
 
 	await test.step('Assert the new page inherits elements from custom masters', async () => {
@@ -146,7 +154,10 @@ test('Fragments hidden in master pages are hidden in pages that use it and visib
 
 		const pageName = getRandomString();
 
-		await pagesAdminPage.createNewPage(pageName, masterName);
+		await pagesAdminPage.createNewPage({
+			name: pageName,
+			template: masterName,
+		});
 
 		await pagesAdminPage.goto(site.friendlyUrlPath);
 

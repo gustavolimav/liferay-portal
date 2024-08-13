@@ -25,6 +25,8 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.GroupConstants;
+import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
@@ -84,6 +86,60 @@ public class CalendarBookingInfoItemFieldValuesProvider
 		}
 	}
 
+	/**
+	 * See {@link
+	 * com.liferay.calendar.internal.notification.NotificationTemplateContextFactory#_getCalendarBookingURL(
+	 * User, long)}
+	 */
+	protected String getCalendarBookingURL(CalendarBooking calendarBooking) {
+		try {
+			Company company = _companyLocalService.getCompany(
+				calendarBooking.getCompanyId());
+
+			Group group = _groupLocalService.getGroup(
+				calendarBooking.getGroupId());
+
+			Layout layout = _layoutLocalService.fetchLayout(
+				group.getDefaultPublicPlid());
+
+			if (layout == null) {
+				Group guestGroup = _groupLocalService.getGroup(
+					company.getCompanyId(), GroupConstants.GUEST);
+
+				layout = _layoutLocalService.fetchLayout(
+					guestGroup.getDefaultPublicPlid());
+			}
+
+			String url =
+				company.getPortalURL(calendarBooking.getGroupId()) +
+					_portal.getLayoutActualURL(layout);
+
+			String namespace = _portal.getPortletNamespace(
+				CalendarPortletKeys.CALENDAR);
+
+			url = HttpComponentsUtil.addParameter(
+				url, namespace + "mvcPath", "/view_calendar_booking.jsp");
+
+			url = HttpComponentsUtil.addParameter(
+				url, "p_p_id", CalendarPortletKeys.CALENDAR);
+			url = HttpComponentsUtil.addParameter(url, "p_p_lifecycle", "0");
+			url = HttpComponentsUtil.addParameter(
+				url, "p_p_state", WindowState.MAXIMIZED.toString());
+			url = HttpComponentsUtil.addParameter(
+				url, namespace + "calendarBookingId",
+				calendarBooking.getCalendarBookingId());
+
+			return url;
+		}
+		catch (PortalException portalException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(portalException);
+			}
+
+			return StringPool.BLANK;
+		}
+	}
+
 	private List<InfoFieldValue<Object>> _getCalendarBookingInfoFieldValues(
 			CalendarBooking calendarBooking)
 		throws PortalException {
@@ -112,7 +168,7 @@ public class CalendarBookingInfoItemFieldValuesProvider
 				calendarBooking.getLocation()),
 			new InfoFieldValue<>(
 				CalendarBookingInfoItemFields.eventURLInfoField,
-				_getCalendarBookingURL(calendarBooking)),
+				getCalendarBookingURL(calendarBooking)),
 			new InfoFieldValue<>(
 				CalendarBookingInfoItemFields.startDateInfoField,
 				new Date(calendarBooking.getStartTime())),
@@ -138,53 +194,6 @@ public class CalendarBookingInfoItemFieldValuesProvider
 				CalendarBookingInfoItemFields.repetitionsInfoField,
 				RecurrenceUtil.getSummary(
 					calendarBooking, calendarBooking.getRecurrenceObj())));
-	}
-
-	/**
-	 * See {@link
-	 * com.liferay.calendar.internal.notification.NotificationTemplateContextFactory#_getCalendarBookingURL(
-	 * User, long)}
-	 */
-	private String _getCalendarBookingURL(CalendarBooking calendarBooking) {
-		try {
-			Company company = _companyLocalService.getCompany(
-				calendarBooking.getCompanyId());
-
-			String portalURL = company.getPortalURL(
-				calendarBooking.getGroupId());
-
-			Group group = _groupLocalService.getGroup(
-				calendarBooking.getGroupId());
-
-			String layoutActualURL = _portal.getLayoutActualURL(
-				_layoutLocalService.fetchLayout(group.getDefaultPublicPlid()));
-
-			String url = portalURL + layoutActualURL;
-
-			String namespace = _portal.getPortletNamespace(
-				CalendarPortletKeys.CALENDAR);
-
-			url = HttpComponentsUtil.addParameter(
-				url, namespace + "mvcPath", "/view_calendar_booking.jsp");
-
-			url = HttpComponentsUtil.addParameter(
-				url, "p_p_id", CalendarPortletKeys.CALENDAR);
-			url = HttpComponentsUtil.addParameter(url, "p_p_lifecycle", "0");
-			url = HttpComponentsUtil.addParameter(
-				url, "p_p_state", WindowState.MAXIMIZED.toString());
-			url = HttpComponentsUtil.addParameter(
-				url, namespace + "calendarBookingId",
-				calendarBooking.getCalendarBookingId());
-
-			return url;
-		}
-		catch (PortalException portalException) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(portalException);
-			}
-
-			return StringPool.BLANK;
-		}
 	}
 
 	private Map<Locale, String> _getCalendarNameMap(

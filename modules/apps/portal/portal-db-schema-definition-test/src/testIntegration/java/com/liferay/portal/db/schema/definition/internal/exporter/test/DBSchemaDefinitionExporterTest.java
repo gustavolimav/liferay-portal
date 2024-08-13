@@ -6,16 +6,23 @@
 package com.liferay.portal.db.schema.definition.internal.exporter.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.object.model.ObjectDefinition;
+import com.liferay.object.model.ObjectRelationship;
+import com.liferay.object.service.ObjectDefinitionLocalServiceUtil;
+import com.liferay.object.service.ObjectRelationshipLocalServiceUtil;
+import com.liferay.object.test.util.ObjectDefinitionTestUtil;
+import com.liferay.object.test.util.ObjectRelationshipTestUtil;
 import com.liferay.portal.db.schema.definition.internal.test.util.ConfigurationTestUtil;
 import com.liferay.portal.db.schema.definition.internal.test.util.DatabaseTestUtil;
+import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.db.DBType;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.AssumeTestRule;
-import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.InfrastructureUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.test.log.LogCapture;
 import com.liferay.portal.test.log.LogEntry;
 import com.liferay.portal.test.log.LoggerTestUtil;
@@ -34,10 +41,10 @@ import javax.sql.DataSource;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.cm.PersistenceManager;
 
-import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Assume;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -64,17 +71,43 @@ public class DBSchemaDefinitionExporterTest {
 			(dbType == DBType.MYSQL) || (dbType == DBType.POSTGRESQL));
 	}
 
-	@Before
-	public void setUp() throws Exception {
+	@BeforeClass
+	public static void setUpClass() throws Exception {
 		_databaseType = String.valueOf(DBManagerUtil.getDBType());
 		_folder = FileUtil.createTempFolder();
+
+		_objectDefinition1 = ObjectDefinitionTestUtil.addCustomObjectDefinition(
+			ObjectDefinitionTestUtil.getRandomName(),
+			ObjectDefinitionLocalServiceUtil.getService());
+		_objectDefinition2 = ObjectDefinitionTestUtil.addCustomObjectDefinition(
+			ObjectDefinitionTestUtil.getRandomName(),
+			ObjectDefinitionLocalServiceUtil.getService());
+
+		_objectRelationship = ObjectRelationshipTestUtil.addObjectRelationship(
+			ObjectRelationshipLocalServiceUtil.getService(), _objectDefinition1,
+			_objectDefinition2);
 	}
 
-	@After
-	public void tearDown() throws Exception {
+	@AfterClass
+	public static void tearDownClass() throws Exception {
 		Files.deleteIfExists(ConfigurationTestUtil.getConfigurationPath(_PID));
 
 		FileUtil.deltree(_folder);
+
+		if (_objectRelationship != null) {
+			ObjectRelationshipLocalServiceUtil.deleteObjectRelationship(
+				_objectRelationship.getObjectRelationshipId());
+		}
+
+		if (_objectDefinition1 != null) {
+			ObjectDefinitionLocalServiceUtil.deleteObjectDefinition(
+				_objectDefinition1.getObjectDefinitionId());
+		}
+
+		if (_objectDefinition2 != null) {
+			ObjectDefinitionLocalServiceUtil.deleteObjectDefinition(
+				_objectDefinition2.getObjectDefinitionId());
+		}
 	}
 
 	@Test
@@ -118,6 +151,41 @@ public class DBSchemaDefinitionExporterTest {
 				"Finished database schema definition export to " +
 					_folder.getAbsolutePath(),
 				logMessages.get(1));
+		}
+	}
+
+	@Test
+	public void testExportImportReport() throws Exception {
+		ConfigurationTestUtil.deployConfiguration(
+			_configurationAdmin, _databaseType, _folder.getAbsolutePath(),
+			_PID);
+
+		String content = FileUtil.read(
+			new File(_folder, "db_schema_definition_export_report.info"));
+
+		Assert.assertTrue(content.endsWith("Missing tables:"));
+	}
+
+	@Test
+	public void testExportImportReportWithMissingTable() throws Exception {
+		DB db = DBManagerUtil.getDB();
+
+		db.runSQL("create table TestTable (testColumn bigint primary key)");
+
+		try {
+			ConfigurationTestUtil.deployConfiguration(
+				_configurationAdmin, _databaseType, _folder.getAbsolutePath(),
+				_PID);
+
+			String content = FileUtil.read(
+				new File(_folder, "db_schema_definition_export_report.info"));
+
+			Assert.assertTrue(
+				content.contains(
+					"Missing tables: " + StringUtil.toLowerCase("TestTable")));
+		}
+		finally {
+			db.runSQL("DROP_TABLE_IF_EXISTS(TestTable)");
 		}
 	}
 
@@ -184,18 +252,20 @@ public class DBSchemaDefinitionExporterTest {
 		}
 	}
 
-	private static final String _COPY_DB_SCHEMA_NAME =
-		RandomTestUtil.randomString();
+	private static final String _COPY_DB_SCHEMA_NAME = "testschema";
 
 	private static final String _PID =
 		"com.liferay.portal.db.schema.definition.internal.configuration." +
 			"DBSchemaDefinitionExporterConfiguration";
 
+	private static String _databaseType;
+	private static File _folder;
+	private static ObjectDefinition _objectDefinition1;
+	private static ObjectDefinition _objectDefinition2;
+	private static ObjectRelationship _objectRelationship;
+
 	@Inject
 	private ConfigurationAdmin _configurationAdmin;
-
-	private String _databaseType;
-	private File _folder;
 
 	@Inject
 	private PersistenceManager _persistenceManager;

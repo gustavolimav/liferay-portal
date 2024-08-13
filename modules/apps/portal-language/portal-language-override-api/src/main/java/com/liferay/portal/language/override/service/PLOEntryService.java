@@ -15,9 +15,12 @@ import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.language.override.model.PLOEntry;
 
+import java.io.IOException;
+
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Properties;
 
 import org.osgi.annotation.versioning.ProviderType;
 
@@ -65,6 +68,9 @@ public interface PLOEntryService extends BaseService {
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getPLOEntriesCount(long companyId) throws PortalException;
+
+	public void importPLOEntries(String languageId, Properties properties)
+		throws IOException, PortalException;
 
 	public void setPLOEntries(String key, Map<Locale, String> localizationMap)
 		throws PortalException;

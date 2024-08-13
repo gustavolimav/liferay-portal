@@ -5,8 +5,8 @@
 
 import {expect, mergeTests} from '@playwright/test';
 
-import {collectionsPagesTest} from '../../fixtures/CollectionsPageTest';
 import {apiHelpersTest} from '../../fixtures/apiHelpersTest';
+import {collectionsPagesTest} from '../../fixtures/collectionsPagesTest';
 import {featureFlagsTest} from '../../fixtures/featureFlagsTest';
 import {fragmentsPagesTest} from '../../fixtures/fragmentPagesTest';
 import {isolatedSiteTest} from '../../fixtures/isolatedSiteTest';
@@ -48,6 +48,57 @@ test.afterEach(async ({apiHelpers}) => {
 test.describe('Manage object definitions through Model Builder', () => {
 	test.beforeEach(({page}) => {
 		page.setViewportSize({height: 1080, width: 1920});
+	});
+
+	test('assert presence of selected node style on click and its transition after dragging an unselected one', async ({
+		apiHelpers,
+		modelBuilderPage,
+	}) => {
+		const objectDefinition =
+			await apiHelpers.objectAdmin.postRandomObjectDefinition({
+				objectFolderExternalReferenceCode: 'default',
+				status: {code: 0},
+			});
+
+		const commerceOrderItemLabel = 'Commerce Order Item';
+
+		objectDefinitions.push(objectDefinition);
+
+		await modelBuilderPage.goto({objectFolderName: 'Default'});
+
+		await modelBuilderPage.toggleSidebarsButton.click();
+
+		await modelBuilderPage.fitViewButton.click();
+
+		await modelBuilderPage.objectDefinitionNodes
+			.filter({hasText: commerceOrderItemLabel})
+			.click();
+
+		await expect(
+			modelBuilderPage.objectDefinitionNodes.filter({
+				hasText: commerceOrderItemLabel,
+			})
+		).toHaveClass(/selected/);
+
+		await modelBuilderPage.dragNodeThroughDiagram(
+			objectDefinition.label['en_US'],
+			1400,
+			940
+		);
+
+		await modelBuilderPage.fitViewButton.click();
+
+		await expect(
+			modelBuilderPage.objectDefinitionNodes.filter({
+				hasText: commerceOrderItemLabel,
+			})
+		).not.toHaveClass(/selected/);
+
+		await expect(
+			modelBuilderPage.objectDefinitionNodes.filter({
+				hasText: objectDefinition.label['en_US'],
+			})
+		).toHaveClass(/selected/);
 	});
 
 	test('can create an object definition by model builder', async ({
@@ -101,7 +152,7 @@ test.describe('Manage object definitions through Model Builder', () => {
 
 		expect(page.getByText(objectDefinitionLabel)).toBeVisible();
 
-		await viewObjectDefinitionsPage.viewInModelBuilder();
+		await viewObjectDefinitionsPage.viewInModelBuilderButton.click();
 
 		await expect(
 			modelBuilderPage.objectDefinitionNodes.filter({
@@ -146,7 +197,7 @@ test.describe('Manage object definitions through Model Builder', () => {
 			objectDefinition1.label['en_US']
 		);
 
-		await modelBuilderPage.clickDeleteObjectDefinition();
+		await modelBuilderPage.deleteObjectDefinitionOption.click();
 
 		await expect(
 			modelBuilderPage.leftSidebarItems.filter({
@@ -185,9 +236,9 @@ test.describe('Manage object definitions through Model Builder', () => {
 
 		objectDefinitions.push(objectDefinition2);
 
-		await modelBuilderPage.clickToggleSidebarsButton();
+		await modelBuilderPage.toggleSidebarsButton.click();
 
-		await modelBuilderPage.clickFitViewButton();
+		await modelBuilderPage.fitViewButton.click();
 
 		await modelBuilderPage.clickObjectDefinitionActionsButton(
 			objectDefinition1.label['en_US']
@@ -274,7 +325,7 @@ test.describe('Manage object definitions through Model Builder', () => {
 			.filter({hasText: objectFolder.name})
 			.hover();
 
-		await modelBuilderPage.clickGoToFolderButton();
+		await modelBuilderPage.goToFolderButton.click();
 
 		await expect(
 			modelBuilderPage.getLinkedObjectDefinitionIconLocator(
@@ -430,7 +481,7 @@ test.describe('Manage object definitions through View Object Definitions', () =>
 			.locator('.dropdown-toggle')
 			.click();
 
-		await viewObjectDefinitionsPage.clickDeleteObjectDefinition();
+		await viewObjectDefinitionsPage.deleteObjectDefinitionOption.click();
 
 		await expect(
 			viewObjectDefinitionsPage.frontendDataSetEntries.filter({

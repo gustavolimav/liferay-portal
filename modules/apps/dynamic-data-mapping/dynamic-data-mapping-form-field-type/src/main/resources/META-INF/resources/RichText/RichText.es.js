@@ -180,6 +180,10 @@ const RichText = ({
 	};
 
 	function sanitezeHTML(html) {
+		if (Liferay.FeatureFlags['LPD-31212']) {
+			return html;
+		}
+
 		const sanitizedHtml = html
 			.replace(HTML_TAG_WITH_ON_ATTRIBUTE_REGEX, (match) => {
 				return match.replace(ON_ATTRIBUTE_REGEX, '');
@@ -196,6 +200,18 @@ const RichText = ({
 	const resetTranslation = useCallback(() => {
 		editorRef.current.editor.setData(currentValue[defaultLocale.localeId]);
 	}, [editorRef, currentValue, defaultLocale]);
+
+	useEffect(() => {
+		const handleRestoreState = () => {
+			editorRef.current.editor.setData(value);
+		};
+
+		Liferay.after('ddm:restoreState', handleRestoreState);
+
+		return () => {
+			Liferay.detach('ddm:restoreState', handleRestoreState);
+		};
+	}, [value, currentValue]);
 
 	useEffect(() => {
 		Liferay.after('inputLocalized:resetTranslations', resetTranslation);

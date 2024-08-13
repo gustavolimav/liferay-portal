@@ -1,4 +1,4 @@
-@component-name = "portal-wcm"
+@component-name = "portal-page-management"
 definition {
 
 	property ci.retries.disabled = "true";
@@ -173,6 +173,8 @@ definition {
 
 		task ("Assert the fragment name is localized") {
 			PageEditor.clickConfigurableField(fragmentName = "Título");
+
+			PageEditor.gotoTab(tabName = "Navegador");
 
 			PageEditor.viewFragmentHeaderVisible(fragmentName = "Título");
 		}

@@ -19,59 +19,46 @@ import {FDSViewType} from '../../../FDSViews';
 import RequiredMark from '../../../components/RequiredMark';
 import Search from '../../../components/Search';
 import ValidationFeedback from '../../../components/ValidationFeedback';
-import {API_URL, OBJECT_RELATIONSHIP} from '../../../utils/constants';
+import {
+	API_URL,
+	DEFAULT_FETCH_HEADERS,
+	OBJECT_RELATIONSHIP,
+} from '../../../utils/constants';
 import openDefaultFailureToast from '../../../utils/openDefaultFailureToast';
 import openDefaultSuccessToast from '../../../utils/openDefaultSuccessToast';
-import {IAction} from '../Actions';
+import {EActionType, IAction} from '../Actions';
 
-const ACTION_METHOD = {
-	DELETE: 'DELETE',
-	GET: 'GET',
-	PATCH: 'PATCH',
-	POST: 'POST',
-};
-
-const ACTION_METHODS = () => {
-	const methods = [];
-
-	for (const method in ACTION_METHOD) {
-		methods.push({label: method, value: method});
-	}
-
-	return methods;
-};
-
-const ACTION_TYPE = {
-	ASYNC: 'async',
-	HEADLESS: 'headless',
-	LINK: 'link',
-	MODAL: 'modal',
-	SIDEPANEL: 'sidePanel',
-};
+enum EAsyncActionMethod {
+	DELETE = 'DELETE',
+	GET = 'GET',
+	PATCH = 'PATCH',
+	POST = 'POST',
+	PUT = 'PUT',
+}
 
 const ACTION_TYPES = [
 	{
 		label: Liferay.Language.get('link'),
-		value: ACTION_TYPE.LINK,
+		value: EActionType.LINK,
 	},
 	{
 		label: Liferay.Language.get('modal'),
-		value: ACTION_TYPE.MODAL,
+		value: EActionType.MODAL,
 	},
 	{
 		label: Liferay.Language.get('side-panel'),
-		value: ACTION_TYPE.SIDEPANEL,
+		value: EActionType.SIDEPANEL,
 	},
 ];
 
 const ITEM_ACTION_TYPES = [
 	{
 		label: Liferay.Language.get('async'),
-		value: ACTION_TYPE.ASYNC,
+		value: EActionType.ASYNC,
 	},
 	{
 		label: Liferay.Language.get('headless'),
-		value: ACTION_TYPE.HEADLESS,
+		value: EActionType.HEADLESS,
 	},
 ].concat(ACTION_TYPES);
 
@@ -153,7 +140,7 @@ const ActionForm = ({
 	const [labelValidationError, setLabelValidationError] = useState(false);
 	const [permissionKeyValidationError, setPermissionKeyValidationError] =
 		useState(false);
-	const [saveButtonDisabled, setSaveButtonDisabled] = useState(!editing);
+	const [saveButtonDisabled, setSaveButtonDisabled] = useState(false);
 	const [successMessageTranslations, setSuccessMessageTranslations] =
 		useState(initialValues?.successMessage_i18n ?? {});
 	const [titleTranslations, setTitleTranslations] = useState(
@@ -165,7 +152,7 @@ const ActionForm = ({
 		confirmationMessage: initialValues?.confirmationMessage ?? '',
 		confirmationMessageType:
 			initialValues?.confirmationMessageType ?? 'warning',
-		iconSymbol: initialValues?.icon ?? '',
+		icon: initialValues?.icon ?? '',
 		label: initialValues?.label ?? '',
 		method: initialValues?.method ?? '',
 		modalSize: initialValues?.modalSize ?? '',
@@ -173,17 +160,21 @@ const ActionForm = ({
 		title: initialValues?.title ?? '',
 		type: initialValues?.type ?? 'link',
 		url: initialValues?.url ?? '',
-	});
+	} as IAction);
 
-	const handleActionTypeChange = (event: any) => {
+	const onActionTypeChange = (event: any) => {
 		const type = event.target.value;
 
 		setActionData({
 			...actionData,
-			method: type === ACTION_TYPE.ASYNC ? ACTION_METHOD.DELETE : '',
-			modalSize: type === ACTION_TYPE.MODAL ? MODAL_SIZES[0].value : '',
+			method: type === EActionType.ASYNC ? EAsyncActionMethod.DELETE : '',
+			modalSize: type === EActionType.MODAL ? MODAL_SIZES[0].value : '',
 			type,
 		});
+
+		if (type !== EActionType.HEADLESS) {
+			setPermissionKeyValidationError(false);
+		}
 	};
 
 	const saveAction = async () => {
@@ -191,7 +182,7 @@ const ActionForm = ({
 
 		const {
 			confirmationMessageType,
-			iconSymbol,
+			icon,
 			method,
 			modalSize,
 			permissionKey,
@@ -206,7 +197,7 @@ const ActionForm = ({
 
 		const body = {
 			confirmationMessage_i18n: confirmationMessageTranslations,
-			icon: iconSymbol,
+			icon,
 			label_i18n: labelTranslations,
 			method,
 			modalSize,
@@ -222,14 +213,14 @@ const ActionForm = ({
 		}
 
 		if (
-			actionData.type === ACTION_TYPE.ASYNC ||
-			actionData.type === ACTION_TYPE.HEADLESS
+			actionData.type === EActionType.ASYNC ||
+			actionData.type === EActionType.HEADLESS
 		) {
 			body.errorMessage_i18n = errorMessageTranslations;
 			body.successMessage_i18n = successMessageTranslations;
 		}
 
-		if (actionData.type === ACTION_TYPE.ASYNC) {
+		if (actionData.type === EActionType.ASYNC) {
 			body.method = method;
 		}
 
@@ -243,10 +234,7 @@ const ActionForm = ({
 
 		const response = await fetch(apiURL, {
 			body: JSON.stringify(body),
-			headers: {
-				'Accept': 'application/json',
-				'Content-Type': 'application/json',
-			},
+			headers: DEFAULT_FETCH_HEADERS,
 			method: fetchMethod,
 		});
 
@@ -265,30 +253,34 @@ const ActionForm = ({
 		onSave();
 	};
 
-	const validateForm = ({
-		labelTranslations,
-		permissionKey,
-		url,
-	}: {
-		labelTranslations: Partial<
-			Liferay.Language.FullyLocalizedValue<string>
-		>;
-		permissionKey: string;
-		url: string;
-	}) => {
-		let valid = true;
+	const validate = () => {
+		let valid: boolean = true;
+
+		const {permissionKey, type, url} = actionData;
 
 		if (
-			(!url && actionData.type !== ACTION_TYPE.HEADLESS) ||
-			(!permissionKey && actionData.type === ACTION_TYPE.HEADLESS) ||
 			!translationExists({
 				translations: labelTranslations,
 			})
 		) {
 			valid = false;
+
+			setLabelValidationError(true);
 		}
 
-		setSaveButtonDisabled(!valid);
+		if (!url && type !== EActionType.HEADLESS) {
+			valid = false;
+
+			setURLValidationError(true);
+		}
+
+		if (!permissionKey && type === EActionType.HEADLESS) {
+			valid = false;
+
+			setPermissionKeyValidationError(true);
+		}
+
+		return valid;
 	};
 
 	useEffect(() => {
@@ -368,7 +360,7 @@ const ActionForm = ({
 									onClick={() => {
 										setActionData({
 											...actionData,
-											iconSymbol: item.value,
+											icon: item.value,
 										});
 										closeModal();
 									}}
@@ -430,12 +422,6 @@ const ActionForm = ({
 											translations,
 										})
 									);
-
-									validateForm({
-										labelTranslations: translations,
-										permissionKey: actionData.permissionKey,
-										url: actionData.url,
-									});
 								}}
 								placeholder={Liferay.Language.get(
 									'action-name'
@@ -456,7 +442,7 @@ const ActionForm = ({
 										<ClayInput.GroupText>
 											<ClayIcon
 												spritemap={spritemap}
-												symbol={actionData.iconSymbol}
+												symbol={actionData.icon}
 											/>
 										</ClayInput.GroupText>
 									</ClayInput.GroupItem>
@@ -466,23 +452,27 @@ const ActionForm = ({
 											onChange={({target: {value}}) =>
 												setActionData({
 													...actionData,
-													iconSymbol: value,
+													icon: value,
 												})
 											}
 											placeholder={Liferay.Language.get(
 												'no-icon-selected'
 											)}
 											type="text"
-											value={actionData.iconSymbol}
+											value={actionData.icon}
 										/>
 									</ClayInput.GroupItem>
 
 									<ClayButtonWithIcon
-										aria-label={Liferay.Language.get(
-											actionData.iconSymbol !== ''
-												? 'change-icon'
-												: 'add-icon'
-										)}
+										aria-label={
+											actionData.icon
+												? Liferay.Language.get(
+														'change-icon'
+													)
+												: Liferay.Language.get(
+														'add-icon'
+													)
+										}
 										className="ml-2"
 										displayType="secondary"
 										id={iconFormElementId}
@@ -500,13 +490,13 @@ const ActionForm = ({
 											})
 										}
 										symbol={
-											actionData.iconSymbol !== ''
+											actionData.icon !== ''
 												? 'change'
 												: 'plus'
 										}
 									/>
 
-									{actionData.iconSymbol !== '' && (
+									{actionData.icon !== '' && (
 										<ClayButtonWithIcon
 											aria-label={Liferay.Language.get(
 												'remove-icon'
@@ -516,7 +506,7 @@ const ActionForm = ({
 											onClick={() =>
 												setActionData({
 													...actionData,
-													iconSymbol: '',
+													icon: '',
 												})
 											}
 											symbol="trash"
@@ -548,9 +538,7 @@ const ActionForm = ({
 								<ClaySelectWithOption
 									disabled={editing}
 									id={typeFormElementId}
-									onChange={(event) =>
-										handleActionTypeChange(event)
-									}
+									onChange={onActionTypeChange}
 									options={
 										activeTab === 0
 											? ITEM_ACTION_TYPES
@@ -564,7 +552,7 @@ const ActionForm = ({
 							</ClayForm.Group>
 						</ClayLayout.Col>
 
-						{actionData.type === ACTION_TYPE.ASYNC && (
+						{actionData.type === EActionType.ASYNC && (
 							<ClayLayout.Col size={4}>
 								<ClayForm.Group>
 									<label htmlFor={methodFormElementId}>
@@ -581,7 +569,12 @@ const ActionForm = ({
 												method: event.target.value,
 											})
 										}
-										options={ACTION_METHODS()}
+										options={Object.values(
+											EAsyncActionMethod
+										).map((method) => ({
+											label: method,
+											value: method,
+										}))}
 										placeholder={Liferay.Language.get(
 											'please-select-an-option'
 										)}
@@ -591,7 +584,7 @@ const ActionForm = ({
 							</ClayLayout.Col>
 						)}
 
-						{actionData.type === ACTION_TYPE.MODAL && (
+						{actionData.type === EActionType.MODAL && (
 							<ClayLayout.Col size={4}>
 								<ClayForm.Group>
 									<label htmlFor={modalSizeFormElementId}>
@@ -619,8 +612,8 @@ const ActionForm = ({
 						)}
 					</ClayLayout.Row>
 
-					{(actionData.type === ACTION_TYPE.MODAL ||
-						actionData.type === ACTION_TYPE.SIDEPANEL) && (
+					{(actionData.type === EActionType.MODAL ||
+						actionData.type === EActionType.SIDEPANEL) && (
 						<ClayLayout.Row>
 							<ClayLayout.Col>
 								<InputLocalized
@@ -633,7 +626,7 @@ const ActionForm = ({
 										setTitleTranslations(translations);
 									}}
 									placeholder={
-										actionData.type === ACTION_TYPE.MODAL
+										actionData.type === EActionType.MODAL
 											? Liferay.Language.get(
 													'add-the-title-of-the-modal'
 												)
@@ -647,7 +640,7 @@ const ActionForm = ({
 						</ClayLayout.Row>
 					)}
 
-					{actionData.type !== ACTION_TYPE.HEADLESS && (
+					{actionData.type !== EActionType.HEADLESS && (
 						<ClayLayout.Row justify="start">
 							<ClayLayout.Col lg>
 								<ClayForm.Group
@@ -673,13 +666,6 @@ const ActionForm = ({
 											});
 
 											setURLValidationError(!url);
-
-											validateForm({
-												labelTranslations,
-												permissionKey:
-													actionData.permissionKey,
-												url,
-											});
 										}}
 										placeholder={Liferay.Language.get(
 											'add-a-url-here'
@@ -708,7 +694,7 @@ const ActionForm = ({
 									)}
 
 									{actionData.type ===
-										ACTION_TYPE.HEADLESS && (
+										EActionType.HEADLESS && (
 										<RequiredMark />
 									)}
 
@@ -735,18 +721,12 @@ const ActionForm = ({
 
 										if (
 											actionData.type ===
-											ACTION_TYPE.HEADLESS
+											EActionType.HEADLESS
 										) {
 											setPermissionKeyValidationError(
 												!permissionKey
 											);
 										}
-
-										validateForm({
-											labelTranslations,
-											permissionKey,
-											url: actionData.url,
-										});
 									}}
 									placeholder={Liferay.Language.get(
 										'add-a-value-here'
@@ -766,6 +746,7 @@ const ActionForm = ({
 							<ClayLayout.Col size={8}>
 								<ClayForm.Group>
 									<InputLocalized
+										data-testid="confirmationMessageInput"
 										id={confirmationMessageFormElementId}
 										label={Liferay.Language.get(
 											'confirmation-message'
@@ -819,8 +800,8 @@ const ActionForm = ({
 				</ClayPanel.Body>
 			</ClayPanel>
 
-			{(actionData.type === ACTION_TYPE.ASYNC ||
-				actionData.type === ACTION_TYPE.HEADLESS) && (
+			{(actionData.type === EActionType.ASYNC ||
+				actionData.type === EActionType.HEADLESS) && (
 				<ClayPanel
 					collapsable
 					defaultExpanded
@@ -837,6 +818,7 @@ const ActionForm = ({
 						<ClayTabs
 							activation="automatic"
 							active={activeMessageTab}
+							className="status-messages-tabs"
 							onActiveChange={(tab: number) => {
 								setActiveMessageTab(tab);
 							}}
@@ -852,16 +834,15 @@ const ActionForm = ({
 
 						<ClayTabs.Content
 							active={activeMessageTab}
-							className="action-messages"
+							className="status-messages-content"
 							fade
 						>
 							<ClayTabs.TabPane
-								aria-labelledby={Liferay.Language.get(
-									'success'
-								)}
+								aria-label={Liferay.Language.get('success')}
 							>
 								<ClayForm.Group>
 									<InputLocalized
+										data-testid="successStatusMessageInput"
 										id={successMessageFormElementId}
 										label={Liferay.Language.get('message')}
 										onChange={setSuccessMessageTranslations}
@@ -879,10 +860,12 @@ const ActionForm = ({
 							</ClayTabs.TabPane>
 
 							<ClayTabs.TabPane
-								aria-labelledby={Liferay.Language.get('error')}
+								aria-label={Liferay.Language.get('error')}
+								className="error-status-message-tab-pane"
 							>
 								<ClayForm.Group>
 									<InputLocalized
+										data-testid="errorStatusMessageInput"
 										id={errorMessageFormElementId}
 										label={Liferay.Language.get('message')}
 										onChange={setErrorMessageTranslations}
@@ -902,7 +885,16 @@ const ActionForm = ({
 			)}
 
 			<ClayButton.Group className="pb-4 px-4" spaced>
-				<ClayButton disabled={saveButtonDisabled} onClick={saveAction}>
+				<ClayButton
+					disabled={saveButtonDisabled}
+					onClick={() => {
+						const valid = validate();
+
+						if (valid) {
+							saveAction();
+						}
+					}}
+				>
 					{Liferay.Language.get('save')}
 				</ClayButton>
 

@@ -63,16 +63,73 @@
 					</execute>
 				</then>
 				<else>
-					<download-gradle-wrapper-binary />
+					<download-gradle-wrapper-binary workspace.dir="${analytics.cloud.asah.dir}" />
 
 					<pull-docker-image-dependencies
 						analytics.cloud.image.names.excludes="${analytics.cloud.faro.image.names.excludes}"
 						analytics.cloud.repository.dir="${analytics.cloud.faro.dir}"
 					/>
 
-					<local name="portal.gradlew" />
+					<local name="portal.base.dir" />
 
-					<property location="${project.dir}/gradlew" name="portal.gradlew" />
+					<beanshell>
+						<![CDATA[
+							import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
+
+							File analyticsCloudFaroDir = new File(project.getProperty("analytics.cloud.faro.dir"));
+
+							File gradleWrapperDir = analyticsCloudFaroDir.getParentFile();
+
+							File gradleWrapperFile = new File(gradleWrapperDir, "gradlew");
+
+							while (true) {
+								if (gradleWrapperFile.exists()) {
+									break;
+								}
+
+								gradleWrapperDir = gradleWrapperDir.getParentFile();
+
+								if (gradleWrapperDir == null) {
+									break;
+								}
+
+								gradleWrapperFile = new File(gradleWrapperDir, "gradlew");
+							}
+
+							if (gradleWrapperFile.exists()) {
+								project.setProperty("portal.base.dir", JenkinsResultsParserUtil.getCanonicalPath(gradleWrapperFile.getParentFile()));
+
+								project.setProperty("portal.gradlew", JenkinsResultsParserUtil.getCanonicalPath(gradleWrapperFile));
+							}
+							else {
+								project.setProperty("portal.gradlew", "gradle");
+							}
+						]]>
+					</beanshell>
+
+					<if>
+						<and>
+							<available file="${portal.base.dir}" />
+							<not>
+								<equals arg1="${portal.base.dir}" arg2="${project.dir}" />
+							</not>
+						</and>
+						<then>
+							<echo>Set up portal for OSB Faro (${portal.base.dir}).</echo>
+
+							<execute dir="${portal.base.dir}">
+								ant setup-profile-dxp
+
+								ant setup-sdk
+
+								ant setup-libs
+
+								ant compile
+
+								ant install-portal-snapshots
+							</execute>
+						</then>
+					</if>
 
 					<loadfile
 						property="analytics.cloud.docker.test.yaml.content"
@@ -448,62 +505,6 @@ OSB_FARO_FRONTEND_URL=${analytics.cloud.faro.frontend.url}</echo>
 						dest="${analytics.cloud.faro.dir}/osb-faro-docker/common/license/"
 						src="${test.portal.license.url}"
 					/>
-				</then>
-			</if>
-		</sequential>
-	</macrodef>
-
-	<macrodef name="download-gradle-wrapper-binary">
-		<sequential>
-			<if>
-				<and>
-					<available file="${analytics.cloud.asah.dir}/gradle/wrapper/gradle-wrapper.properties" />
-					<not>
-						<available file="${analytics.cloud.asah.dir}/gradle/wrapper/${gradle.wrapper.bin.file.name}" />
-					</not>
-				</and>
-				<then>
-					<local name="gradle.wrapper.bin.file.name" />
-					<local name="gradle.wrapper.bin.file.url" />
-
-					<beanshell>
-						<![CDATA[
-							import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
-
-							File gradleWrapperPropertiesFile = new File(project.getProperty("analytics.cloud.asah.dir") + "/gradle/wrapper/gradle-wrapper.properties");
-
-							Properties gradleWrapperProperties = JenkinsResultsParserUtil.getProperties(new File[] {gradleWrapperPropertiesFile});
-
-							String distributionURL = gradleWrapperProperties.getProperty("distributionUrl");
-
-							project.setProperty("gradle.wrapper.bin.file.name", distributionURL.replaceAll(".*/([^/]+)", "$1"));
-							project.setProperty("gradle.wrapper.bin.file.url", distributionURL);
-						]]>
-					</beanshell>
-
-					<if>
-						<matches pattern="https?://.+" string="${gradle.wrapper.bin.file.url}" />
-						<then>
-							<mirrors-get
-								dest="${analytics.cloud.asah.dir}/gradle/wrapper/${gradle.wrapper.bin.file.name}"
-								src="${gradle.wrapper.bin.file.url}"
-							/>
-						</then>
-					</if>
-
-					<beanshell>
-						<![CDATA[
-							import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
-
-							File gradleWrapperPropertiesFile = new File(project.getProperty("analytics.cloud.asah.dir") + "/gradle/wrapper/gradle-wrapper.properties");
-
-							Properties gradleWrapperProperties = JenkinsResultsParserUtil.getProperties(new File[] {gradleWrapperPropertiesFile});
-
-							gradleWrapperProperties.setProperty("distributionUrl", "./" + project.getProperty("gradle.wrapper.bin.file.name"));
-
-							JenkinsResultsParserUtil.writePropertiesFile(gradleWrapperPropertiesFile, gradleWrapperProperties, true);
-						]]>
-					</beanshell>
 				</then>
 			</if>
 		</sequential>

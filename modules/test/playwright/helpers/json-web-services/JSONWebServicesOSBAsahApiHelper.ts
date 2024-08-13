@@ -4,16 +4,40 @@
  */
 
 import {asahConfig} from '../../tests/osb-faro-web/asah.config';
+import {Nanites} from '../../tests/osb-faro-web/utils/nanites';
 import {ApiHelpers} from '../ApiHelpers';
 
 type Event = {
 	applicationId: string;
+	assetId?: string;
+	assetTitle?: string;
 	canonicalUrl: string;
 	channelId: string;
+	dataSourceId?: number;
 	eventDate: string;
 	eventId: string;
+	eventProperties?: string;
+	properties?: Property[];
 	title: string;
 	userId: string;
+};
+
+type EventAttributeDefinition = {
+	dataType: string;
+	displayName: string;
+	name: string;
+	type: string;
+};
+
+type EventDefinition = {
+	applicationId: string;
+	description?: string;
+	displayName: string;
+	eventAttributeDefinitions?: EventAttributeDefinition[];
+	eventDate?: string;
+	name: string;
+	type: string;
+	url?: string;
 };
 
 type Identity = {
@@ -45,6 +69,19 @@ type PageDaily = {
 	views: number;
 };
 
+type Property = {
+	name: string;
+	value: string;
+};
+
+type Session = {
+	channelId: string;
+	id: string;
+	sessionEnd: string;
+	sessionStart: string;
+	userId: string;
+};
+
 export class JSONWebServicesOSBAsahApiHelper {
 	readonly apiHelpers: ApiHelpers;
 	readonly basePath: string;
@@ -61,9 +98,20 @@ export class JSONWebServicesOSBAsahApiHelper {
 		};
 	}
 
+	async runNanites(nanites: Nanites[]): Promise<any> {
+		return this.apiHelpers.post(
+			`${asahConfig.environment.batchCuratordUrl}/nanites/run`,
+			{
+				data: nanites,
+				failOnStatusCode: true,
+				headers: this.getHeaders(),
+			}
+		);
+	}
+
 	async createEvents(events: Event[]): Promise<any> {
 		return this.apiHelpers.post(
-			`${asahConfig.environment.baseUrl}${this.basePath}/events`,
+			`${asahConfig.environment.backendUrl}${this.basePath}/events`,
 			{
 				data: events,
 				failOnStatusCode: true,
@@ -72,9 +120,22 @@ export class JSONWebServicesOSBAsahApiHelper {
 		);
 	}
 
+	async createEventDefinition(
+		eventDefinition: EventDefinition[]
+	): Promise<any> {
+		return this.apiHelpers.post(
+			`${asahConfig.environment.backendUrl}${this.basePath}/event-definition`,
+			{
+				data: eventDefinition,
+				failOnStatusCode: true,
+				headers: this.getHeaders(),
+			}
+		);
+	}
+
 	async createIdentities(identities: Identity[]): Promise<any> {
 		return this.apiHelpers.post(
-			`${asahConfig.environment.baseUrl}${this.basePath}/identities`,
+			`${asahConfig.environment.backendUrl}${this.basePath}/identities`,
 			{
 				data: identities,
 				failOnStatusCode: true,
@@ -85,7 +146,7 @@ export class JSONWebServicesOSBAsahApiHelper {
 
 	async createIndividuals(individuals: Individual[]): Promise<any> {
 		return this.apiHelpers.post(
-			`${asahConfig.environment.baseUrl}${this.basePath}/individuals`,
+			`${asahConfig.environment.backendUrl}${this.basePath}/individuals`,
 			{
 				data: individuals,
 				failOnStatusCode: true,
@@ -96,7 +157,7 @@ export class JSONWebServicesOSBAsahApiHelper {
 
 	async createPagesDaily(pagesDaily: PageDaily[]): Promise<any> {
 		return this.apiHelpers.post(
-			`${asahConfig.environment.baseUrl}${this.basePath}/pagesdaily`,
+			`${asahConfig.environment.backendUrl}${this.basePath}/pagesdaily`,
 			{
 				data: pagesDaily,
 				failOnStatusCode: true,
@@ -105,9 +166,20 @@ export class JSONWebServicesOSBAsahApiHelper {
 		);
 	}
 
+	async createSessions(session: Session[]): Promise<any> {
+		return this.apiHelpers.post(
+			`${asahConfig.environment.backendUrl}${this.basePath}/sessions`,
+			{
+				data: session,
+				failOnStatusCode: true,
+				headers: this.getHeaders(),
+			}
+		);
+	}
+
 	async closeSessions(): Promise<any> {
 		return this.apiHelpers.delete(
-			`${asahConfig.environment.baseUrl}${this.basePath}/sessions/close`,
+			`${asahConfig.environment.backendUrl}${this.basePath}/sessions/close`,
 			this.getHeaders()
 		);
 	}

@@ -25,6 +25,7 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.ListType;
 import com.liferay.portal.kernel.model.ListTypeConstants;
+import com.liferay.portal.kernel.model.ModelHintsUtil;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.OrganizationConstants;
 import com.liferay.portal.kernel.model.Region;
@@ -759,7 +760,7 @@ public class OrganizationLocalServiceImpl
 		}
 
 		if (orderByComparator == null) {
-			orderByComparator = new OrganizationNameComparator(true);
+			orderByComparator = OrganizationNameComparator.getInstance(true);
 		}
 
 		Collections.sort(organizations, orderByComparator);
@@ -1339,7 +1340,7 @@ public class OrganizationLocalServiceImpl
 					return organizationPersistence.findByGtO_C_P(
 						previousId, companyId, parentPrimaryKey,
 						QueryUtil.ALL_POS, size,
-						new OrganizationIdComparator(true));
+						OrganizationIdComparator.getInstance(true));
 				}
 
 			});
@@ -1453,7 +1454,7 @@ public class OrganizationLocalServiceImpl
 		return search(
 			companyId, parentOrganizationId, keywords, type, regionId,
 			countryId, params, start, end,
-			new OrganizationNameComparator(true));
+			OrganizationNameComparator.getInstance(true));
 	}
 
 	/**
@@ -1567,7 +1568,7 @@ public class OrganizationLocalServiceImpl
 		return search(
 			companyId, parentOrganizationId, name, type, street, city, zip,
 			regionId, countryId, params, andOperator, start, end,
-			new OrganizationNameComparator(true));
+			OrganizationNameComparator.getInstance(true));
 	}
 
 	/**
@@ -2438,7 +2439,7 @@ public class OrganizationLocalServiceImpl
 						organization.getOrganizationId(),
 						StringPool.FORWARD_SLASH))[0],
 				QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-				new OrganizationNameComparator(true));
+				OrganizationNameComparator.getInstance(true));
 
 		long[] organizationIds = new long[organizations.size()];
 
@@ -2619,7 +2620,15 @@ public class OrganizationLocalServiceImpl
 		}
 
 		if (Validator.isNull(name)) {
-			throw new OrganizationNameException();
+			throw new OrganizationNameException.MustNotBeNull();
+		}
+
+		int maxLength = ModelHintsUtil.getMaxLength(
+			Organization.class.getName(), "name");
+
+		if (name.length() > maxLength) {
+			throw new OrganizationNameException.MustNotExceedMaximumLength(
+				name, maxLength);
 		}
 
 		Organization organization = organizationPersistence.fetchByC_N(

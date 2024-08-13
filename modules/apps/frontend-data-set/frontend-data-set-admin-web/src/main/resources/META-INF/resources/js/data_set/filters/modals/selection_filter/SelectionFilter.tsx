@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import ClayAlert from '@clayui/alert';
 import ClayForm, {
 	ClayRadio,
 	ClayRadioGroup,
@@ -14,12 +13,10 @@ import ClayIcon from '@clayui/icon';
 import ClayLayout from '@clayui/layout';
 import ClayModal from '@clayui/modal';
 import classNames from 'classnames';
-import fuzzy from 'fuzzy';
-import React, {useEffect, useState} from 'react';
+import React, {useState} from 'react';
 
 import CheckboxMultiSelect from '../../../../components/CheckboxMultiSelect';
 import RequiredMark from '../../../../components/RequiredMark';
-import getAllPicklists from '../../../../utils/getAllPicklists';
 import {
 	ESelectionFilterSourceType,
 	IField,
@@ -36,16 +33,6 @@ function Header() {
 	return <>{Liferay.Language.get('new-selection-filter')}</>;
 }
 
-interface IBodyProps {
-	closeModal: Function;
-	fieldNames?: string[];
-	fields: IField[];
-	filter?: IFilter;
-	namespace: string;
-	onSave: Function;
-	restApplications: string[];
-}
-
 function Body({
 	closeModal,
 	fieldNames,
@@ -54,18 +41,25 @@ function Body({
 	namespace,
 	onSave,
 	restApplications,
-}: IBodyProps) {
+}: {
+	closeModal: Function;
+	fieldNames?: string[];
+	fields: IField[];
+	filter?: IFilter;
+	namespace: string;
+	onSave: Function;
+	restApplications: string[];
+}) {
 	const [fieldInUseValidationError, setFieldInUseValidationError] =
 		useState<boolean>(false);
 	const [fieldValidationError, setFieldValidationError] =
 		useState<boolean>(false);
+	const [itemKeyValidationError, setItemKeyValidationError] =
+		useState<boolean>(false);
+	const [itemLabelValidationError, setItemLabelValidationError] =
+		useState<boolean>(false);
 	const [labelValidationError, setLabelValidationError] =
 		useState<boolean>(false);
-	const [sourceValidationError, setSourceValidationError] =
-		useState<boolean>(false);
-	const [sourceTypeValidationError, setSourceTypeValidationError] =
-		useState<boolean>(false);
-
 	const [
 		requiredRESTApplicationValidationError,
 		setRequiredRESTApplicationValidationError,
@@ -74,46 +68,49 @@ function Body({
 		useState(false);
 	const [restEndpointValidationError, setRESTEndpointValidationError] =
 		useState(false);
+	const [sourceValidationError, setSourceValidationError] =
+		useState<boolean>(false);
+	const [sourceTypeValidationError, setSourceTypeValidationError] =
+		useState<boolean>(false);
 
 	const [filteredSourceItems, setFilteredSourceItems] = useState<TItem[]>([]);
-	const [preselectedValueInput, setPreselectedValueInput] = useState('');
 	const [saveButtonDisabled, setSaveButtonDisabled] =
 		useState<boolean>(false);
 	const [includeMode, setIncludeMode] = useState<string>('include');
 	const inUseFields: (string | undefined)[] = fields.map((item) =>
 		fieldNames?.includes(item.name) ? item.name : undefined
 	);
-	const [multiple, setMultiple] = useState<boolean>(
-		(filter as ISelectionFilter)?.multiple ?? true
+	const [multiple, setMultiple] = useState(filter?.multiple ?? true);
+	const [picklists, setPicklists] = useState<IPickList[]>();
+	const [preselectedValueInput, setPreselectedValueInput] = useState('');
+	const [preselectedValues, setPreselectedValues] = useState<TItem[]>(
+		JSON.parse(filter?.preselectedValues || '[]')
 	);
-	const [picklists, setPicklists] = useState<IPickList[]>([]);
-	const [preselectedValues, setPreselectedValues] = useState<any[]>([]);
 	const [selectedField, setSelectedField] = useState<IField | undefined>(
 		fields.find((item) => item.name === filter?.fieldName)
 	);
-	const [source, setSource] = useState<IPickList | string | undefined>();
-	const [sourceType, setSourceType] = useState<
-		ESelectionFilterSourceType | undefined
-	>();
+	const [source, setSource] = useState<string | undefined>(filter?.source);
+	const [sourceType, setSourceType] = useState(filter?.sourceType);
 	const fdsFilterLabelTranslations = filter?.label_i18n ?? {};
 	const [i18nFilterLabels, setI18nFilterLabels] = useState(
 		fdsFilterLabelTranslations
 	);
-	const [selectedRESTApplication, setSelectedRESTApplication] = useState<
-		string | null
-	>('');
-	const [selectedRESTSchema, setSelectedRESTSchema] = useState<string | null>(
-		''
+	const [selectedPicklist, setSelectedPicklist] = useState<
+		IPickList | undefined
+	>();
+	const [selectedRESTApplication, setSelectedRESTApplication] = useState(
+		filter?.restApplication || null
 	);
-	const [selectedRESTEndpoint, setSelectedRESTEndpoint] = useState<
-		string | null
-	>('');
-	const [selectedItemKey, setSelectedItemKey] = useState<string>('');
-	const [selectedItemLabel, setSelectedItemLabel] = useState<string>('');
-	const [itemKeyValidationError, setItemKeyValidationError] =
-		useState<boolean>(false);
-	const [itemLabelValidationError, setItemLabelValidationError] =
-		useState<boolean>(false);
+	const [selectedRESTSchema, setSelectedRESTSchema] = useState(
+		filter?.restSchema || null
+	);
+	const [selectedRESTEndpoint, setSelectedRESTEndpoint] = useState(
+		filter?.restEndpoint || null
+	);
+	const [selectedItemKey, setSelectedItemKey] = useState(filter?.itemKey);
+	const [selectedItemLabel, setSelectedItemLabel] = useState(
+		filter?.itemLabel
+	);
 
 	const includeModeFormElementId = `${namespace}IncludeMode`;
 	const multipleFormElementId = `${namespace}Multiple`;
@@ -144,12 +141,11 @@ function Body({
 	const validate = () => {
 		let isValid = true;
 
-		if (Liferay.FeatureFlags['LPD-10754']) {
-			const isLabelValid = isi18nFilterLabelsValid(i18nFilterLabels);
-			setLabelValidationError(!isLabelValid);
+		const isLabelValid = isi18nFilterLabelsValid(i18nFilterLabels);
 
-			isValid = isLabelValid;
-		}
+		setLabelValidationError(!isLabelValid);
+
+		isValid = isLabelValid;
 
 		if (!selectedField) {
 			setFieldValidationError(true);
@@ -165,23 +161,19 @@ function Body({
 			}
 		}
 
-		if (Liferay.FeatureFlags['LPD-10754'] && !sourceType) {
+		if (!sourceType) {
 			setSourceTypeValidationError(true);
 
 			isValid = false;
 		}
 
-		if (Liferay.FeatureFlags['LPD-10754'] && !source) {
+		if (!source) {
 			setSourceValidationError(true);
 
 			isValid = false;
 		}
 
-		if (
-			Liferay.FeatureFlags['LPD-10754'] &&
-			sourceType &&
-			sourceType === ESelectionFilterSourceType.API_HEADLESS
-		) {
+		if (sourceType === ESelectionFilterSourceType.API_REST_APPLICATION) {
 			if (!selectedItemKey) {
 				setItemKeyValidationError(true);
 
@@ -224,55 +216,31 @@ function Body({
 		if (success) {
 			let formData: any = {
 				fieldName: selectedField?.name,
+				include: includeMode === 'include',
 				label_i18n: i18nFilterLabels,
+				multiple,
+				preselectedValues: JSON.stringify(
+					preselectedValues.map((item: any) => ({
+						label: item.label,
+						value: item.value,
+					}))
+				),
+				source,
+				sourceType,
 			};
 
-			if (Liferay.FeatureFlags['LPD-10754']) {
-				if (sourceType === ESelectionFilterSourceType.API_HEADLESS) {
-					formData = {
-						...formData,
-						itemKey: selectedItemKey,
-						itemLabel: selectedItemLabel,
-						preselectedValues: JSON.stringify(
-							preselectedValues.map((item: any) => ({
-								label: item.label,
-								value: item.value,
-							}))
-						),
-						restApplication: selectedRESTApplication,
-						restEndpoint: selectedRESTEndpoint,
-						restSchema: selectedRESTSchema,
-						source: source as string,
-						sourceType,
-					};
-				}
-
-				if (sourceType === ESelectionFilterSourceType.PICKLIST) {
-					formData = {
-						...formData,
-						preselectedValues: JSON.stringify(
-							preselectedValues.map(
-								(item: any) => item.externalReferenceCode
-							)
-						),
-						source: (source as IPickList)?.externalReferenceCode,
-						sourceType,
-					};
-				}
-			}
-			else {
+			if (
+				sourceType === ESelectionFilterSourceType.API_REST_APPLICATION
+			) {
 				formData = {
 					...formData,
-					listTypeDefinitionERC: (source as IPickList)
-						?.externalReferenceCode,
+					itemKey: selectedItemKey,
+					itemLabel: selectedItemLabel,
+					restApplication: selectedRESTApplication,
+					restEndpoint: selectedRESTEndpoint,
+					restSchema: selectedRESTSchema,
 				};
 			}
-
-			formData = {
-				...formData,
-				include: includeMode === 'include',
-				multiple,
-			};
 
 			onSave(formData);
 		}
@@ -280,137 +248,6 @@ function Body({
 			setSaveButtonDisabled(false);
 		}
 	};
-
-	function getAPIHeadlessSourceURL(
-		restApplication: string | null,
-		restEndpoint: string | null
-	): string | null {
-		if (!restApplication || !restEndpoint) {
-			return null;
-		}
-
-		return `/o${restApplication.replace('v1.0/', '')}${restEndpoint}`;
-	}
-
-	useEffect(() => {
-		if (
-			(filter as ISelectionFilter)?.sourceType ===
-			ESelectionFilterSourceType.PICKLIST
-		) {
-			getAllPicklists().then((items) => {
-				setPicklists(items);
-
-				const picklist = items.find((item) =>
-					Liferay.FeatureFlags['LPD-10754']
-						? String(item.externalReferenceCode) ===
-							(filter as any)?.source
-						: String(item.externalReferenceCode) ===
-							(filter as any)?.listTypeDefinitionERC
-				);
-
-				if (picklist) {
-					setSource(picklist);
-				}
-			});
-		}
-	}, [filter]);
-
-	useEffect(() => {
-		if (filter) {
-			const selectionFilter = filter as ISelectionFilter;
-
-			if (
-				selectionFilter.sourceType ===
-				ESelectionFilterSourceType.API_HEADLESS
-			) {
-				setSelectedRESTApplication(selectionFilter.restApplication);
-				setSelectedRESTSchema(selectionFilter.restSchema);
-				setSelectedRESTEndpoint(selectionFilter.restEndpoint);
-
-				setSelectedItemKey(selectionFilter.itemKey);
-				setSelectedItemLabel(selectionFilter.itemLabel);
-
-				setSource(selectionFilter.source);
-			}
-		}
-	}, [filter]);
-
-	useEffect(() => {
-		if (filter) {
-			const selectionFilter = filter as ISelectionFilter;
-			setSourceType(selectionFilter.sourceType);
-
-			let validSavedPreselectedValues: any[] = [];
-
-			if (
-				source &&
-				sourceType === ESelectionFilterSourceType.API_HEADLESS
-			) {
-				const filterPreselectedValues = JSON.parse(
-					(filter as ISelectionFilter).preselectedValues || '[]'
-				);
-
-				validSavedPreselectedValues = filteredSourceItems.filter(
-					(item) =>
-						filterPreselectedValues.find(
-							(filterValue: {label: string; value: string}) =>
-								filterValue.value === item.value
-						)
-				);
-			}
-
-			if (source && sourceType === ESelectionFilterSourceType.PICKLIST) {
-				validSavedPreselectedValues = (
-					source as IPickList
-				).listTypeEntries.filter((item) =>
-					JSON.parse(
-						(filter as ISelectionFilter).preselectedValues || '[]'
-					).includes(item.externalReferenceCode)
-				);
-			}
-
-			setPreselectedValues(validSavedPreselectedValues);
-
-			setIncludeMode(
-				validSavedPreselectedValues?.length
-					? filter && (filter as ISelectionFilter).include
-						? 'include'
-						: 'exclude'
-					: 'include'
-			);
-		}
-	}, [filter, filteredSourceItems, source, sourceType]);
-
-	useEffect(() => {
-		if (sourceType === ESelectionFilterSourceType.PICKLIST) {
-			setFilteredSourceItems(
-				!source
-					? []
-					: (source as IPickList).listTypeEntries
-							.filter((item) =>
-								fuzzy.match(preselectedValueInput, item.name)
-							)
-							.map((item) => ({
-								label: item.name,
-								value: String(item.externalReferenceCode),
-							}))
-			);
-		}
-	}, [preselectedValueInput, source, sourceType]);
-
-	if (
-		!Liferay.FeatureFlags['LPD-10754'] &&
-		sourceType === ESelectionFilterSourceType.API_HEADLESS &&
-		!picklists.length
-	) {
-		return (
-			<ClayAlert displayType="info" title="Info">
-				{Liferay.Language.get(
-					'no-filter-sources-are-available.-create-a-picklist-or-a-vocabulary-for-this-type-of-filter'
-				)}
-			</ClayAlert>
-		);
-	}
 
 	return (
 		<>
@@ -444,389 +281,391 @@ function Body({
 
 				{!fieldInUseValidationError && (
 					<>
-						{Liferay.FeatureFlags['LPD-10754'] && (
-							<>
-								<ClayLayout.SheetSection className="mb-4">
-									<h3 className="sheet-subtitle">
-										{Liferay.Language.get('filter-source')}
-									</h3>
+						<ClayLayout.SheetSection className="mb-4">
+							<h3 className="sheet-subtitle">
+								{Liferay.Language.get('filter-source')}
+							</h3>
 
-									<ClayForm.Text>
-										{Liferay.Language.get(
-											'the-filter-source-determines-the-values-to-be-offered-in-this-filter-to-the-user'
-										)}
-									</ClayForm.Text>
-								</ClayLayout.SheetSection>
+							<ClayForm.Text>
+								{Liferay.Language.get(
+									'the-filter-source-determines-the-values-to-be-offered-in-this-filter-to-the-user'
+								)}
+							</ClayForm.Text>
+						</ClayLayout.SheetSection>
 
-								<ClayForm.Group
-									className={classNames({
-										'has-error': sourceTypeValidationError,
-									})}
-								>
-									<label htmlFor={sourceOptionFormElementId}>
-										{Liferay.Language.get('source')}
+						<ClayForm.Group
+							className={classNames({
+								'has-error': sourceTypeValidationError,
+							})}
+						>
+							<label htmlFor={sourceOptionFormElementId}>
+								{Liferay.Language.get('source')}
 
-										<RequiredMark />
-									</label>
+								<RequiredMark />
+							</label>
 
-									<ClaySelectWithOption
-										aria-label={Liferay.Language.get(
+							<ClaySelectWithOption
+								aria-label={Liferay.Language.get(
+									'choose-an-option'
+								)}
+								id={sourceOptionFormElementId}
+								name={sourceOptionFormElementId}
+								onChange={(event) => {
+									setSourceType(
+										event.target
+											.value as ESelectionFilterSourceType
+									);
+
+									setSourceTypeValidationError(false);
+
+									setSelectedItemKey(undefined);
+									setSelectedItemLabel(undefined);
+									setSelectedRESTApplication(null);
+									setSelectedRESTEndpoint(null);
+									setSelectedRESTEndpoint(null);
+									setSource(undefined);
+									setPreselectedValueInput('');
+									setPreselectedValues([]);
+
+									setSelectedPicklist(undefined);
+								}}
+								options={[
+									{
+										disabled: true,
+										label: Liferay.Language.get(
 											'choose-an-option'
+										),
+										value: '',
+									},
+									{
+										disabled: false,
+										label: Liferay.Language.get(
+											'api-rest-application'
+										),
+										value: ESelectionFilterSourceType.API_REST_APPLICATION,
+									},
+									{
+										disabled: false,
+										label: Liferay.Language.get(
+											'object-picklist'
+										),
+										value: ESelectionFilterSourceType.OBJECT_PICKLIST,
+									},
+								]}
+								required
+								title={Liferay.Language.get('source')}
+								value={sourceType || ''}
+							/>
+
+							{sourceTypeValidationError && (
+								<ClayForm.FeedbackGroup>
+									<ClayForm.FeedbackItem>
+										<ClayForm.FeedbackIndicator symbol="exclamation-full" />
+
+										{Liferay.Language.get(
+											'this-field-is-required'
 										)}
-										name={sourceOptionFormElementId}
-										onChange={(event) => {
-											const newSourceType = event.target
-												.value as ESelectionFilterSourceType;
+									</ClayForm.FeedbackItem>
+								</ClayForm.FeedbackGroup>
+							)}
+						</ClayForm.Group>
 
-											setSourceType(newSourceType);
-											setSourceTypeValidationError(false);
+						{sourceType ===
+							ESelectionFilterSourceType.OBJECT_PICKLIST && (
+							<ObjectPicklist
+								namespace={namespace}
+								onChange={(picklist: IPickList) => {
+									setSource(picklist.externalReferenceCode);
 
-											setSource(undefined);
-											setPreselectedValueInput('');
+									setSourceValidationError(false);
 
-											setPreselectedValues([]);
-										}}
-										options={[
-											{
-												disabled: true,
-												label: Liferay.Language.get(
-													'choose-an-option'
+									setFilteredSourceItems(
+										picklist.listTypeEntries.map(
+											(item) => ({
+												label: item.name,
+												value: String(
+													item.externalReferenceCode
 												),
-												value: '',
-											},
-											{
-												disabled: false,
-												label: Liferay.Language.get(
-													'api-rest-application'
-												),
-												value: ESelectionFilterSourceType.API_HEADLESS,
-											},
-											{
-												disabled: false,
-												label: Liferay.Language.get(
-													'object-picklist'
-												),
-												value: ESelectionFilterSourceType.PICKLIST,
-											},
-										]}
-										required
-										title={Liferay.Language.get('source')}
-										value={sourceType || ''}
-									/>
+											})
+										)
+									);
+								}}
+								onPicklistsLoad={(
+									picklists: Array<IPickList>
+								) => {
+									setPicklists(picklists);
 
-									{sourceTypeValidationError && (
-										<ClayForm.FeedbackGroup>
-											<ClayForm.FeedbackItem>
-												<ClayForm.FeedbackIndicator symbol="exclamation-full" />
+									const savedPicklistERC = filter?.source;
 
-												{Liferay.Language.get(
-													'this-field-is-required'
-												)}
-											</ClayForm.FeedbackItem>
-										</ClayForm.FeedbackGroup>
-									)}
-								</ClayForm.Group>
-							</>
+									if (!savedPicklistERC) {
+										return;
+									}
+
+									const picklist = picklists.find(
+										(item) =>
+											item.externalReferenceCode ===
+											savedPicklistERC
+									);
+
+									if (!picklist) {
+										return;
+									}
+
+									setSelectedPicklist(picklist);
+
+									setFilteredSourceItems(
+										picklist.listTypeEntries.map(
+											(item) => ({
+												label: item.name,
+												value: item.externalReferenceCode,
+											})
+										)
+									);
+
+									const validPreselectedValues: Array<TItem> =
+										[];
+
+									picklist.listTypeEntries.forEach((item) => {
+										const value = preselectedValues.find(
+											(preselectedValue) =>
+												preselectedValue.value ===
+												item.externalReferenceCode
+										);
+
+										if (value) {
+											validPreselectedValues.push({
+												label: item.name,
+												value: item.externalReferenceCode,
+											});
+										}
+									});
+
+									setPreselectedValues(
+										validPreselectedValues
+									);
+								}}
+								picklists={picklists}
+								selectedPicklist={selectedPicklist}
+								sourceValidationError={sourceValidationError}
+							/>
 						)}
 
-						{Liferay.FeatureFlags['LPD-10754'] ? (
-							<>
-								{sourceType &&
-									sourceType ===
-										ESelectionFilterSourceType.PICKLIST && (
-										<ObjectPicklist
-											filter={filter}
-											namespace={namespace}
-											onChange={(item: IPickList) => {
-												setSource(item);
-												setSourceValidationError(false);
-											}}
-											sourceValidationError={
-												sourceValidationError
-											}
-										/>
-									)}
+						{sourceType ===
+							ESelectionFilterSourceType.API_REST_APPLICATION && (
+							<ApiRestApplication
+								filter={filter as ISelectionFilter}
+								itemKeyValidationError={itemKeyValidationError}
+								itemLabelValidationError={
+									itemLabelValidationError
+								}
+								namespace={namespace}
+								onChange={({
+									selectedItemKey,
+									selectedItemLabel,
+									selectedRESTApplication,
+									selectedRESTEndpoint,
+									selectedRESTSchema,
+									sourceItems,
+								}) => {
+									setSelectedRESTApplication(
+										selectedRESTApplication
+									);
+									if (selectedRESTApplication) {
+										setRequiredRESTApplicationValidationError(
+											false
+										);
+									}
 
-								{sourceType &&
-									sourceType ===
-										ESelectionFilterSourceType.API_HEADLESS && (
-										<ApiRestApplication
-											filter={filter as ISelectionFilter}
-											itemKeyValidationError={
-												itemKeyValidationError
-											}
-											itemLabelValidationError={
-												itemLabelValidationError
-											}
-											namespace={namespace}
-											onChange={({
-												selectedItemKey,
-												selectedItemLabel,
-												selectedRESTApplication,
-												selectedRESTEndpoint,
-												selectedRESTSchema,
-												sourceItems,
-											}) => {
-												const restApplication =
-													selectedRESTApplication!.replace(
-														'/v1.0',
-														''
-													);
+									setSelectedRESTEndpoint(
+										selectedRESTEndpoint
+									);
+									if (selectedRESTEndpoint) {
+										setRESTEndpointValidationError(false);
+									}
 
-												setSelectedRESTApplication(
-													restApplication
-												);
-												if (selectedRESTApplication) {
-													setRequiredRESTApplicationValidationError(
-														false
-													);
-												}
+									if (
+										selectedRESTApplication &&
+										selectedRESTEndpoint
+									) {
+										setSource(
+											`/o${selectedRESTApplication.replace('v1.0/', '')}${selectedRESTEndpoint}`
+										);
+									}
 
-												setSelectedRESTEndpoint(
-													selectedRESTEndpoint
-												);
-												if (selectedRESTEndpoint) {
-													setRESTEndpointValidationError(
-														false
-													);
-												}
+									setSourceValidationError(false);
 
-												const source =
-													getAPIHeadlessSourceURL(
-														restApplication,
-														selectedRESTEndpoint
-													);
+									setSelectedRESTSchema(selectedRESTSchema);
+									if (selectedRESTSchema) {
+										setRESTSchemaValidationError(false);
+									}
 
-												setSource(source as string);
-												setSourceValidationError(false);
+									setSelectedItemKey(selectedItemKey);
+									setItemKeyValidationError(false);
 
-												setSelectedRESTSchema(
-													selectedRESTSchema
-												);
-												if (selectedRESTSchema) {
-													setRESTSchemaValidationError(
-														false
-													);
-												}
+									setSelectedItemLabel(selectedItemLabel);
+									setItemLabelValidationError(false);
 
-												setSelectedItemKey(
-													selectedItemKey
-												);
-												setItemKeyValidationError(
-													false
-												);
+									setFilteredSourceItems(sourceItems);
+								}}
+								preselectedValueInput={preselectedValueInput}
+								requiredRESTApplicationValidationError={
+									requiredRESTApplicationValidationError
+								}
+								restApplications={restApplications}
+								restEndpointValidationError={
+									restEndpointValidationError
+								}
+								restSchemaValidationError={
+									restSchemaValidationError
+								}
+								source={source as string}
+							/>
+						)}
 
-												setSelectedItemLabel(
-													selectedItemLabel
-												);
-												setItemLabelValidationError(
-													false
-												);
-
-												setPreselectedValues([]);
-												setFilteredSourceItems(
-													sourceItems
-												);
-											}}
-											preselectedValueInput={
-												preselectedValueInput
-											}
-											requiredRESTApplicationValidationError={
-												requiredRESTApplicationValidationError
-											}
-											restApplications={restApplications}
-											restEndpointValidationError={
-												restEndpointValidationError
-											}
-											restSchemaValidationError={
-												restSchemaValidationError
-											}
-											source={source as string}
-										/>
-									)}
-
-								{source && (
-									<>
-										<ClayLayout.SheetSection className="mb-4">
-											<h3 className="sheet-subtitle">
-												{Liferay.Language.get(
-													'filter-options'
-												)}
-											</h3>
-										</ClayLayout.SheetSection>
-										<ClayForm.Group
-											className={classNames({
-												'has-error': !isValidSingleMode,
-											})}
-										>
-											<label
-												htmlFor={
-													preselectedValuesFormElementId
-												}
-											>
-												{Liferay.Language.get(
-													'preselected-values'
-												)}
-
-												<span
-													className="label-icon lfr-portal-tooltip ml-2"
-													title={Liferay.Language.get(
-														'choose-values-to-preselect-for-your-filters-source-option'
-													)}
-												>
-													<ClayIcon symbol="question-circle-full" />
-												</span>
-											</label>
-
-											<CheckboxMultiSelect
-												allowsCustomLabel={false}
-												aria-label={Liferay.Language.get(
-													'preselected-values'
-												)}
-												inputName={
-													preselectedValuesFormElementId
-												}
-												items={preselectedValues.map(
-													(item) => {
-														let valueItem;
-
-														if (
-															sourceType ===
-															ESelectionFilterSourceType.PICKLIST
-														) {
-															valueItem = {
-																label: item.name,
-																value: String(
-																	item.externalReferenceCode
-																),
-															};
-														}
-
-														if (
-															sourceType ===
-															ESelectionFilterSourceType.API_HEADLESS
-														) {
-															valueItem = {
-																label: item.label,
-																value: item.value,
-															};
-														}
-
-														return valueItem as TItem;
-													}
-												)}
-												loadingState={4}
-												onChange={
-													setPreselectedValueInput
-												}
-												onItemsChange={(
-													selectedItems: any
-												) => {
-													let preselectedValues;
-
-													if (
-														sourceType ===
-														ESelectionFilterSourceType.API_HEADLESS
-													) {
-														preselectedValues =
-															selectedItems.map(
-																({
-																	value,
-																}: any) => {
-																	return filteredSourceItems.find(
-																		(
-																			item
-																		) =>
-																			String(
-																				item.value
-																			) ===
-																			String(
-																				value
-																			)
-																	);
-																}
-															);
-													}
-
-													if (
-														sourceType ===
-														ESelectionFilterSourceType.PICKLIST
-													) {
-														preselectedValues =
-															selectedItems.map(
-																({
-																	value,
-																}: any) => {
-																	return (
-																		source as IPickList
-																	).listTypeEntries.find(
-																		(
-																			item
-																		) =>
-																			String(
-																				item.externalReferenceCode
-																			) ===
-																			String(
-																				value
-																			)
-																	);
-																}
-															);
-													}
-
-													setPreselectedValues(
-														preselectedValues
-													);
-
-													setIncludeMode(
-														preselectedValues.length
-															? filter &&
-																(
-																	filter as ISelectionFilter
-																).include
-																? 'include'
-																: 'exclude'
-															: 'include'
-													);
-												}}
-												placeholder={Liferay.Language.get(
-													'select-a-default-value-for-your-filter'
-												)}
-												sourceItems={
-													filteredSourceItems
-												}
-												value={preselectedValueInput}
-											/>
-
-											{!isValidSingleMode && (
-												<ClayForm.FeedbackGroup>
-													<ClayForm.FeedbackItem>
-														<ClayForm.FeedbackIndicator symbol="exclamation-full" />
-
-														{Liferay.Language.get(
-															'only-one-value-is-allowed-in-single-selection-mode'
-														)}
-													</ClayForm.FeedbackItem>
-												</ClayForm.FeedbackGroup>
+						{source &&
+							(sourceType ===
+								ESelectionFilterSourceType.API_REST_APPLICATION ||
+								picklists) && (
+								<>
+									<ClayLayout.SheetSection className="mb-4">
+										<h3 className="sheet-subtitle">
+											{Liferay.Language.get(
+												'filter-options'
 											)}
-										</ClayForm.Group>
+										</h3>
+									</ClayLayout.SheetSection>
+									<ClayForm.Group
+										className={classNames({
+											'has-error': !isValidSingleMode,
+										})}
+									>
+										<label
+											htmlFor={
+												preselectedValuesFormElementId
+											}
+										>
+											{Liferay.Language.get(
+												'preselected-values'
+											)}
 
-										<ClayLayout.Row justify="start">
+											<span
+												className="label-icon lfr-portal-tooltip ml-2"
+												title={Liferay.Language.get(
+													'choose-values-to-preselect-for-your-filters-source-option'
+												)}
+											>
+												<ClayIcon symbol="question-circle-full" />
+											</span>
+										</label>
+
+										<CheckboxMultiSelect
+											allowsCustomLabel={false}
+											aria-label={Liferay.Language.get(
+												'preselected-values'
+											)}
+											inputName={
+												preselectedValuesFormElementId
+											}
+											items={preselectedValues}
+											loadingState={4}
+											onChange={setPreselectedValueInput}
+											onItemsChange={(
+												selectedItems: any
+											) => {
+												setPreselectedValues(
+													selectedItems
+												);
+											}}
+											placeholder={Liferay.Language.get(
+												'select-a-default-value-for-your-filter'
+											)}
+											sourceItems={filteredSourceItems}
+											value={preselectedValueInput}
+										/>
+
+										{!isValidSingleMode && (
+											<ClayForm.FeedbackGroup>
+												<ClayForm.FeedbackItem>
+													<ClayForm.FeedbackIndicator symbol="exclamation-full" />
+
+													{Liferay.Language.get(
+														'only-one-value-is-allowed-in-single-selection-mode'
+													)}
+												</ClayForm.FeedbackItem>
+											</ClayForm.FeedbackGroup>
+										)}
+									</ClayForm.Group>
+
+									<ClayLayout.Row justify="start">
+										<ClayLayout.Col size={6}>
+											<ClayForm.Group>
+												<label
+													htmlFor={
+														multipleFormElementId
+													}
+												>
+													{Liferay.Language.get(
+														'selection'
+													)}
+
+													<span
+														className="label-icon lfr-portal-tooltip ml-2"
+														title={Liferay.Language.get(
+															'determines-how-many-preselected-values-for-the-filter-can-be-added'
+														)}
+													>
+														<ClayIcon symbol="question-circle-full" />
+													</span>
+												</label>
+
+												<ClayRadioGroup
+													name={multipleFormElementId}
+													onChange={(newVal: any) => {
+														const newMultiple =
+															newVal === 'true';
+														setMultiple(
+															newMultiple
+														);
+													}}
+													value={
+														multiple
+															? 'true'
+															: 'false'
+													}
+												>
+													<ClayRadio
+														label={Liferay.Language.get(
+															'multiple'
+														)}
+														value="true"
+													/>
+
+													<ClayRadio
+														label={Liferay.Language.get(
+															'single'
+														)}
+														value="false"
+													/>
+												</ClayRadioGroup>
+											</ClayForm.Group>
+										</ClayLayout.Col>
+
+										{preselectedValues?.length > 0 && (
 											<ClayLayout.Col size={6}>
 												<ClayForm.Group>
 													<label
 														htmlFor={
-															multipleFormElementId
+															includeModeFormElementId
 														}
 													>
 														{Liferay.Language.get(
-															'selection'
+															'filter-mode'
 														)}
 
 														<span
 															className="label-icon lfr-portal-tooltip ml-2"
 															title={Liferay.Language.get(
-																'determines-how-many-preselected-values-for-the-filter-can-be-added'
+																'include-returns-only-the-selected-values.-exclude-returns-all-except-the-selected-ones'
 															)}
 														>
 															<ClayIcon symbol="question-circle-full" />
@@ -835,350 +674,35 @@ function Body({
 
 													<ClayRadioGroup
 														name={
-															multipleFormElementId
+															includeModeFormElementId
 														}
 														onChange={(
-															newVal: any
+															val: any
 														) => {
-															const newMultiple =
-																newVal ===
-																'true';
-															setMultiple(
-																newMultiple
-															);
+															setIncludeMode(val);
 														}}
-														value={
-															multiple
-																? 'true'
-																: 'false'
-														}
+														value={includeMode}
 													>
 														<ClayRadio
 															label={Liferay.Language.get(
-																'multiple'
+																'include'
 															)}
-															value="true"
+															value="include"
 														/>
 
 														<ClayRadio
 															label={Liferay.Language.get(
-																'single'
+																'exclude'
 															)}
-															value="false"
+															value="exclude"
 														/>
 													</ClayRadioGroup>
 												</ClayForm.Group>
 											</ClayLayout.Col>
-
-											{preselectedValues?.length > 0 && (
-												<ClayLayout.Col size={6}>
-													<ClayForm.Group>
-														<label
-															htmlFor={
-																includeModeFormElementId
-															}
-														>
-															{Liferay.Language.get(
-																'filter-mode'
-															)}
-
-															<span
-																className="label-icon lfr-portal-tooltip ml-2"
-																title={Liferay.Language.get(
-																	'include-returns-only-the-selected-values.-exclude-returns-all-except-the-selected-ones'
-																)}
-															>
-																<ClayIcon symbol="question-circle-full" />
-															</span>
-														</label>
-
-														<ClayRadioGroup
-															name={
-																includeModeFormElementId
-															}
-															onChange={(
-																val: any
-															) => {
-																setIncludeMode(
-																	val
-																);
-															}}
-															value={includeMode}
-														>
-															<ClayRadio
-																label={Liferay.Language.get(
-																	'include'
-																)}
-																value="include"
-															/>
-
-															<ClayRadio
-																label={Liferay.Language.get(
-																	'exclude'
-																)}
-																value="exclude"
-															/>
-														</ClayRadioGroup>
-													</ClayForm.Group>
-												</ClayLayout.Col>
-											)}
-										</ClayLayout.Row>
-									</>
-								)}
-							</>
-						) : (
-							<>
-								<ClayForm.Group>
-									<label htmlFor={sourceOptionFormElementId}>
-										{Liferay.Language.get('source-options')}
-
-										<span
-											className="label-icon lfr-portal-tooltip ml-2"
-											title={Liferay.Language.get(
-												'choose-a-picklist-to-associate-with-this-filter'
-											)}
-										>
-											<ClayIcon symbol="question-circle-full" />
-										</span>
-									</label>
-
-									<ClaySelectWithOption
-										aria-label={Liferay.Language.get(
-											'source-options'
 										)}
-										name={sourceOptionFormElementId}
-										onChange={(event) => {
-											const picklist = picklists.find(
-												(item) =>
-													String(
-														item.externalReferenceCode
-													) === event.target.value
-											);
-
-											setSource(picklist);
-
-											setPreselectedValues([]);
-										}}
-										options={[
-											{
-												disabled: true,
-												label: Liferay.Language.get(
-													'select'
-												),
-												value: '',
-											},
-											...picklists.map((item) => ({
-												label: item.name,
-												value: item.externalReferenceCode,
-											})),
-										]}
-										title={Liferay.Language.get(
-											'source-options'
-										)}
-										value={
-											(source as IPickList)
-												?.externalReferenceCode || ''
-										}
-									/>
-								</ClayForm.Group>
-
-								{source && (
-									<>
-										<ClayForm.Group>
-											<label
-												htmlFor={multipleFormElementId}
-											>
-												{Liferay.Language.get(
-													'selection'
-												)}
-
-												<span
-													className="label-icon lfr-portal-tooltip ml-2"
-													title={Liferay.Language.get(
-														'determines-how-many-preselected-values-for-the-filter-can-be-added'
-													)}
-												>
-													<ClayIcon symbol="question-circle-full" />
-												</span>
-											</label>
-
-											<ClayRadioGroup
-												name={multipleFormElementId}
-												onChange={(newVal: any) => {
-													setMultiple(
-														newVal === 'true'
-													);
-												}}
-												value={
-													multiple ? 'true' : 'false'
-												}
-											>
-												<ClayRadio
-													label={Liferay.Language.get(
-														'multiple'
-													)}
-													value="true"
-												/>
-
-												<ClayRadio
-													label={Liferay.Language.get(
-														'single'
-													)}
-													value="false"
-												/>
-											</ClayRadioGroup>
-										</ClayForm.Group>
-										<ClayForm.Group
-											className={classNames({
-												'has-error': !isValidSingleMode,
-											})}
-										>
-											<label
-												htmlFor={
-													preselectedValuesFormElementId
-												}
-											>
-												{Liferay.Language.get(
-													'preselected-values'
-												)}
-
-												<span
-													className="label-icon lfr-portal-tooltip ml-2"
-													title={Liferay.Language.get(
-														'choose-values-to-preselect-for-your-filters-source-option'
-													)}
-												>
-													<ClayIcon symbol="question-circle-full" />
-												</span>
-											</label>
-
-											<CheckboxMultiSelect
-												allowsCustomLabel={false}
-												aria-label={Liferay.Language.get(
-													'preselected-values'
-												)}
-												inputName={
-													preselectedValuesFormElementId
-												}
-												items={preselectedValues.map(
-													(item) => ({
-														label: item.name,
-														value: String(
-															item.externalReferenceCode
-														),
-													})
-												)}
-												loadingState={4}
-												onChange={
-													setPreselectedValueInput
-												}
-												onItemsChange={(
-													selectedItems: any
-												) => {
-													const preselectedValues =
-														selectedItems.map(
-															({value}: any) => {
-																return (
-																	source as IPickList
-																).listTypeEntries.find(
-																	(item) =>
-																		String(
-																			item.externalReferenceCode
-																		) ===
-																		String(
-																			value
-																		)
-																);
-															}
-														);
-
-													setPreselectedValues(
-														preselectedValues
-													);
-
-													setIncludeMode(
-														preselectedValues.length
-															? filter &&
-																(
-																	filter as ISelectionFilter
-																).include
-																? 'include'
-																: 'exclude'
-															: 'include'
-													);
-												}}
-												placeholder={Liferay.Language.get(
-													'select-a-default-value-for-your-filter'
-												)}
-												sourceItems={
-													filteredSourceItems
-												}
-												value={preselectedValueInput}
-											/>
-
-											{!isValidSingleMode && (
-												<ClayForm.FeedbackGroup>
-													<ClayForm.FeedbackItem>
-														<ClayForm.FeedbackIndicator symbol="exclamation-full" />
-
-														{Liferay.Language.get(
-															'only-one-value-is-allowed-in-single-selection-mode'
-														)}
-													</ClayForm.FeedbackItem>
-												</ClayForm.FeedbackGroup>
-											)}
-										</ClayForm.Group>
-
-										{preselectedValues?.length > 0 && (
-											<ClayForm.Group>
-												<label
-													htmlFor={
-														includeModeFormElementId
-													}
-												>
-													{Liferay.Language.get(
-														'filter-mode'
-													)}
-
-													<span
-														className="label-icon lfr-portal-tooltip ml-2"
-														title={Liferay.Language.get(
-															'include-returns-only-the-selected-values.-exclude-returns-all-except-the-selected-ones'
-														)}
-													>
-														<ClayIcon symbol="question-circle-full" />
-													</span>
-												</label>
-
-												<ClayRadioGroup
-													name={
-														includeModeFormElementId
-													}
-													onChange={(val: any) =>
-														setIncludeMode(val)
-													}
-													value={includeMode}
-												>
-													<ClayRadio
-														label={Liferay.Language.get(
-															'include'
-														)}
-														value="include"
-													/>
-
-													<ClayRadio
-														label={Liferay.Language.get(
-															'exclude'
-														)}
-														value="exclude"
-													/>
-												</ClayRadioGroup>
-											</ClayForm.Group>
-										)}
-									</>
-								)}
-							</>
-						)}
+									</ClayLayout.Row>
+								</>
+							)}
 					</>
 				)}
 			</ClayModal.Body>

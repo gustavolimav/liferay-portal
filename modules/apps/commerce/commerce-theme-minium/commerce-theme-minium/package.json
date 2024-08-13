@@ -15,9 +15,9 @@
 	"main": "package.json",
 	"name": "minium-theme",
 	"scripts": {
-		"build": "liferay-npm-scripts theme build",
+		"build": "node-scripts build:theme",
 		"checkFormat": "node-scripts format --check",
 		"format": "node-scripts format"
 	},
-	"version": "5.0.88"
+	"version": "5.0.91"
 }

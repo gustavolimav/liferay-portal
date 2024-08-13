@@ -6,6 +6,7 @@
 import {FrameLocator, Locator, Page, expect} from '@playwright/test';
 
 import {clickAndExpectToBeVisible} from '../../../utils/clickAndExpectToBeVisible';
+import {expandSection} from '../../../utils/expandSection';
 import {PORTLET_URLS} from '../../../utils/portletUrls';
 import {waitForSuccessAlert} from '../../../utils/waitForSuccessAlert';
 
@@ -26,7 +27,9 @@ export class JournalPage {
 		this.createBasicWebContentLink = this.page.getByRole('menuitem', {
 			name: 'Basic Web Content',
 		});
-		this.newButton = page.getByText('New', {exact: true});
+		this.newButton = page.locator(
+			'button[data-qa-id="creationMenuNewButton"].d-md-flex.d-none'
+		);
 		this.permissionsFrameLocator = page.frameLocator(
 			'iframe[title="Permissions"]'
 		);
@@ -130,11 +133,11 @@ export class JournalPage {
 	}
 
 	async changeView(viewName: string) {
-		await this.page
-			.getByLabel('Select View, Currently Selected: ')
-			.waitFor();
-		await this.page.getByLabel('Select View, Currently Selected: ').click();
-		await this.page.getByRole('menuitem', {name: viewName}).click();
+		await clickAndExpectToBeVisible({
+			autoClick: true,
+			target: this.page.getByRole('menuitem', {name: viewName}),
+			trigger: this.page.getByLabel('Select View, Currently Selected: '),
+		});
 	}
 
 	async publishArticle() {
@@ -189,13 +192,7 @@ export class JournalPage {
 
 		await permissionsGroup.waitFor();
 
-		const isOpen = await permissionsGroup.evaluate(
-			(element) => element.getAttribute('aria-expanded') === 'true'
-		);
-
-		if (!isOpen) {
-			await permissionsGroup.click();
-		}
+		await expandSection(permissionsGroup);
 
 		await this.page.getByLabel('Viewable by').waitFor();
 

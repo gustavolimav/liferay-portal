@@ -1210,6 +1210,20 @@ org.apache.level=WARNING]]>
 		</replace>
 
 		<replace
+			file="${app.server.tomcat.dir}/conf/server.xml"
+		>
+			<replacetoken><![CDATA[<Cluster className="org.apache.catalina.ha.tcp.SimpleTcpCluster"/>]]></replacetoken>
+			<replacevalue><![CDATA[<Cluster className="org.apache.catalina.ha.tcp.SimpleTcpCluster">
+		<Manager className="com.liferay.support.tomcat.session.LiferayDeltaManager" />
+		<Channel className="org.apache.catalina.tribes.group.GroupChannel">
+			<Sender className="org.apache.catalina.tribes.transport.ReplicationTransmitter">
+				<Transport className="org.apache.catalina.tribes.transport.nio.PooledParallelSender" timeout="300000" />
+			</Sender>
+		</Channel>
+	</Cluster>]]></replacevalue>
+		</replace>
+
+		<replace
 			file="${app.server.tomcat.dir}/conf/web.xml"
 		>
 			<replacetoken><![CDATA[<web-app]]></replacetoken>
@@ -1719,11 +1733,17 @@ closeTemplate()
 					</fileset>
 				</chmod>
 
+				<local name="app.server.weblogic.java.options" />
+
+				<condition else="${app.server.weblogic.jdk.java.options} ${app.server.weblogic.jvm.args} ${app.server.weblogic.jvm.mem}" property="app.server.weblogic.java.options" value="${app.server.weblogic.jvm.args} ${app.server.weblogic.jvm.mem}">
+					<isset property="env.JENKINS_HOME" />
+				</condition>
+
 				<replace
 					file="${app.server.weblogic.instance.dir}/startWebLogic.sh"
 				>
 					<replacetoken><![CDATA[-Xmx1024m]]></replacetoken>
-					<replacevalue expandProperties="true"><![CDATA[${app.server.weblogic.jdk.java.options} ${app.server.weblogic.jvm.args} ${app.server.weblogic.jvm.mem}]]></replacevalue>
+					<replacevalue expandProperties="true"><![CDATA[${app.server.weblogic.java.options}]]></replacevalue>
 				</replace>
 
 				<chmod

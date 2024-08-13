@@ -1,0 +1,132 @@
+@import '../../styles/variables';
+
+.account-selector {
+	.btn-account-selector {
+		align-items: center;
+		display: grid;
+		font-size: 0.875rem;
+		gap: 0.5rem;
+		grid-template-columns: auto min-content;
+		height: 2.5rem;
+		max-width: 17rem;
+		padding: 0 0.5rem;
+		width: 14.5rem;
+
+		@media screen and (min-width: 375px) and (max-width: 577px) {
+			width: 14rem;
+		}
+
+		&:focus {
+			box-shadow: none !important;
+		}
+
+		&:hover {
+			background-color: rgba(39, 40, 51, 0.03);
+		}
+
+		&.account-selected {
+			grid-template-columns: min-content minmax(0, 1fr) min-content;
+		}
+
+		.current-info-container {
+			text-align: left;
+		}
+
+		.account-name,
+		.no-account-selected-placeholder {
+			font-weight: 500;
+			text-transform: capitalize;
+		}
+
+		.order-info {
+			font-size: 0.75rem;
+		}
+
+		.no-account-selected-placeholder {
+			margin: 0;
+			text-align: left;
+		}
+	}
+
+	.label {
+		transform: translateY(-1px);
+	}
+
+	&-dropdown-menu {
+		height: 100%;
+		max-height: 28.65rem !important;
+		max-width: 25rem !important;
+		min-height: 28.65rem !important;
+		min-width: 25rem !important;
+		position: fixed;
+
+		&.dropdown-menu {
+			max-width: 300px;
+			min-width: 300px;
+		}
+
+		.item-list-head {
+			align-items: center;
+			display: flex;
+			font-size: 1rem;
+			font-weight: 500;
+			height: 3rem;
+			justify-content: center;
+			position: relative;
+			text-transform: capitalize;
+		}
+
+		.accounts-list-container {
+			display: flex;
+			flex-direction: column;
+			height: 100%;
+
+			.accounts-list {
+				flex-grow: 1;
+			}
+
+			.btn-primary {
+				margin-top: 0.5rem;
+				width: 100%;
+			}
+
+			.dropdown-item {
+				font-size: 0.825rem;
+				font-weight: 500;
+				text-transform: capitalize;
+			}
+
+			.inline-scroller {
+				height: 100%;
+			}
+
+			.item-list-head .btn {
+				position: absolute;
+				right: 0.5rem;
+			}
+		}
+
+		.orders-list-container {
+			.inline-scroller {
+				max-height: 15.25rem;
+				min-height: 15.25rem;
+			}
+
+			.orders-table {
+				a {
+					text-decoration: none;
+				}
+
+				tr {
+					font-size: 0.8rem;
+					height: auto !important;
+				}
+			}
+
+			.item-list-head .btn {
+				left: 0.5rem;
+				position: absolute;
+			}
+		}
+	}
+}

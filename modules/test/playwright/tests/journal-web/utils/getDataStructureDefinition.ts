@@ -13,6 +13,7 @@ interface Field {
 	localizable?: boolean;
 	name: string;
 	repeatable?: boolean;
+	required?: boolean;
 }
 
 export default function getDataStructureDefinition({
@@ -23,13 +24,19 @@ export default function getDataStructureDefinition({
 	return {
 		availableLanguageIds: [defaultLanguageId],
 		dataDefinitionFields: fields.map(
-			({localizable = true, name: fieldName, repeatable = false}) => {
+			({
+				localizable = true,
+				name: fieldName,
+				repeatable = false,
+				required = false,
+			}) => {
 				return {
 					customProperties: {
 						dataType: 'string',
 						displayStyle: 'singleline',
 						fieldReference: fieldName,
 					},
+					defaultValue: {},
 					fieldType: 'text',
 					indexType: 'keyword',
 					label: {
@@ -38,6 +45,7 @@ export default function getDataStructureDefinition({
 					localizable,
 					name: fieldName,
 					repeatable,
+					required,
 					showLabel: true,
 				};
 			}
@@ -69,6 +77,7 @@ export default function getDataStructureDefinition({
 			paginationMode: 'single-page',
 		},
 		defaultLanguageId,
+		id: '',
 		name: {
 			[defaultLanguageId]: name,
 		},

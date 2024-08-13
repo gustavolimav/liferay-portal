@@ -1,4 +1,4 @@
-@component-name = "portal-wcm"
+@component-name = "portal-page-management"
 definition {
 
 	property ci.retries.disabled = "true";
@@ -277,6 +277,8 @@ definition {
 			SelectFrame.selectFrameNoLoading(locator1 = "IFrame#PAGE_EDITOR_GLOBAL_CONTEXT_IFRAME");
 
 			PageEditor.clickConfigurableField(fragmentName = "Container");
+
+			PageEditor.gotoTab(tabName = "Browser");
 
 			SelectFrameTop();
 

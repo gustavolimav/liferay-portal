@@ -321,10 +321,11 @@ public class SalesforceObjectEntryManagerImplTest
 
 	@Test
 	public void testGetObjectEntries() throws Exception {
-		String title1 = "a" + RandomTestUtil.randomString();
-		String title2 = "b" + RandomTestUtil.randomString();
-		String title3 = "c" + RandomTestUtil.randomString();
-		String title4 = "d" + RandomTestUtil.randomString();
+		String title1 = null;
+		String title2 = "a" + RandomTestUtil.randomString();
+		String title3 = "b" + RandomTestUtil.randomString();
+		String title4 = "c" + RandomTestUtil.randomString();
+		String title5 = "d" + RandomTestUtil.randomString();
 
 		Date date = RandomTestUtil.nextDate();
 
@@ -346,23 +347,29 @@ public class SalesforceObjectEntryManagerImplTest
 		ObjectEntry objectEntry4 = _addObjectEntry(
 			"queued", date, true, null, title4);
 		ObjectEntry objectEntry5 = _addObjectEntry(
-			"queued", date, false, null, null);
+			"queued", date, false, null, title5);
 
 		// And/or with equals/not equals expression
 
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"filter", buildEqualsExpressionFilterString("title", null)
+			).build(),
+			objectEntry1);
+
 		String filterString = StringBundler.concat(
-			"(title eq ", getValue(title1), " or title eq ", getValue(title2),
-			" or title eq ", getValue(title3), " or title eq ",
-			getValue(title4), ") and ");
+			"(objectDefinitionId eq ",
+			_objectDefinition.getObjectDefinitionId(), ") and ");
 
 		testGetObjectEntries(
 			HashMapBuilder.put(
 				"filter",
 				StringBundler.concat(
-					filterString,
+					filterString, "(",
 					buildEqualsExpressionFilterString("customStatus", "queued"),
 					" and ", buildEqualsExpressionFilterString("dueDate", date),
-					" and ", buildEqualsExpressionFilterString("title", title1))
+					" and ", buildEqualsExpressionFilterString("title", title1),
+					")")
 			).build(),
 			objectEntry1);
 
@@ -370,13 +377,13 @@ public class SalesforceObjectEntryManagerImplTest
 			HashMapBuilder.put(
 				"filter",
 				StringBundler.concat(
-					filterString,
+					filterString, "(",
 					_buildNotEqualsExpressionFilterString(
 						"customStatus", "queued"),
 					" and ",
 					_buildNotEqualsExpressionFilterString("dueDate", date),
 					" and ",
-					_buildNotEqualsExpressionFilterString("title", title1))
+					_buildNotEqualsExpressionFilterString("title", title1), ")")
 			).build(),
 			objectEntry2, objectEntry3);
 
@@ -384,10 +391,11 @@ public class SalesforceObjectEntryManagerImplTest
 			HashMapBuilder.put(
 				"filter",
 				StringBundler.concat(
-					filterString,
+					filterString, "(",
 					buildEqualsExpressionFilterString("customStatus", "queued"),
 					" or ", buildEqualsExpressionFilterString("dueDate", date),
-					" or ", buildEqualsExpressionFilterString("title", title1))
+					" or ", buildEqualsExpressionFilterString("title", title1),
+					")")
 			).build(),
 			objectEntry1, objectEntry4, objectEntry5);
 
@@ -395,13 +403,13 @@ public class SalesforceObjectEntryManagerImplTest
 			HashMapBuilder.put(
 				"filter",
 				StringBundler.concat(
-					filterString,
+					filterString, "(",
 					_buildNotEqualsExpressionFilterString(
 						"customStatus", "queued"),
 					" or ",
 					_buildNotEqualsExpressionFilterString("dueDate", date),
 					" or ",
-					_buildNotEqualsExpressionFilterString("title", title1))
+					_buildNotEqualsExpressionFilterString("title", title1), ")")
 			).build(),
 			objectEntry2, objectEntry3, objectEntry4);
 
@@ -431,7 +439,7 @@ public class SalesforceObjectEntryManagerImplTest
 				filterString.concat(
 					buildEqualsExpressionFilterString("customStatus", "queued"))
 			).build(),
-			objectEntry1, objectEntry4);
+			objectEntry1, objectEntry4, objectEntry5);
 
 		testGetObjectEntries(
 			HashMapBuilder.put(
@@ -448,7 +456,7 @@ public class SalesforceObjectEntryManagerImplTest
 				filterString.concat(
 					buildEqualsExpressionFilterString("dueDate", date))
 			).build(),
-			objectEntry1, objectEntry4);
+			objectEntry1, objectEntry4, objectEntry5);
 
 		testGetObjectEntries(
 			HashMapBuilder.put(
@@ -497,12 +505,6 @@ public class SalesforceObjectEntryManagerImplTest
 					_buildNotEqualsExpressionFilterString("title", title1))
 			).build(),
 			objectEntry2, objectEntry3, objectEntry4);
-
-		testGetObjectEntries(
-			HashMapBuilder.put(
-				"filter", buildEqualsExpressionFilterString("title", null)
-			).build(),
-			objectEntry5);
 
 		// Range expression
 
@@ -577,7 +579,7 @@ public class SalesforceObjectEntryManagerImplTest
 			Map<String, String> context, Sort[] sorts)
 		throws Exception {
 
-		if (sorts == null) {
+		if ((sorts == null) || !context.containsKey("sort")) {
 			sorts = new Sort[] {SortFactoryUtil.create("title", false)};
 		}
 

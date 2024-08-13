@@ -27,3 +27,8 @@
 # Bundle Version 5.0.8
 #
 4b345567ca3e84dbd901be70b631508702735b5b^..dcad4aaf86bc3ccec4c03e1e421bf1991f892f38=LPS-188912
+
+#
+# Bundle Version 5.0.9
+#
+dcad4aaf86bc3ccec4c03e1e421bf1991f892f38^..06ca3533a5d6a69c49105f353314f6090aafc23f=LRCI-4395

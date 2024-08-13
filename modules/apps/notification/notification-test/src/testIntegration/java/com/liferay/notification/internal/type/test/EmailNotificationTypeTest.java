@@ -14,15 +14,8 @@ import com.liferay.account.service.AccountEntryOrganizationRelLocalService;
 import com.liferay.account.service.AccountEntryUserRelLocalService;
 import com.liferay.account.service.AccountRoleLocalService;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
-import com.liferay.commerce.constants.CommerceOrderConstants;
-import com.liferay.commerce.constants.CommerceOrderPaymentConstants;
-import com.liferay.commerce.currency.model.CommerceCurrency;
-import com.liferay.commerce.currency.test.util.CommerceCurrencyTestUtil;
-import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.order.engine.CommerceOrderEngine;
-import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.service.CommerceOrderLocalService;
-import com.liferay.commerce.test.util.CommerceTestUtil;
 import com.liferay.document.library.kernel.exception.NoSuchFolderException;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.notification.constants.NotificationConstants;
@@ -35,7 +28,7 @@ import com.liferay.notification.model.NotificationQueueEntry;
 import com.liferay.notification.model.NotificationQueueEntryAttachment;
 import com.liferay.notification.model.NotificationTemplate;
 import com.liferay.notification.service.NotificationQueueEntryAttachmentLocalService;
-import com.liferay.notification.service.test.util.NotificationTemplateUtil;
+import com.liferay.notification.test.util.NotificationTemplateUtil;
 import com.liferay.notification.util.NotificationRecipientSettingUtil;
 import com.liferay.object.action.trigger.ObjectActionTriggerRegistry;
 import com.liferay.object.action.util.ObjectActionThreadLocal;
@@ -45,7 +38,6 @@ import com.liferay.object.constants.ObjectActionTriggerConstants;
 import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.constants.ObjectRelationshipConstants;
 import com.liferay.object.field.builder.TextObjectFieldBuilder;
-import com.liferay.object.model.ObjectAction;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.rest.dto.v1_0.ListEntry;
@@ -54,10 +46,10 @@ import com.liferay.object.service.ObjectActionLocalService;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectEntryLocalService;
 import com.liferay.object.test.util.ObjectDefinitionTestUtil;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
-import com.liferay.portal.kernel.messaging.DestinationNames;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.OrganizationConstants;
@@ -70,20 +62,25 @@ import com.liferay.portal.kernel.portletfilerepository.PortletFileRepository;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.OrganizationLocalService;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.UserGroupRoleLocalService;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.test.AssertUtils;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
-import com.liferay.portal.kernel.test.util.GroupTestUtil;
+import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.RoleTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -98,7 +95,6 @@ import com.liferay.portal.kernel.util.TempFileEntryUtil;
 import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.mail.MailServiceTestUtil;
-import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.SynchronousMailTestRule;
@@ -114,11 +110,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -423,7 +417,6 @@ public class EmailNotificationTypeTest extends BaseNotificationTypeTest {
 				user2.getEmailAddress()));
 	}
 
-	@FeatureFlags("LPD-11165")
 	@Test
 	public void testSendNotificationWithRegularRoles() throws Exception {
 		Role role1 = _addRole(RoleConstants.TYPE_REGULAR, user1);
@@ -436,27 +429,36 @@ public class EmailNotificationTypeTest extends BaseNotificationTypeTest {
 					RandomTestUtil.randomString(),
 					NotificationTemplateConstants.EDITOR_TYPE_RICH_TEXT,
 					Arrays.asList(
-						createNotificationRecipientSetting(
-							NotificationRecipientSettingConstants.NAME_CC,
-							"[%CURRENT_USER_EMAIL_ADDRESS%],cc@liferay.com"),
-						createNotificationRecipientSetting(
-							NotificationRecipientSettingConstants.NAME_FROM,
-							"[%CURRENT_USER_EMAIL_ADDRESS%]"),
-						createNotificationRecipientSetting(
-							NotificationRecipientSettingConstants.
-								NAME_FROM_NAME,
-							Collections.singletonMap(
-								LocaleUtil.US, "[%CURRENT_USER_FIRST_NAME%]")),
-						createNotificationRecipientSetting(
-							NotificationRecipientSettingConstants.
-								NAME_SINGLE_RECIPIENT,
-							Boolean.FALSE.toString()),
-						createNotificationRecipientSetting(
-							NotificationRecipientSettingConstants.NAME_TO,
-							role1.getName()),
-						createNotificationRecipientSetting(
-							NotificationRecipientSettingConstants.NAME_TO_TYPE,
-							NotificationRecipientConstants.TYPE_ROLE)),
+						NotificationRecipientSettingUtil.
+							createNotificationRecipientSetting(
+								NotificationRecipientSettingConstants.NAME_CC,
+								"[%CURRENT_USER_EMAIL_ADDRESS%]," +
+									"cc@liferay.com"),
+						NotificationRecipientSettingUtil.
+							createNotificationRecipientSetting(
+								NotificationRecipientSettingConstants.NAME_FROM,
+								"[%CURRENT_USER_EMAIL_ADDRESS%]"),
+						NotificationRecipientSettingUtil.
+							createNotificationRecipientSetting(
+								NotificationRecipientSettingConstants.
+									NAME_FROM_NAME,
+								Collections.singletonMap(
+									LocaleUtil.US,
+									"[%CURRENT_USER_FIRST_NAME%]")),
+						NotificationRecipientSettingUtil.
+							createNotificationRecipientSetting(
+								NotificationRecipientSettingConstants.
+									NAME_SINGLE_RECIPIENT,
+								Boolean.FALSE.toString()),
+						NotificationRecipientSettingUtil.
+							createNotificationRecipientSetting(
+								NotificationRecipientSettingConstants.NAME_TO,
+								role1.getName()),
+						NotificationRecipientSettingUtil.
+							createNotificationRecipientSetting(
+								NotificationRecipientSettingConstants.
+									NAME_TO_TYPE,
+								NotificationRecipientConstants.TYPE_ROLE)),
 					RandomTestUtil.randomString(),
 					NotificationConstants.TYPE_EMAIL, Collections.emptyList()));
 
@@ -471,7 +473,6 @@ public class EmailNotificationTypeTest extends BaseNotificationTypeTest {
 			notificationTemplate);
 	}
 
-	@FeatureFlags("LPD-11165")
 	@Test
 	public void testSendNotificationWithRoles() throws Exception {
 		AccountEntry accountEntry1 = _addAccountEntry();
@@ -501,45 +502,61 @@ public class EmailNotificationTypeTest extends BaseNotificationTypeTest {
 					RandomTestUtil.randomString(),
 					NotificationTemplateConstants.EDITOR_TYPE_RICH_TEXT,
 					Arrays.asList(
-						createNotificationRecipientSetting(
-							NotificationRecipientSettingConstants.NAME_BCC,
-							accountRole3.getRoleName()),
-						createNotificationRecipientSetting(
-							NotificationRecipientSettingConstants.NAME_BCC,
-							organizationRole2.getName()),
-						createNotificationRecipientSetting(
-							NotificationRecipientSettingConstants.NAME_BCC_TYPE,
-							NotificationRecipientConstants.TYPE_ROLE),
-						createNotificationRecipientSetting(
-							NotificationRecipientSettingConstants.NAME_CC,
-							"[%CURRENT_USER_EMAIL_ADDRESS%],cc@liferay.com"),
-						createNotificationRecipientSetting(
-							NotificationRecipientSettingConstants.NAME_FROM,
-							"[%CURRENT_USER_EMAIL_ADDRESS%]"),
-						createNotificationRecipientSetting(
-							NotificationRecipientSettingConstants.
-								NAME_FROM_NAME,
-							Collections.singletonMap(
-								LocaleUtil.US, "[%CURRENT_USER_FIRST_NAME%]")),
-						createNotificationRecipientSetting(
-							NotificationRecipientSettingConstants.
-								NAME_SINGLE_RECIPIENT,
-							Boolean.FALSE.toString()),
-						createNotificationRecipientSetting(
-							NotificationRecipientSettingConstants.NAME_TO,
-							accountRole1.getRoleName()),
-						createNotificationRecipientSetting(
-							NotificationRecipientSettingConstants.NAME_TO,
-							accountRole2.getRoleName()),
-						createNotificationRecipientSetting(
-							NotificationRecipientSettingConstants.NAME_TO,
-							accountRole4.getRoleName()),
-						createNotificationRecipientSetting(
-							NotificationRecipientSettingConstants.NAME_TO,
-							organizationRole1.getName()),
-						createNotificationRecipientSetting(
-							NotificationRecipientSettingConstants.NAME_TO_TYPE,
-							NotificationRecipientConstants.TYPE_ROLE)),
+						NotificationRecipientSettingUtil.
+							createNotificationRecipientSetting(
+								NotificationRecipientSettingConstants.NAME_BCC,
+								accountRole3.getRoleName()),
+						NotificationRecipientSettingUtil.
+							createNotificationRecipientSetting(
+								NotificationRecipientSettingConstants.NAME_BCC,
+								organizationRole2.getName()),
+						NotificationRecipientSettingUtil.
+							createNotificationRecipientSetting(
+								NotificationRecipientSettingConstants.
+									NAME_BCC_TYPE,
+								NotificationRecipientConstants.TYPE_ROLE),
+						NotificationRecipientSettingUtil.
+							createNotificationRecipientSetting(
+								NotificationRecipientSettingConstants.NAME_CC,
+								"[%CURRENT_USER_EMAIL_ADDRESS%]," +
+									"cc@liferay.com"),
+						NotificationRecipientSettingUtil.
+							createNotificationRecipientSetting(
+								NotificationRecipientSettingConstants.NAME_FROM,
+								"[%CURRENT_USER_EMAIL_ADDRESS%]"),
+						NotificationRecipientSettingUtil.
+							createNotificationRecipientSetting(
+								NotificationRecipientSettingConstants.
+									NAME_FROM_NAME,
+								Collections.singletonMap(
+									LocaleUtil.US,
+									"[%CURRENT_USER_FIRST_NAME%]")),
+						NotificationRecipientSettingUtil.
+							createNotificationRecipientSetting(
+								NotificationRecipientSettingConstants.
+									NAME_SINGLE_RECIPIENT,
+								Boolean.FALSE.toString()),
+						NotificationRecipientSettingUtil.
+							createNotificationRecipientSetting(
+								NotificationRecipientSettingConstants.NAME_TO,
+								accountRole1.getRoleName()),
+						NotificationRecipientSettingUtil.
+							createNotificationRecipientSetting(
+								NotificationRecipientSettingConstants.NAME_TO,
+								accountRole2.getRoleName()),
+						NotificationRecipientSettingUtil.
+							createNotificationRecipientSetting(
+								NotificationRecipientSettingConstants.NAME_TO,
+								accountRole4.getRoleName()),
+						NotificationRecipientSettingUtil.
+							createNotificationRecipientSetting(
+								NotificationRecipientSettingConstants.NAME_TO,
+								organizationRole1.getName()),
+						NotificationRecipientSettingUtil.
+							createNotificationRecipientSetting(
+								NotificationRecipientSettingConstants.
+									NAME_TO_TYPE,
+								NotificationRecipientConstants.TYPE_ROLE)),
 					RandomTestUtil.randomString(),
 					NotificationConstants.TYPE_EMAIL, Collections.emptyList()));
 
@@ -687,34 +704,46 @@ public class EmailNotificationTypeTest extends BaseNotificationTypeTest {
 					RandomTestUtil.randomString(),
 					NotificationTemplateConstants.EDITOR_TYPE_RICH_TEXT,
 					Arrays.asList(
-						createNotificationRecipientSetting(
-							NotificationRecipientSettingConstants.NAME_BCC,
-							AccountRoleConstants.
-								REQUIRED_ROLE_NAME_ACCOUNT_MEMBER),
-						createNotificationRecipientSetting(
-							NotificationRecipientSettingConstants.NAME_BCC_TYPE,
-							NotificationRecipientConstants.TYPE_ROLE),
-						createNotificationRecipientSetting(
-							NotificationRecipientSettingConstants.NAME_CC,
-							"[%CURRENT_USER_EMAIL_ADDRESS%],cc@liferay.com"),
-						createNotificationRecipientSetting(
-							NotificationRecipientSettingConstants.NAME_FROM,
-							"[%CURRENT_USER_EMAIL_ADDRESS%]"),
-						createNotificationRecipientSetting(
-							NotificationRecipientSettingConstants.
-								NAME_FROM_NAME,
-							Collections.singletonMap(
-								LocaleUtil.US, "[%CURRENT_USER_FIRST_NAME%]")),
-						createNotificationRecipientSetting(
-							NotificationRecipientSettingConstants.
-								NAME_SINGLE_RECIPIENT,
-							Boolean.FALSE.toString()),
-						createNotificationRecipientSetting(
-							NotificationRecipientSettingConstants.NAME_TO,
-							RoleConstants.ORGANIZATION_USER),
-						createNotificationRecipientSetting(
-							NotificationRecipientSettingConstants.NAME_TO_TYPE,
-							NotificationRecipientConstants.TYPE_ROLE)),
+						NotificationRecipientSettingUtil.
+							createNotificationRecipientSetting(
+								NotificationRecipientSettingConstants.NAME_BCC,
+								AccountRoleConstants.
+									REQUIRED_ROLE_NAME_ACCOUNT_MEMBER),
+						NotificationRecipientSettingUtil.
+							createNotificationRecipientSetting(
+								NotificationRecipientSettingConstants.
+									NAME_BCC_TYPE,
+								NotificationRecipientConstants.TYPE_ROLE),
+						NotificationRecipientSettingUtil.
+							createNotificationRecipientSetting(
+								NotificationRecipientSettingConstants.NAME_CC,
+								"[%CURRENT_USER_EMAIL_ADDRESS%]," +
+									"cc@liferay.com"),
+						NotificationRecipientSettingUtil.
+							createNotificationRecipientSetting(
+								NotificationRecipientSettingConstants.NAME_FROM,
+								"[%CURRENT_USER_EMAIL_ADDRESS%]"),
+						NotificationRecipientSettingUtil.
+							createNotificationRecipientSetting(
+								NotificationRecipientSettingConstants.
+									NAME_FROM_NAME,
+								Collections.singletonMap(
+									LocaleUtil.US,
+									"[%CURRENT_USER_FIRST_NAME%]")),
+						NotificationRecipientSettingUtil.
+							createNotificationRecipientSetting(
+								NotificationRecipientSettingConstants.
+									NAME_SINGLE_RECIPIENT,
+								Boolean.FALSE.toString()),
+						NotificationRecipientSettingUtil.
+							createNotificationRecipientSetting(
+								NotificationRecipientSettingConstants.NAME_TO,
+								RoleConstants.ORGANIZATION_USER),
+						NotificationRecipientSettingUtil.
+							createNotificationRecipientSetting(
+								NotificationRecipientSettingConstants.
+									NAME_TO_TYPE,
+								NotificationRecipientConstants.TYPE_ROLE)),
 					RandomTestUtil.randomString(),
 					NotificationConstants.TYPE_EMAIL, Collections.emptyList()));
 
@@ -773,128 +802,135 @@ public class EmailNotificationTypeTest extends BaseNotificationTypeTest {
 	}
 
 	@Test
-	public void testSendNotificationWithSystemObjectDefinition()
-		throws Exception {
+	public void testSendNotificationWithRolesToCurrentUser() throws Exception {
+		NotificationTemplate notificationTemplate =
+			notificationTemplateLocalService.addNotificationTemplate(
+				NotificationTemplateUtil.createNotificationContext(
+					TestPropsValues.getUser(), 0, RandomTestUtil.randomString(),
+					RandomTestUtil.randomString(),
+					NotificationTemplateConstants.EDITOR_TYPE_RICH_TEXT,
+					Arrays.asList(
+						NotificationRecipientSettingUtil.
+							createNotificationRecipientSetting(
+								NotificationRecipientSettingConstants.NAME_FROM,
+								"test@liferay.com"),
+						NotificationRecipientSettingUtil.
+							createNotificationRecipientSetting(
+								NotificationRecipientSettingConstants.
+									NAME_FROM_NAME,
+								Collections.singletonMap(
+									LocaleUtil.US, "Test")),
+						NotificationRecipientSettingUtil.
+							createNotificationRecipientSetting(
+								NotificationRecipientSettingConstants.
+									NAME_SINGLE_RECIPIENT,
+								Boolean.FALSE.toString()),
+						NotificationRecipientSettingUtil.
+							createNotificationRecipientSetting(
+								NotificationRecipientSettingConstants.NAME_TO,
+								"[%CURRENT_USER_EMAIL_ADDRESS%]")),
+					RandomTestUtil.randomString(),
+					NotificationConstants.TYPE_EMAIL, Collections.emptyList()));
 
-		// On account entry update
+		ObjectDefinition objectDefinition =
+			objectDefinitionLocalService.addCustomObjectDefinition(
+				TestPropsValues.getUserId(), 0, false, true, false, false,
+				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
+				ObjectDefinitionTestUtil.getRandomName(), null, null,
+				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
+				true, ObjectDefinitionConstants.SCOPE_COMPANY,
+				ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT,
+				Collections.singletonList(
+					new TextObjectFieldBuilder(
+					).labelMap(
+						LocalizedMapUtil.getLocalizedMap(
+							RandomTestUtil.randomString())
+					).name(
+						"textObjectField"
+					).build()));
 
-		ObjectDefinition accountEntryObjectDefinition =
-			objectDefinitionLocalService.fetchObjectDefinition(
-				TestPropsValues.getCompanyId(),
-				AccountEntry.class.getSimpleName());
-
-		ObjectAction accountEntryObjectAction = _addObjectAction(
+		_addObjectAction(
+			objectDefinition.getObjectDefinitionId(),
+			ObjectActionTriggerConstants.KEY_ON_AFTER_ADD,
+			notificationTemplate.getNotificationTemplateId());
+		_addObjectAction(
+			objectDefinition.getObjectDefinitionId(),
 			ObjectActionTriggerConstants.KEY_ON_AFTER_UPDATE,
-			accountEntryObjectDefinition,
-			"[%ACCOUNTENTRY_AUTHOR_EMAIL_ADDRESS%]");
+			notificationTemplate.getNotificationTemplateId());
 
-		User omniadminUser = UserTestUtil.addOmniadminUser();
-
-		AccountEntry accountEntry = _accountEntryLocalService.addAccountEntry(
-			omniadminUser.getUserId(), 0L, RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), null, null, null,
-			RandomTestUtil.randomString(),
-			AccountConstants.ACCOUNT_ENTRY_TYPE_BUSINESS,
-			WorkflowConstants.STATUS_APPROVED,
-			ServiceContextTestUtil.getServiceContext());
-
-		_accountEntryLocalService.updateAccountEntry(accountEntry);
-
-		List<NotificationQueueEntry> notificationQueueEntries =
-			notificationQueueEntryLocalService.getNotificationEntries(
-				NotificationConstants.TYPE_EMAIL,
-				NotificationQueueEntryConstants.STATUS_SENT);
-
-		Assert.assertEquals(
-			notificationQueueEntries.toString(), 1,
-			notificationQueueEntries.size());
-
-		_assertNotificationQueueEntry(
-			user2.getEmailAddress(), true, omniadminUser.getEmailAddress(),
-			notificationQueueEntries.get(0));
-
-		objectActionLocalService.deleteObjectAction(accountEntryObjectAction);
-
-		// On commerce order payment status update
-
-		ObjectDefinition commerceOrderObjectDefinition =
-			_objectDefinitionLocalService.fetchObjectDefinitionByClassName(
-				TestPropsValues.getCompanyId(), CommerceOrder.class.getName());
-
-		Set<String> objectActionTriggerKeys = new HashSet<>();
-
-		ListUtil.isNotEmptyForEach(
-			_objectActionTriggerRegistry.getObjectActionTriggers(
-				commerceOrderObjectDefinition.getClassName()),
-			objectActionTrigger -> objectActionTriggerKeys.add(
-				objectActionTrigger.getKey()));
-
-		Assert.assertTrue(
-			objectActionTriggerKeys.contains(
-				DestinationNames.COMMERCE_ORDER_STATUS));
-		Assert.assertTrue(
-			objectActionTriggerKeys.contains(
-				DestinationNames.COMMERCE_PAYMENT_STATUS));
-
-		ObjectAction commerceOrderObjectAction = _addObjectAction(
-			DestinationNames.COMMERCE_PAYMENT_STATUS,
-			commerceOrderObjectDefinition, "[%CURRENT_USER_EMAIL_ADDRESS%]");
-
-		Group group = GroupTestUtil.addGroup();
-
-		CommerceCurrency commerceCurrency =
-			CommerceCurrencyTestUtil.addCommerceCurrency(
-				TestPropsValues.getCompanyId());
-
-		CommerceChannel commerceChannel = CommerceTestUtil.addCommerceChannel(
-			group.getGroupId(), commerceCurrency.getCode());
+		objectDefinition =
+			objectDefinitionLocalService.publishCustomObjectDefinition(
+				TestPropsValues.getUserId(),
+				objectDefinition.getObjectDefinitionId());
 
 		PermissionChecker originalPermissionChecker =
 			PermissionThreadLocal.getPermissionChecker();
+
 		String originalName = PrincipalThreadLocal.getName();
 
-		User user = TestPropsValues.getUser();
+		_user = UserTestUtil.addUser();
 
-		try {
-			PrincipalThreadLocal.setName(user.getUserId());
-			PermissionThreadLocal.setPermissionChecker(
-				PermissionCheckerFactoryUtil.create(user));
+		PermissionThreadLocal.setPermissionChecker(
+			PermissionCheckerFactoryUtil.create(_user));
 
-			CommerceOrder commerceOrder = CommerceTestUtil.addB2CCommerceOrder(
-				user.getUserId(), commerceChannel.getGroupId(),
-				commerceCurrency);
+		PrincipalThreadLocal.setName(_user.getUserId());
 
-			commerceOrder = _commerceOrderEngine.checkoutCommerceOrder(
-				commerceOrder, user.getUserId());
+		Role role = RoleTestUtil.addRole(RoleConstants.TYPE_REGULAR);
 
-			Assert.assertEquals(
-				CommerceOrderConstants.ORDER_STATUS_PENDING,
-				commerceOrder.getPaymentStatus());
+		String name = objectDefinition.getClassName();
 
-			commerceOrder = _commerceOrderLocalService.updatePaymentStatus(
-				user.getUserId(), commerceOrder.getCommerceOrderId(),
-				CommerceOrderPaymentConstants.STATUS_COMPLETED);
+		String[] actionIds = {ObjectActionKeys.ADD_OBJECT_ENTRY};
 
-			Assert.assertEquals(
-				CommerceOrderConstants.ORDER_STATUS_COMPLETED,
-				commerceOrder.getPaymentStatus());
-		}
-		finally {
-			PermissionThreadLocal.setPermissionChecker(
-				originalPermissionChecker);
-			PrincipalThreadLocal.setName(originalName);
+		if (ArrayUtil.contains(actionIds, ObjectActionKeys.ADD_OBJECT_ENTRY)) {
+			name = objectDefinition.getResourceName();
 		}
 
-		notificationQueueEntries =
-			notificationQueueEntryLocalService.getNotificationEntries(
-				NotificationConstants.TYPE_EMAIL,
-				NotificationQueueEntryConstants.STATUS_SENT);
+		_resourcePermissionLocalService.setResourcePermissions(
+			TestPropsValues.getCompanyId(), name,
+			ResourceConstants.SCOPE_COMPANY,
+			String.valueOf(TestPropsValues.getCompanyId()), role.getRoleId(),
+			actionIds);
 
-		Assert.assertEquals(
-			notificationQueueEntries.toString(), 2,
-			notificationQueueEntries.size());
+		_userLocalService.addRoleUser(role.getRoleId(), _user);
 
-		objectActionLocalService.deleteObjectAction(commerceOrderObjectAction);
+		_resourcePermissionLocalService.addResourcePermission(
+			TestPropsValues.getCompanyId(), objectDefinition.getClassName(),
+			ResourceConstants.SCOPE_COMPANY, "0", role.getRoleId(),
+			ActionKeys.UPDATE);
+
+		_roleLocalService.addUserRole(_user.getUserId(), role.getRoleId());
+
+		// Notification sent on after add
+
+		ObjectEntry objectEntry = objectEntryManager.addObjectEntry(
+			dtoConverterContext, objectDefinition,
+			new ObjectEntry() {
+				{
+					properties = HashMapBuilder.<String, Object>put(
+						"textObjectField", RandomTestUtil.randomString()
+					).build();
+				}
+			},
+			ObjectDefinitionConstants.SCOPE_COMPANY);
+
+		_testSendNotificationWithRolesToCurrentUser();
+
+		// Notification sent on after update
+
+		objectEntryManager.updateObjectEntry(
+			_user.getCompanyId(), dtoConverterContext,
+			objectEntry.getExternalReferenceCode(), objectDefinition,
+			objectEntry, ObjectDefinitionConstants.SCOPE_COMPANY);
+
+		_testSendNotificationWithRolesToCurrentUser();
+
+		_objectEntryLocalService.deleteObjectEntry(objectEntry.getId());
+
+		objectDefinitionLocalService.deleteObjectDefinition(objectDefinition);
+
+		PermissionThreadLocal.setPermissionChecker(originalPermissionChecker);
+
+		PrincipalThreadLocal.setName(originalName);
 	}
 
 	private AccountEntry _addAccountEntry() throws Exception {
@@ -930,55 +966,39 @@ public class EmailNotificationTypeTest extends BaseNotificationTypeTest {
 				childObjectDefinition.getObjectDefinitionId(), body,
 				RandomTestUtil.randomString(), editorType,
 				Arrays.asList(
-					createNotificationRecipientSetting(
-						"bcc",
-						"[%CURRENT_USER_EMAIL_ADDRESS%],bcc@liferay.com"),
-					createNotificationRecipientSetting(
-						"cc", "[%CURRENT_USER_EMAIL_ADDRESS%],cc@liferay.com"),
-					createNotificationRecipientSetting(
-						"from", "[%CURRENT_USER_EMAIL_ADDRESS%]"),
-					createNotificationRecipientSetting("fromName", fromName),
-					createNotificationRecipientSetting(
-						"singleRecipient", String.valueOf(singleRecipient)),
-					createNotificationRecipientSetting("to", to)),
+					NotificationRecipientSettingUtil.
+						createNotificationRecipientSetting(
+							"bcc",
+							"[%CURRENT_USER_EMAIL_ADDRESS%],bcc@liferay.com"),
+					NotificationRecipientSettingUtil.
+						createNotificationRecipientSetting(
+							"cc",
+							"[%CURRENT_USER_EMAIL_ADDRESS%],cc@liferay.com"),
+					NotificationRecipientSettingUtil.
+						createNotificationRecipientSetting(
+							"from", "[%CURRENT_USER_EMAIL_ADDRESS%]"),
+					NotificationRecipientSettingUtil.
+						createNotificationRecipientSetting(
+							"fromName", fromName),
+					NotificationRecipientSettingUtil.
+						createNotificationRecipientSetting(
+							"singleRecipient", String.valueOf(singleRecipient)),
+					NotificationRecipientSettingUtil.
+						createNotificationRecipientSetting("to", to)),
 				ListUtil.toString(
 					getTermNames(), StringPool.BLANK, StringPool.SEMICOLON),
 				NotificationConstants.TYPE_EMAIL,
 				Collections.singletonList(objectField.getObjectFieldId())));
 	}
 
-	private ObjectAction _addObjectAction(
-			String objectActionTriggerKey, ObjectDefinition objectDefinition,
-			String to)
+	private void _addObjectAction(
+			long objectDefinitionId, String objectActionTriggerKey,
+			long objectNotificationTemplateId)
 		throws Exception {
 
-		NotificationTemplate notificationTemplate =
-			notificationTemplateLocalService.addNotificationTemplate(
-				NotificationTemplateUtil.createNotificationContext(
-					TestPropsValues.getUser(),
-					objectDefinition.getObjectDefinitionId(),
-					RandomTestUtil.randomString(),
-					RandomTestUtil.randomString(),
-					NotificationTemplateConstants.EDITOR_TYPE_RICH_TEXT,
-					Arrays.asList(
-						createNotificationRecipientSetting(
-							"bcc", "[%CURRENT_USER_EMAIL_ADDRESS%]"),
-						createNotificationRecipientSetting(
-							"cc",
-							"[%CURRENT_USER_EMAIL_ADDRESS%],cc@liferay.com"),
-						createNotificationRecipientSetting(
-							"from", "[%CURRENT_USER_EMAIL_ADDRESS%]"),
-						createNotificationRecipientSetting(
-							"fromName",
-							Collections.singletonMap(
-								LocaleUtil.US, "[%CURRENT_USER_FIRST_NAME%]")),
-						createNotificationRecipientSetting("to", to)),
-					RandomTestUtil.randomString(),
-					NotificationConstants.TYPE_EMAIL, Collections.emptyList()));
-
-		return objectActionLocalService.addObjectAction(
+		objectActionLocalService.addObjectAction(
 			RandomTestUtil.randomString(), TestPropsValues.getUserId(),
-			objectDefinition.getObjectDefinitionId(), true, StringPool.BLANK,
+			objectDefinitionId, true, StringPool.BLANK,
 			RandomTestUtil.randomString(),
 			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
@@ -986,16 +1006,15 @@ public class EmailNotificationTypeTest extends BaseNotificationTypeTest {
 			ObjectActionExecutorConstants.KEY_NOTIFICATION,
 			objectActionTriggerKey,
 			UnicodePropertiesBuilder.put(
-				"notificationTemplateId",
-				notificationTemplate.getNotificationTemplateId()
+				"notificationTemplateId", objectNotificationTemplateId
 			).build(),
 			false);
 	}
 
 	private Role _addRole(int type, User user) throws Exception {
 		return _roleLocalService.addRole(
-			user.getUserId(), null, 0, RandomTestUtil.randomString(), null,
-			null, type, null, null);
+			RandomTestUtil.randomString(), user.getUserId(), null, 0,
+			RandomTestUtil.randomString(), null, null, type, null, null);
 	}
 
 	private void _assertNotificationQueueEntry(
@@ -1088,7 +1107,8 @@ public class EmailNotificationTypeTest extends BaseNotificationTypeTest {
 			notificationQueueEntries.get(0);
 
 		assertTermValues(
-			expectedTermValues,
+			TransformUtil.transform(
+				expectedTermValues, this::parseTermValueToString),
 			Arrays.asList(
 				StringUtil.split(notificationQueueEntry.getBody(), delimiter)));
 
@@ -1171,6 +1191,11 @@ public class EmailNotificationTypeTest extends BaseNotificationTypeTest {
 				singleRecipient, expectedToEmailAddresses.get(1),
 				notificationQueueEntries.get(1));
 		}
+
+		Assert.assertTrue(
+			MailServiceTestUtil.lastMailMessageContains(
+				ListUtil.toString(
+					getTermValues(), StringPool.BLANK, StringPool.SEMICOLON)));
 
 		MailServiceTestUtil.clearMessages();
 
@@ -1316,6 +1341,34 @@ public class EmailNotificationTypeTest extends BaseNotificationTypeTest {
 		objectDefinitionLocalService.deleteObjectDefinition(objectDefinition);
 	}
 
+	private void _testSendNotificationWithRolesToCurrentUser()
+		throws Exception {
+
+		List<NotificationQueueEntry> notificationQueueEntries =
+			notificationQueueEntryLocalService.getNotificationEntries(
+				NotificationConstants.TYPE_EMAIL,
+				NotificationQueueEntryConstants.STATUS_SENT);
+
+		Assert.assertEquals(
+			notificationQueueEntries.toString(), 1,
+			notificationQueueEntries.size());
+
+		Map<String, Object> notificationRecipientSettingsMap =
+			NotificationRecipientSettingUtil.
+				getNotificationRecipientSettingsMap(
+					notificationQueueEntries.get(0));
+
+		AssertUtils.assertEqualsSorted(
+			StringUtil.split(_user.getEmailAddress()),
+			StringUtil.split(
+				String.valueOf(notificationRecipientSettingsMap.get("to"))));
+
+		MailServiceTestUtil.clearMessages();
+
+		notificationQueueEntryLocalService.deleteNotificationQueueEntry(
+			notificationQueueEntries.get(0));
+	}
+
 	private static Map<String, Object> _freeMarkerTermValues;
 	private static HttpServletRequest _originalHttpServletRequest;
 
@@ -1367,9 +1420,18 @@ public class EmailNotificationTypeTest extends BaseNotificationTypeTest {
 	private PortletFileRepository _portletFileRepository;
 
 	@Inject
+	private ResourcePermissionLocalService _resourcePermissionLocalService;
+
+	@Inject
 	private RoleLocalService _roleLocalService;
+
+	@DeleteAfterTestRun
+	private User _user;
 
 	@Inject
 	private UserGroupRoleLocalService _userGroupRoleLocalService;
+
+	@Inject
+	private UserLocalService _userLocalService;
 
 }

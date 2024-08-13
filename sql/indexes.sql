@@ -104,8 +104,9 @@ create unique index IX_5DC2B977 on DLFileEntryMetadata (fileVersionId, DDMStruct
 create index IX_D49AB5D1 on DLFileEntryMetadata (uuid_[$COLUMN_LENGTH:75$]);
 
 create unique index IX_93ED0F06 on DLFileEntryType (groupId, ctCollectionId, dataDefinitionId);
+create unique index IX_8B9CF803 on DLFileEntryType (groupId, ctCollectionId, externalReferenceCode[$COLUMN_LENGTH:75$]);
 create unique index IX_A5C4723D on DLFileEntryType (groupId, ctCollectionId, fileEntryTypeKey[$COLUMN_LENGTH:75$]);
-create unique index IX_C1518AF6 on DLFileEntryType (groupId, uuid_[$COLUMN_LENGTH:75$], ctCollectionId);
+create unique index IX_476F807A on DLFileEntryType (groupId, ctCollectionId, uuid_[$COLUMN_LENGTH:75$]);
 create index IX_90724726 on DLFileEntryType (uuid_[$COLUMN_LENGTH:75$]);
 
 create index IX_2E64D9F9 on DLFileEntryTypes_DLFolders (companyId);
@@ -342,6 +343,7 @@ create index IX_A37A0588 on ResourcePermission (roleId);
 create index IX_F4555981 on ResourcePermission (scope);
 
 create unique index IX_CC85CC2C on Role_ (companyId, ctCollectionId, classNameId, classPK);
+create unique index IX_C849CE46 on Role_ (companyId, ctCollectionId, externalReferenceCode[$COLUMN_LENGTH:75$]);
 create unique index IX_D11C3796 on Role_ (companyId, ctCollectionId, name[$COLUMN_LENGTH:75$]);
 create index IX_F436EC8E on Role_ (name[$COLUMN_LENGTH:75$]);
 create index IX_5EB4E2FB on Role_ (subtype[$COLUMN_LENGTH:75$]);

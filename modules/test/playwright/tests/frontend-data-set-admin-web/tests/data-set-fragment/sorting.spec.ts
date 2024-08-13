@@ -5,14 +5,17 @@
 
 import {expect, mergeTests} from '@playwright/test';
 
+import {accountSettingsPagesTest} from '../../../../fixtures/accountSettingsPagesTest';
 import {featureFlagsTest} from '../../../../fixtures/featureFlagsTest';
 import {isolatedLayoutTest} from '../../../../fixtures/isolatedLayoutTest';
 import {loginTest} from '../../../../fixtures/loginTest';
 import getRandomString from '../../../../utils/getRandomString';
+import {waitForSuccessAlert} from '../../../../utils/waitForSuccessAlert';
 import {dataSetManagerApiHelpersTest} from '../../fixtures/dataSetManagerApiHelpersTest';
 import {fdsFragmentPageTest} from './fixtures/fdsFragmentPageTest';
 
 export const test = mergeTests(
+	accountSettingsPagesTest,
 	dataSetManagerApiHelpersTest,
 	featureFlagsTest({
 		'LPD-19465': true,
@@ -163,5 +166,123 @@ test.describe('Sorting Dropdown in Data Set Fragment', () => {
 
 			expect(firstNameTextAscending < lastNameTextAscending).toBeTruthy();
 		});
+	});
+
+	test('When the current page language is changed, the current translation is used and fallbacks to the site default language @LPD-25464', async ({
+		accountSettingsPage,
+		dataSetManagerApiHelpers,
+		fdsFragmentPage,
+		layout,
+		page,
+	}) => {
+		let spanishLanguage = false;
+
+		try {
+			await test.step('Create sorting', async () => {
+				await dataSetManagerApiHelpers.createDataSetSort({
+					dataSetERC,
+					defaultValue: true,
+					fieldName: 'id',
+					label_i18n: {en_US: 'ID'},
+					orderType: 'asc',
+				});
+
+				await dataSetManagerApiHelpers.createDataSetSort({
+					dataSetERC,
+					defaultValue: false,
+					fieldName: 'name',
+					label_i18n: {en_US: 'Name', es_ES: 'Nombre'},
+				});
+			});
+
+			await test.step('Add fields, so data is displayed', async () => {
+				await dataSetManagerApiHelpers.createDataSetField({
+					dataSetERC,
+					label_i18n: {
+						en_US: 'ID',
+					},
+					name: 'id',
+					sortable: true,
+					type: 'string',
+				});
+
+				await dataSetManagerApiHelpers.createDataSetField({
+					dataSetERC,
+					label_i18n: {en_US: 'Name'},
+					name: 'name',
+					sortable: true,
+					type: 'string',
+				});
+			});
+
+			await test.step('Configure Data Set fragment', async () => {
+				await fdsFragmentPage.configureDataSetFragment({
+					dataSetLabel,
+					layout,
+				});
+			});
+
+			await test.step('Change user account default language to Spanish', async () => {
+
+				// This method should be used, but since it uses it a different
+				// configured `testIdAttribute`, a locator has to be used.
+				//
+				// await accountSettingsPage.goToAccountSettings();
+
+				await page.locator('[data-qa-id="userPersonalMenu"]').click();
+
+				await accountSettingsPage.accountSettingsMenuItem.click();
+
+				await page.getByLabel('Language').selectOption('es_ES');
+
+				await page.getByRole('button', {name: 'Save'}).click();
+
+				await expect(
+					page.getByText('Éxito:Su petición ha terminado con éxito.')
+				).toBeVisible();
+
+				spanishLanguage = true;
+			});
+
+			await test.step('Go to Data Set fragment page', async () => {
+				await fdsFragmentPage.goToPage({layout});
+
+				await page
+					.locator('.data-set-content-wrapper')
+					.waitFor({state: 'visible'});
+			});
+
+			await test.step('Check that the correct translations are displayed in the dropdown', async () => {
+				await page.getByRole('button', {name: 'Pedido'}).click();
+
+				await expect(
+					page.getByRole('menuitem', {name: 'ID'})
+				).toBeVisible();
+				await expect(
+					page.getByRole('menuitem', {name: 'Nombre'})
+				).toBeVisible();
+			});
+		}
+		finally {
+			if (spanishLanguage) {
+				await test.step('Change user account default language back to English', async () => {
+					await page
+						.locator('[data-qa-id="userPersonalMenu"]')
+						.click(); // This is using `locator` instead of `getByTestId` because of the difference in `testIdAttribute` names.
+
+					await page
+						.getByRole('menuitem', {
+							name: 'Mi cuenta',
+						})
+						.click();
+
+					await page.getByLabel('Lenguaje').selectOption('en_US');
+
+					await page.getByRole('button', {name: 'Guardar'}).click();
+
+					await waitForSuccessAlert(page);
+				});
+			}
+		}
 	});
 });

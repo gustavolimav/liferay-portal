@@ -5,12 +5,14 @@
 
 package com.liferay.change.tracking.rest.internal.resource.v1_0;
 
+import com.liferay.change.tracking.exception.NoSuchEntryException;
 import com.liferay.change.tracking.model.CTCollection;
 import com.liferay.change.tracking.rest.dto.v1_0.CTEntry;
 import com.liferay.change.tracking.rest.internal.odata.entity.v1_0.CTEntryEntityModel;
 import com.liferay.change.tracking.rest.resource.v1_0.CTEntryResource;
 import com.liferay.change.tracking.service.CTEntryLocalService;
 import com.liferay.change.tracking.spi.display.CTDisplayRendererRegistry;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.change.tracking.sql.CTSQLModeThreadLocal;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.BaseModel;
@@ -73,6 +75,28 @@ public class CTEntryResourceImpl extends BaseCTEntryResourceImpl {
 			sorts,
 			document -> _toCTEntry(
 				GetterUtil.getLong(document.get(Field.ENTRY_CLASS_PK))));
+	}
+
+	@Override
+	public CTEntry
+			getCtCollectionCTEntryByModelClassNameByModelClassPkModelClassPK(
+				Long ctCollectionId, Long modelClassNameId, Long modelClassPK)
+		throws Exception {
+
+		com.liferay.change.tracking.model.CTEntry ctEntry =
+			_ctEntryLocalService.fetchCTEntry(
+				ctCollectionId, modelClassNameId, modelClassPK);
+
+		if (ctEntry == null) {
+			throw new NoSuchEntryException(
+				StringBundler.concat(
+					"No change tracking entry exists with change tracking ",
+					"collection ID ", ctCollectionId, ", model class name ID ",
+					modelClassNameId, ", and model class PK ", modelClassPK));
+		}
+
+		return _ctEntryDTOConverter.toDTO(
+			_getDTOConverterContext(ctEntry), ctEntry);
 	}
 
 	@Override

@@ -1710,7 +1710,7 @@ public class JenkinsResultsParserUtil {
 	}
 
 	public static long getCurrentTimeMillis() {
-		if (!isCINode()) {
+		if (!isCINode() || isJenkinsMaster()) {
 			return System.currentTimeMillis();
 		}
 
@@ -2234,8 +2234,6 @@ public class JenkinsResultsParserUtil {
 			getCanonicalPath(rootDir) + File.separator,
 			resourceIncludesRelativeGlobs);
 
-		final List<URL> includedResourceURLs = new ArrayList<>();
-
 		Path rootDirPath = rootDir.toPath();
 
 		if (!Files.exists(rootDirPath)) {
@@ -2243,8 +2241,10 @@ public class JenkinsResultsParserUtil {
 				combine(
 					"Directory ", rootDirPath.toString(), " does not exist."));
 
-			return includedResourceURLs;
+			return Collections.emptyList();
 		}
+
+		final List<URL> includedResourceURLs = new ArrayList<>();
 
 		Files.walkFileTree(
 			rootDirPath,
@@ -3612,6 +3612,17 @@ public class JenkinsResultsParserUtil {
 		return false;
 	}
 
+	public static boolean isJenkinsMaster() {
+		try {
+			JenkinsMaster.getInstance(getHostName(null));
+		}
+		catch (Exception exception) {
+			return false;
+		}
+
+		return true;
+	}
+
 	public static boolean isJenkinsSlaveInNetwork(
 		String jenkinsSlaveName, String networkName) {
 
@@ -4057,7 +4068,7 @@ public class JenkinsResultsParserUtil {
 	public static void pullDockerImageDependencies(
 		File baseDir, String[] excludedDockerImageNames) {
 
-		String dockerEnabled = System.getenv("DOCKER_ENABLED");
+		String dockerEnabled = System.getenv("LIFERAY_DOCKER_ENABLED");
 
 		if (isNullOrEmpty(dockerEnabled) || !dockerEnabled.equals("true")) {
 			return;
@@ -4609,8 +4620,6 @@ public class JenkinsResultsParserUtil {
 
 		url = fixURL(url);
 
-		String key = url.replace("//", "/");
-
 		if (url.startsWith("file:")) {
 			url = fixFileURL(url);
 		}
@@ -4620,7 +4629,8 @@ public class JenkinsResultsParserUtil {
 					System.out.println("Loading " + url);
 				}
 
-				File cachedFile = _getCacheFile(_PREFIX_TO_STRING_CACHE + key);
+				File cachedFile = _getCacheFile(
+					_generateToStringCacheKey(url, postContent));
 
 				if ((cachedFile != null) && cachedFile.exists()) {
 					return new FileInputStream(cachedFile);
@@ -5304,25 +5314,19 @@ public class JenkinsResultsParserUtil {
 						line = bufferedReader.readLine();
 					}
 
-					int bytes = sb.length();
+					String content = sb.toString();
 
-					if (expectResponse && (bytes == 0) && (i < 1)) {
+					if (expectResponse && isNullOrEmpty(content) && (i < 1)) {
 						System.out.println(
 							"Unable to get response, retrying request");
 
 						continue;
 					}
 
-					String content = sb.toString();
-
-					if (checkCache && !url.startsWith("file:") &&
-						(bytes < (3 * 1024 * 1024))) {
-
-						url = fixURL(url);
-
-						String key = url.replace("//", "/");
-
-						saveToCacheFile(_PREFIX_TO_STRING_CACHE + key, content);
+					if (checkCache && !url.startsWith("file:")) {
+						saveToCacheFile(
+							_generateToStringCacheKey(url, postContent),
+							content);
 					}
 
 					return content;
@@ -6117,6 +6121,20 @@ public class JenkinsResultsParserUtil {
 		return sb.toString();
 	}
 
+	private static String _generateToStringCacheKey(
+		String urlString, String postContent) {
+
+		String key = fixURL(urlString);
+
+		key.replace("//", "/");
+
+		if (!isNullOrEmpty(postContent)) {
+			key += postContent;
+		}
+
+		return key;
+	}
+
 	private static File _getCacheFile(String key) {
 		String fileName = combine(
 			System.getProperty("java.io.tmpdir"), "/jenkins-cached-files/",
@@ -6281,11 +6299,11 @@ public class JenkinsResultsParserUtil {
 		String gitDirectoryName) {
 
 		JSONObject jsonObject = _getGitDirectoryJSONObject(
-			gitDirectoryName, _getGitWorkingDirectoriesJSONArray());
+			gitDirectoryName, _getGitDirectoriesJSONArray());
 
 		if (jsonObject == null) {
 			jsonObject = _getGitDirectoryJSONObject(
-				gitDirectoryName, _getGitDirectoriesJSONArray());
+				gitDirectoryName, _getGitWorkingDirectoriesJSONArray());
 		}
 
 		return jsonObject;
@@ -6725,8 +6743,6 @@ public class JenkinsResultsParserUtil {
 
 	private static final int _MILLIS_TIMEOUT_DEFAULT = 1000 * 60 * 5;
 
-	private static final String _PREFIX_TO_STRING_CACHE = "toStringCache-";
-
 	private static final int _RETRIES_SIZE_MAX_DEFAULT = 3;
 
 	private static final int _SECONDS_RETRY_PERIOD_DEFAULT = 5;
@@ -6758,7 +6774,7 @@ public class JenkinsResultsParserUtil {
 	private static final Pattern _dockerFilePattern = Pattern.compile(
 		".*FROM (?<dockerImageName>[^\\s]+)( AS builder)?\\n[\\s\\S]*");
 	private static final List<String> _forbiddenRedactTokens = Arrays.asList(
-		"liferay", "test");
+		"admin", "liferay", "test");
 	private static JSONArray _gitDirectoriesJSONArray;
 	private static final Pattern _gitHubAPIURLPattern = Pattern.compile(
 		"https\\:\\/\\/api\\.github\\.com(.*)");

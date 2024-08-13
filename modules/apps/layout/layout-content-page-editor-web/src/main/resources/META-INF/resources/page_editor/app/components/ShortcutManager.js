@@ -15,17 +15,24 @@ import {
 	ARROW_UP_KEY_CODE,
 	BACKSPACE_KEY_CODE,
 	D_KEY_CODE,
+	H_KEY_CODE,
 	PERIOD_KEY_CODE,
+	R_KEY_CODE,
 	S_KEY_CODE,
 	Z_KEY_CODE,
 } from '../config/constants/keyboardCodes';
 import {LAYOUT_DATA_ITEM_TYPES} from '../config/constants/layoutDataItemTypes';
 import {MOVE_ITEM_DIRECTIONS} from '../config/constants/moveItemDirections';
 import {
-	useActiveItemId,
+	useActiveItemIds,
 	useActiveItemType,
 	useSelectItem,
 } from '../contexts/ControlsContext';
+import {
+	useOpenShorcutModal,
+	useSetEditedNodeId,
+	useSetOpenShorcutModal,
+} from '../contexts/ShortcutContext';
 import {useDispatch, useSelector} from '../contexts/StoreContext';
 import selectCanUpdatePageStructure from '../selectors/selectCanUpdatePageStructure';
 import deleteItem from '../thunks/deleteItem';
@@ -35,13 +42,14 @@ import redoThunk from '../thunks/redo';
 import switchSidebarPanel from '../thunks/switchSidebarPanel';
 import undoThunk from '../thunks/undo';
 import canBeDuplicated from '../utils/canBeDuplicated';
+import canBeHidden from '../utils/canBeHidden';
 import canBeRemoved from '../utils/canBeRemoved';
+import canBeRenamed from '../utils/canBeRenamed';
 import canBeSaved from '../utils/canBeSaved';
+import isCtrlOrMeta from '../utils/isCtrlOrMeta';
+import updateItemStyle from '../utils/updateItemStyle';
 import SaveFragmentCompositionModal from './SaveFragmentCompositionModal';
 import ShortcutModal from './ShortcutModal';
-
-const ctrlOrMeta = (event) =>
-	(event.ctrlKey && !event.metaKey) || (!event.ctrlKey && event.metaKey);
 
 const isEditableField = (element) =>
 	!!element.closest('.page-editor__editable');
@@ -65,23 +73,42 @@ const isWithinIframe = () => {
 };
 
 export default function ShortcutManager() {
-	const activeItemId = useActiveItemId();
+	const activeItemIds = useActiveItemIds();
 	const activeItemType = useActiveItemType();
 	const dispatch = useDispatch();
 	const canUpdatePageStructure = useSelector(selectCanUpdatePageStructure);
 	const [openSaveModal, setOpenSaveModal] = useState(false);
-	const [openShortcutModal, setOpenShorcutModal] = useState(false);
+	const openShortcutModal = useOpenShorcutModal();
 	const selectItem = useSelectItem();
+	const setEditedNodeId = useSetEditedNodeId();
+	const setOpenShorcutModal = useSetOpenShorcutModal();
 	const state = useSelector((state) => state);
 	const sidebarHidden = state.sidebar.hidden;
 	const {widgets} = state;
 
 	const {fragmentEntryLinks, layoutData} = state;
 
+	let activeItemId = activeItemIds;
+
+	if (Liferay.FeatureFlags['LPD-18221']) {
+
+		// todo: adapt shortcuts for multiselect
+
+		[activeItemId] = activeItemIds;
+	}
+
 	const activeLayoutDataItem =
 		activeItemType === ITEM_TYPES.layoutDataItem
 			? layoutData.items[activeItemId]
 			: null;
+
+	const masterLayoutData = useSelector(
+		(state) => state.masterLayout?.masterLayoutData
+	);
+
+	const selectedViewportSize = useSelector(
+		(state) => state.selectedViewportSize
+	);
 
 	const duplicate = () => {
 		dispatch(
@@ -90,6 +117,19 @@ export default function ShortcutManager() {
 				selectItem,
 			})
 		);
+	};
+
+	const hideShow = () => {
+		updateItemStyle({
+			dispatch,
+			itemId: activeItemId,
+			selectedViewportSize,
+			styleName: 'display',
+			styleValue:
+				layoutData.items[activeItemId].config.styles.display === 'none'
+					? 'block'
+					: 'none',
+		});
 	};
 
 	const hideSidebar = () => {
@@ -137,15 +177,11 @@ export default function ShortcutManager() {
 		);
 	};
 
-	const openShortcutModalAction = () => {
-		setOpenShorcutModal(true);
-	};
-
 	const remove = () => {
 		dispatch(
 			deleteItem({
 				itemId: activeItemId,
-				selectItem: () => selectItem(null),
+				selectItem,
 			})
 		);
 	};
@@ -192,7 +228,7 @@ export default function ShortcutManager() {
 		if (selectableParent) {
 			selectItem(selectableParent.itemId, {
 				itemType: ITEM_TYPES.layoutDataItem,
-				origin: ITEM_ACTIVATION_ORIGINS.pageEditor,
+				origin: ITEM_ACTIVATION_ORIGINS.layout,
 			});
 		}
 	};
@@ -212,7 +248,24 @@ export default function ShortcutManager() {
 					widgets
 				),
 			isKeyCombination: (event) =>
-				ctrlOrMeta(event) && event.code === D_KEY_CODE,
+				isCtrlOrMeta(event) && event.code === D_KEY_CODE,
+		},
+		hideShow: {
+			action: hideShow,
+			canBeExecuted: () =>
+				canUpdatePageStructure &&
+				!!layoutData.items[activeItemId] &&
+				canBeHidden({
+					fragmentEntryLinks,
+					item: layoutData.items[activeItemId],
+					layoutData,
+					masterLayoutData,
+					selectedViewportSize,
+				}),
+			isKeyCombination: (event) =>
+				isCtrlOrMeta(event) &&
+				event.altKey &&
+				event.code === H_KEY_CODE,
 		},
 		hideSidebar: {
 			action: hideSidebar,
@@ -222,7 +275,7 @@ export default function ShortcutManager() {
 				!isEditingEditableField(),
 
 			isKeyCombination: (event) =>
-				ctrlOrMeta(event) &&
+				isCtrlOrMeta(event) &&
 				event.shiftKey &&
 				event.code === PERIOD_KEY_CODE,
 		},
@@ -259,7 +312,7 @@ export default function ShortcutManager() {
 			},
 		},
 		openShortcutModal: {
-			action: openShortcutModalAction,
+			action: () => setOpenShorcutModal(true),
 			canBeExecuted: (event) =>
 				!isInteractiveElement(event.target) &&
 				!isWithinIframe() &&
@@ -275,6 +328,19 @@ export default function ShortcutManager() {
 				!isInteractiveElement(event.target),
 			isKeyCombination: (event) => event.code === BACKSPACE_KEY_CODE,
 		},
+		rename: {
+			action: () => {
+				setEditedNodeId(activeItemId);
+			},
+			canBeExecuted: () =>
+				canUpdatePageStructure &&
+				!!layoutData.items[activeItemId] &&
+				canBeRenamed(layoutData.items[activeItemId]),
+			isKeyCombination: (event) =>
+				isCtrlOrMeta(event) &&
+				event.altKey &&
+				event.code === R_KEY_CODE,
+		},
 		save: {
 			action: save,
 			canBeExecuted: () =>
@@ -282,7 +348,7 @@ export default function ShortcutManager() {
 				!!layoutData.items[activeItemId] &&
 				canBeSaved(layoutData.items[activeItemId], layoutData),
 			isKeyCombination: (event) =>
-				ctrlOrMeta(event) && event.code === S_KEY_CODE,
+				isCtrlOrMeta(event) && event.code === S_KEY_CODE,
 		},
 		selectParent: {
 			action: selectParent,
@@ -299,7 +365,9 @@ export default function ShortcutManager() {
 				!isWithinIframe() &&
 				!isEditingEditableField(),
 			isKeyCombination: (event) =>
-				ctrlOrMeta(event) && event.code === Z_KEY_CODE && !event.altKey,
+				isCtrlOrMeta(event) &&
+				event.code === Z_KEY_CODE &&
+				!event.altKey,
 		},
 	};
 

@@ -7,8 +7,10 @@ import {expect, mergeTests} from '@playwright/test';
 
 import {featureFlagsTest} from '../../../../fixtures/featureFlagsTest';
 import {loginTest} from '../../../../fixtures/loginTest';
+import {liferayConfig} from '../../../../liferay.config';
 import getRandomString from '../../../../utils/getRandomString';
 import {dataSetManagerApiHelpersTest} from '../../fixtures/dataSetManagerApiHelpersTest';
+import {EN_BASE_URL, ES_BASE_URL, PT_BASE_URL} from '../../utils/constants';
 import saveFromModal from '../../utils/saveFromModal';
 import {dataSetManagerSetupTest} from './fixtures/dataSetManagerSetupTest';
 import {visualizationModesPageTest} from './fixtures/visualizationModesPageTest';
@@ -22,6 +24,11 @@ export const test = mergeTests(
 	loginTest(),
 	dataSetManagerSetupTest
 );
+
+const LABEL_COLUMN_INDEX = 2;
+const RENDERER_COLUMN_INDEX = 4;
+const SORTABLE_COLUMN_INDEX = 5;
+const TYPE_COLUMN_INDEX = 3;
 
 let dataSetERC: string;
 
@@ -255,7 +262,6 @@ test.describe('Visualization Modes in Data Set Manager', () => {
 		const SAMPLE_SCALAR_FIELD = 'id';
 		const SAMPLE_OBJECT_FIELD = 'fdsViewFDSFieldRelationship';
 		const SAMPLE_OBJECT_CHILD_FIELD = 'id';
-		const SORTABLE_COLUMN_INDEX = 5;
 
 		await test.step('Navigate to table visualization mode page', async () => {
 			await visualizationModesPage.goto({
@@ -487,7 +493,7 @@ test.describe('Visualization Modes in Data Set Manager', () => {
 		});
 	});
 
-	test('Configure table visualization mode with array fields @LPD-11769', async ({
+	test('Configure table visualization mode using search with array fields @LPD-11769, @LPS-185231, LPS-185227', async ({
 		page,
 		visualizationModesPage,
 	}) => {
@@ -496,8 +502,6 @@ test.describe('Visualization Modes in Data Set Manager', () => {
 		const SAMPLE_SCALAR_ARRAY_FIELD = 'keywords';
 		const SAMPLE_FULL_COMPLEX_FIELD = 'creator.*';
 		const SAMPLE_COMPLEX_OBJECT_CHILD_FIELD = 'creator.givenName';
-		const SORTABLE_COLUMN_INDEX = 5;
-		const TYPE_COLUMN_INDEX = 3;
 
 		await test.step('Navigate to table visualization mode page', async () => {
 			await visualizationModesPage.goto({
@@ -586,7 +590,6 @@ test.describe('Visualization Modes in Data Set Manager', () => {
 	}) => {
 		const SAMPLE_SCALAR_FIELD = 'id';
 		const SAMPLE_OBJECT_FIELD = 'fdsViewFDSFieldRelationship';
-		const LABEL_COLUMN_INDEX = 2;
 
 		await test.step('Navigate to table visualization mode page', async () => {
 			await visualizationModesPage.goto({
@@ -698,6 +701,498 @@ test.describe('Visualization Modes in Data Set Manager', () => {
 			).toHaveText(SAMPLE_SCALAR_FIELD);
 
 			await visualizationModesPage.assertTableFieldRowCount(1);
+		});
+	});
+
+	test('Check field edition in table visualization mode @LPS-176051, @LPS-178736', async ({
+		page,
+		visualizationModesPage,
+	}) => {
+		const SAMPLE_SCALAR_FIELD = 'id';
+		const SAMPLE_FIELD = 'name';
+
+		await test.step('Navigate to table visualization mode page', async () => {
+			await visualizationModesPage.goto({
+				dataSetLabel,
+			});
+
+			await visualizationModesPage.selectTab('Table');
+
+			await expect(
+				visualizationModesPage.page.getByPlaceholder('Search')
+			).toBeVisible();
+		});
+
+		await test.step('Add one field, save', async () => {
+			await visualizationModesPage.openAddFieldsModal();
+
+			await visualizationModesPage.selectField({
+				fieldName: SAMPLE_SCALAR_FIELD,
+			});
+
+			await saveFromModal({
+				page,
+			});
+		});
+
+		await test.step('Check there is one field and is the one just added', async () => {
+			await expect(
+				visualizationModesPage
+					.getRowByText(SAMPLE_SCALAR_FIELD)
+					.locator('td')
+					.nth(LABEL_COLUMN_INDEX)
+			).toHaveText(SAMPLE_SCALAR_FIELD);
+
+			await visualizationModesPage.assertTableFieldRowCount(1);
+		});
+
+		await test.step('Add another field, save', async () => {
+			await visualizationModesPage.openAddFieldsModal();
+
+			await visualizationModesPage.selectField({
+				fieldName: SAMPLE_FIELD,
+			});
+
+			await saveFromModal({
+				page,
+			});
+		});
+
+		await test.step('Check there are two fields', async () => {
+			await expect(
+				visualizationModesPage
+					.getRowByText(SAMPLE_SCALAR_FIELD)
+					.locator('td')
+					.nth(LABEL_COLUMN_INDEX)
+			).toHaveText(SAMPLE_SCALAR_FIELD);
+
+			await expect(
+				visualizationModesPage
+					.getRowByText(SAMPLE_FIELD)
+					.locator('td')
+					.nth(LABEL_COLUMN_INDEX)
+			).toHaveText(SAMPLE_FIELD);
+
+			await visualizationModesPage.assertTableFieldRowCount(2);
+		});
+
+		await test.step('Delete field', async () => {
+			await clickActionInRow({
+				actionName: 'Delete',
+				rowName: SAMPLE_FIELD,
+				visualizationModesPage,
+			});
+
+			const deleteModal =
+				await visualizationModesPage.page.getByRole('dialog');
+
+			await expect(deleteModal).toContainText(
+				'Are you sure you want to delete this field? It will be removed immediately. Fragments using it will be affected. This action cannot be undone.'
+			);
+
+			await deleteModal.getByRole('button', {name: 'Delete'}).click();
+
+			const toastContainer = page.locator('.alert-container');
+
+			await expect(toastContainer.getByText('Success')).toBeInViewport();
+
+			await toastContainer
+				.getByRole('button', {
+					name: 'Close',
+				})
+				.click();
+		});
+
+		await test.step('Check that there is only one field', async () => {
+			await expect(
+				visualizationModesPage
+					.getRowByText(SAMPLE_SCALAR_FIELD)
+					.locator('td')
+					.nth(LABEL_COLUMN_INDEX)
+			).toHaveText(SAMPLE_SCALAR_FIELD);
+
+			await visualizationModesPage.assertTableFieldRowCount(1);
+		});
+
+		await test.step('Open field edition modal, check that name field is not editable', async () => {
+			await clickActionInRow({
+				actionName: 'Edit',
+				rowName: SAMPLE_SCALAR_FIELD,
+				visualizationModesPage,
+			});
+
+			const editModal =
+				await visualizationModesPage.page.getByRole('dialog');
+
+			await expect(editModal.getByRole('heading')).toContainText(
+				`Edit ${SAMPLE_SCALAR_FIELD}`
+			);
+
+			const nameInput = visualizationModesPage.page.getByLabel('Name');
+
+			await expect(nameInput).toBeInViewport();
+
+			await expect(nameInput).toBeDisabled();
+
+			await visualizationModesPage.cancelAddFieldsModal();
+		});
+
+		await test.step('Open field edition modal, check that the user can change the renderer', async () => {
+			await expect(
+				visualizationModesPage
+					.getRowByText(SAMPLE_SCALAR_FIELD)
+					.locator('td')
+					.nth(RENDERER_COLUMN_INDEX)
+			).toHaveText('Default');
+
+			await clickActionInRow({
+				actionName: 'Edit',
+				rowName: SAMPLE_SCALAR_FIELD,
+				visualizationModesPage,
+			});
+
+			const rendererButton = page.getByRole('button', {name: 'Default'});
+			await expect(rendererButton).toBeInViewport();
+
+			const rendererDropdownId = await rendererButton.evaluate((node) => {
+				return node.getAttribute('aria-controls');
+			});
+			await rendererButton.click();
+
+			await page.locator(`#${rendererDropdownId}`).waitFor();
+
+			const availbleRenderersCount = await page
+				.locator(`#${rendererDropdownId}`)
+				.getByRole('option')
+				.count();
+			await expect(availbleRenderersCount).toBeGreaterThanOrEqual(10);
+
+			await page
+				.locator(`#${rendererDropdownId}`)
+				.getByRole('option', {name: 'Boolean'})
+				.click();
+
+			await saveFromModal({
+				page,
+			});
+
+			await expect(
+				visualizationModesPage
+					.getRowByText(SAMPLE_SCALAR_FIELD)
+					.locator('td')
+					.nth(RENDERER_COLUMN_INDEX)
+			).toHaveText('Boolean');
+		});
+	});
+
+	test(
+		'Check that users can translate labels in table visualization mode.',
+		{tag: '@LPS-176516'},
+		async ({page, visualizationModesPage}) => {
+			const SAMPLE_FIELD = 'name';
+			const SAMPLE_FIELD_EN_US = 'Name';
+			const SAMPLE_FIELD_ES_ES = 'Nombre';
+			const SAMPLE_FIELD_PT_BR = 'Nome';
+
+			await test.step('Navigate to table visualization mode page', async () => {
+				await visualizationModesPage.goto({
+					dataSetLabel,
+				});
+
+				await visualizationModesPage.selectTab('Table');
+
+				await expect(
+					visualizationModesPage.page.getByPlaceholder('Search')
+				).toBeVisible();
+			});
+
+			await test.step('Add field', async () => {
+				await visualizationModesPage.openAddFieldsModal();
+
+				await visualizationModesPage.selectField({
+					fieldName: SAMPLE_FIELD,
+				});
+
+				await saveFromModal({
+					page,
+				});
+			});
+
+			await test.step('Check there is one field and is the one just added', async () => {
+				await expect(
+					visualizationModesPage
+						.getRowByText(SAMPLE_FIELD)
+						.locator('td')
+						.nth(LABEL_COLUMN_INDEX)
+				).toHaveText(SAMPLE_FIELD);
+
+				await visualizationModesPage.assertTableFieldRowCount(1);
+			});
+
+			await test.step('Edit a field, change its label using the default language (en_US)', async () => {
+				await clickActionInRow({
+					actionName: 'Edit',
+					rowName: SAMPLE_FIELD,
+					visualizationModesPage,
+				});
+
+				const labelInput =
+					visualizationModesPage.page.getByLabel('Label');
+
+				await expect(labelInput).toBeInViewport();
+
+				await expect(labelInput).toBeEnabled();
+
+				await labelInput.fill(SAMPLE_FIELD_EN_US);
+
+				await saveFromModal({page});
+			});
+
+			await test.step('Check there is one field and the label shows the translated value', async () => {
+				await expect(
+					visualizationModesPage
+						.getRowByText(SAMPLE_FIELD)
+						.locator('td')
+						.nth(LABEL_COLUMN_INDEX)
+				).toHaveText(SAMPLE_FIELD_EN_US);
+
+				await visualizationModesPage.assertTableFieldRowCount(1);
+			});
+
+			await test.step('Edit a field, update the label using the pt_BR and es_ES languages', async () => {
+				await clickActionInRow({
+					actionName: 'Edit',
+					rowName: SAMPLE_FIELD,
+					visualizationModesPage,
+				});
+
+				const labelInput =
+					visualizationModesPage.page.getByLabel('Label');
+
+				await expect(labelInput).toBeInViewport();
+
+				const localizationButton = await page
+					.locator('.input-localized')
+					.getByRole('button');
+				const languageDropdownId = await localizationButton.evaluate(
+					(node) => node.getAttribute('aria-controls')
+				);
+
+				await localizationButton.click();
+
+				await page.locator(`#${languageDropdownId}`).waitFor();
+
+				await expect(
+					page
+						.locator(`#${languageDropdownId}`)
+						.getByRole('menuitem', {name: 'en_US'})
+						.locator('.label-item')
+				).toContainText('Default');
+
+				await expect(
+					page
+						.locator(`#${languageDropdownId}`)
+						.getByRole('menuitem', {name: 'es_ES'})
+						.locator('.label-item')
+				).toContainText('Untranslated');
+
+				await expect(
+					page
+						.locator(`#${languageDropdownId}`)
+						.getByRole('menuitem', {name: 'pt_BR'})
+						.locator('.label-item')
+				).toContainText('Untranslated');
+
+				await page
+					.locator(`#${languageDropdownId}`)
+					.getByRole('menuitem', {name: 'pt_BR'})
+					.click();
+
+				await labelInput.fill(SAMPLE_FIELD_PT_BR);
+
+				await localizationButton.click();
+
+				await page.locator(`#${languageDropdownId}`).waitFor();
+				await page
+					.locator(`#${languageDropdownId}`)
+					.getByRole('menuitem', {name: 'es_ES'})
+					.click();
+
+				await labelInput.fill(SAMPLE_FIELD_ES_ES);
+
+				await saveFromModal({page});
+			});
+
+			await test.step('Check that the language dropdown shows the updated language as Translated', async () => {
+				await clickActionInRow({
+					actionName: 'Edit',
+					rowName: SAMPLE_FIELD,
+					visualizationModesPage,
+				});
+
+				const localizationButton = await page
+					.locator('.input-localized')
+					.getByRole('button');
+				const languageDropdownId = await localizationButton.evaluate(
+					(node) => node.getAttribute('aria-controls')
+				);
+
+				await localizationButton.click();
+
+				await page.locator(`#${languageDropdownId}`).waitFor();
+
+				await expect(
+					page
+						.locator(`#${languageDropdownId}`)
+						.getByRole('menuitem', {name: 'en_US'})
+						.locator('.label-item')
+				).toContainText('Default');
+
+				await expect(
+					page
+						.locator(`#${languageDropdownId}`)
+						.getByRole('menuitem', {name: 'es_ES'})
+						.locator('.label-item')
+				).toContainText('Translated');
+
+				await expect(
+					page
+						.locator(`#${languageDropdownId}`)
+						.getByRole('menuitem', {name: 'pt_BR'})
+						.locator('.label-item')
+				).toContainText('Translated');
+
+				await page
+					.locator(`#${languageDropdownId}`)
+					.getByRole('menuitem', {name: 'pt_BR'})
+					.click();
+
+				await page.keyboard.press('Escape');
+				await visualizationModesPage.cancelAddFieldsModal();
+			});
+
+			await test.step('Confirm that the translation works when the page is loaded with es_ES locale', async () => {
+				const currentUrl = page.url();
+				const updatedUrl = currentUrl.replace(
+					liferayConfig.environment.baseUrl,
+					ES_BASE_URL
+				);
+
+				await page.goto(updatedUrl);
+
+				await visualizationModesPage.dataSetPage.selectTab(
+					'Modos de visualización'
+				);
+
+				await expect(
+					visualizationModesPage
+						.getRowByText(SAMPLE_FIELD)
+						.locator('td')
+						.nth(LABEL_COLUMN_INDEX)
+				).toHaveText(SAMPLE_FIELD_ES_ES);
+
+				await visualizationModesPage.assertTableFieldRowCount(1);
+			});
+
+			await test.step('Confirm that the translation works when the page is loaded with pt_BR locale', async () => {
+				const currentUrl = page.url();
+				const updatedUrl = currentUrl.replace(ES_BASE_URL, PT_BASE_URL);
+
+				await page.goto(updatedUrl);
+
+				await visualizationModesPage.dataSetPage.selectTab(
+					'Modos de exibição'
+				);
+
+				await expect(
+					visualizationModesPage
+						.getRowByText(SAMPLE_FIELD)
+						.locator('td')
+						.nth(LABEL_COLUMN_INDEX)
+				).toHaveText(SAMPLE_FIELD_PT_BR);
+
+				await visualizationModesPage.assertTableFieldRowCount(1);
+			});
+
+			await test.step('Restore EN locale', async () => {
+				await page.goto(EN_BASE_URL);
+			});
+		}
+	);
+
+	test('Check modal field selection allows check and uncheck fields @LPS-174141, @LPS-185228, @LPS-179282', async ({
+		page,
+		visualizationModesPage,
+	}) => {
+		const SAMPLE_SCALAR_FIELD = 'externalReferenceCode';
+		const SAMPLE_FIELD = 'name';
+
+		await test.step('Navigate to table visualization mode page', async () => {
+			await visualizationModesPage.goto({
+				dataSetLabel,
+			});
+
+			await visualizationModesPage.selectTab('Table');
+
+			await expect(
+				visualizationModesPage.page.getByPlaceholder('Search')
+			).toBeVisible();
+		});
+
+		await test.step('Can check and uncheck fields in the field selection modal', async () => {
+			await visualizationModesPage.openAddFieldsModal();
+
+			await visualizationModesPage.selectField({fieldName: SAMPLE_FIELD});
+
+			const checkbox =
+				visualizationModesPage.getFieldCheckboxByLabel(SAMPLE_FIELD);
+
+			await expect(checkbox).toBeChecked();
+
+			await visualizationModesPage.unSelectField({
+				fieldName: SAMPLE_FIELD,
+			});
+
+			await expect(checkbox).not.toBeChecked();
+
+			await saveFromModal({
+				page,
+			});
+		});
+
+		await test.step('Can check some fields and uncheck all selected fields using Deselect All button', async () => {
+			await visualizationModesPage.openAddFieldsModal();
+
+			await visualizationModesPage.selectField({fieldName: SAMPLE_FIELD});
+
+			const sampleFieldCheckbox =
+				visualizationModesPage.getFieldCheckboxByLabel(SAMPLE_FIELD);
+
+			await expect(sampleFieldCheckbox).toBeChecked();
+
+			await visualizationModesPage.selectField({
+				fieldName: SAMPLE_SCALAR_FIELD,
+			});
+
+			const sampleScalarFieldCheckbox =
+				visualizationModesPage.getFieldCheckboxByLabel(
+					SAMPLE_SCALAR_FIELD
+				);
+
+			await expect(sampleScalarFieldCheckbox).toBeChecked();
+
+			await visualizationModesPage.unSelectSelectedFields();
+
+			await expect(sampleFieldCheckbox).not.toBeChecked();
+			await expect(sampleScalarFieldCheckbox).not.toBeChecked();
+
+			await saveFromModal({
+				page,
+			});
+		});
+
+		await test.step('Check there is no field added', async () => {
+			await visualizationModesPage.assertTableFieldRowCount(0);
 		});
 	});
 });

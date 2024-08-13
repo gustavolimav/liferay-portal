@@ -10,22 +10,26 @@ import {ModalAddObjectDefinitionPage} from '../pages/object-web/ModalAddObjectDe
 import {ModalEditObjectFolderPage} from '../pages/object-web/ModalEditObjectFolderPage';
 import {ModelBuilderPage} from '../pages/object-web/ModelBuilderPage';
 import {ViewObjectDefinitionsPage} from '../pages/object-web/ViewObjectDefinitionsPage';
+import {EditObjectDetailsPage} from '../pages/object-web/object-details/EditObjectDetailsPage';
 import {ViewObjectEntriesPage} from '../pages/object-web/object-entries/ViewObjectEntriesPage';
 import {ObjectFieldsPage} from '../pages/object-web/object-fields/ObjectFieldsPage';
 import {EditObjectValidationPage} from '../pages/object-web/object-validation/EditObjectValidationPage';
 import {ModalAddObjectValidationPage} from '../pages/object-web/object-validation/ModalAddObjectValidationPage';
 import {ObjectValidationsPage} from '../pages/object-web/object-validation/ObjectValidationsPage';
 import {EditObjectViewPage} from '../pages/object-web/object-view/EditObjectViewPage';
+import {ObjectDetailsPage} from '../pages/object-web/object-view/ObjectDetailsPage';
 import {ObjectViewPage} from '../pages/object-web/object-view/ObjectViewsPage';
 
 const objectPagesTest = test.extend<{
 	editObjectDefinitionPage: EditObjectDefinitionPage;
+	editObjectDetailsPage: EditObjectDetailsPage;
 	editObjectValidationPage: EditObjectValidationPage;
 	editObjectViewPage: EditObjectViewPage;
 	modalAddObjectDefinitionPage: ModalAddObjectDefinitionPage;
 	modalAddObjectValidationPage: ModalAddObjectValidationPage;
 	modalEditObjectFolderPage: ModalEditObjectFolderPage;
 	modelBuilderPage: ModelBuilderPage;
+	objectDetailsPage: ObjectDetailsPage;
 	objectFieldsPage: ObjectFieldsPage;
 	objectValidationsPage: ObjectValidationsPage;
 	objectViewPage: ObjectViewPage;
@@ -34,6 +38,9 @@ const objectPagesTest = test.extend<{
 }>({
 	editObjectDefinitionPage: async ({page}, use) => {
 		await use(new EditObjectDefinitionPage(page));
+	},
+	editObjectDetailsPage: async ({page}, use) => {
+		await use(new EditObjectDetailsPage(page));
 	},
 	editObjectValidationPage: async ({page}, use) => {
 		await use(new EditObjectValidationPage(page));
@@ -52,6 +59,9 @@ const objectPagesTest = test.extend<{
 	},
 	modelBuilderPage: async ({page}, use) => {
 		await use(new ModelBuilderPage(page));
+	},
+	objectDetailsPage: async ({page}, use) => {
+		await use(new ObjectDetailsPage(page));
 	},
 	objectFieldsPage: async ({page}, use) => {
 		await use(new ObjectFieldsPage(page));

@@ -8,11 +8,14 @@ package com.liferay.headless.admin.user.internal.resource.v1_0;
 import com.liferay.account.constants.AccountActionKeys;
 import com.liferay.account.constants.AccountConstants;
 import com.liferay.account.constants.AccountListTypeConstants;
+import com.liferay.account.exception.NoSuchGroupException;
 import com.liferay.account.model.AccountEntry;
+import com.liferay.account.model.AccountGroup;
 import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.account.service.AccountEntryOrganizationRelLocalService;
 import com.liferay.account.service.AccountEntryService;
 import com.liferay.account.service.AccountEntryUserRelLocalService;
+import com.liferay.account.service.AccountGroupService;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.headless.admin.user.dto.v1_0.Account;
 import com.liferay.headless.admin.user.dto.v1_0.AccountContactInformation;
@@ -32,7 +35,6 @@ import com.liferay.headless.admin.user.internal.odata.entity.v1_0.AccountEntityM
 import com.liferay.headless.admin.user.resource.v1_0.AccountResource;
 import com.liferay.headless.common.spi.service.context.ServiceContextBuilder;
 import com.liferay.petra.function.UnsafeConsumer;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.Address;
 import com.liferay.portal.kernel.model.Contact;
 import com.liferay.portal.kernel.model.Website;
@@ -61,6 +63,7 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
+import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.dto.converter.util.DTOConverterUtil;
 import com.liferay.portal.vulcan.fields.NestedField;
@@ -72,6 +75,7 @@ import com.liferay.portlet.usersadmin.util.UsersAdminUtil;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -147,6 +151,60 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 		return getAccount(
 			DTOConverterUtil.getModelPrimaryKey(
 				_accountResourceDTOConverter, externalReferenceCode));
+	}
+
+	@Override
+	public Page<Account> getAccountGroupAccountsPage(
+			Long accountGroupId, String search, Filter filter,
+			Pagination pagination, Sort[] sorts)
+		throws Exception {
+
+		AccountGroup accountGroup = _accountGroupService.getAccountGroup(
+			accountGroupId);
+
+		return SearchUtil.search(
+			Collections.emptyMap(),
+			booleanQuery -> {
+				BooleanFilter booleanFilter =
+					booleanQuery.getPreBooleanFilter();
+
+				booleanFilter.add(
+					new TermFilter(
+						"accountGroupIds",
+						String.valueOf(accountGroup.getAccountGroupId())),
+					BooleanClauseOccur.MUST);
+			},
+			filter, AccountEntry.class.getName(), search, pagination,
+			queryConfig -> queryConfig.setSelectedFieldNames(
+				Field.ENTRY_CLASS_PK),
+			searchContext -> searchContext.setCompanyId(
+				contextCompany.getCompanyId()),
+			sorts,
+			document -> _toAccount(
+				Collections.emptyMap(),
+				GetterUtil.getLong(document.get(Field.ENTRY_CLASS_PK))));
+	}
+
+	@Override
+	public Page<Account> getAccountGroupByExternalReferenceCodeAccountsPage(
+			String accountGroupExternalReferenceCode, String search,
+			Filter filter, Pagination pagination, Sort[] sorts)
+		throws Exception {
+
+		AccountGroup accountGroup =
+			_accountGroupService.fetchAccountGroupByExternalReferenceCode(
+				accountGroupExternalReferenceCode,
+				contextCompany.getCompanyId());
+
+		if (accountGroup == null) {
+			throw new NoSuchGroupException(
+				"Unable to find account group with external reference code " +
+					accountGroupExternalReferenceCode);
+		}
+
+		return getAccountGroupAccountsPage(
+			accountGroup.getAccountGroupId(), search, filter, pagination,
+			sorts);
 	}
 
 	@Override
@@ -295,74 +353,62 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 					Arrays.asList(userAccounts), UserAccount::getId));
 		}
 
-		if (FeatureFlagManagerUtil.isEnabled("LPD-10855")) {
-			AccountContactInformation accountContactInformation =
-				account.getAccountContactInformation();
+		AccountContactInformation accountContactInformation =
+			account.getAccountContactInformation();
 
-			if (accountContactInformation != null) {
-				UsersAdminUtil.updateAddresses(
-					AccountEntry.class.getName(),
-					accountEntry.getAccountEntryId(),
-					_getContactAddresses(account, accountEntry));
-				UsersAdminUtil.updateEmailAddresses(
-					AccountEntry.class.getName(),
-					accountEntry.getAccountEntryId(),
-					_getEmailAddresses(account, accountEntry));
-				UsersAdminUtil.updatePhones(
-					AccountEntry.class.getName(),
-					accountEntry.getAccountEntryId(),
-					_getPhones(account, accountEntry));
-				UsersAdminUtil.updateWebsites(
-					AccountEntry.class.getName(),
-					accountEntry.getAccountEntryId(),
-					_getWebsites(account, accountEntry));
+		if (accountContactInformation != null) {
+			UsersAdminUtil.updateAddresses(
+				AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
+				_getContactAddresses(account, accountEntry));
+			UsersAdminUtil.updateEmailAddresses(
+				AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
+				_getEmailAddresses(account, accountEntry));
+			UsersAdminUtil.updatePhones(
+				AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
+				_getPhones(account, accountEntry));
+			UsersAdminUtil.updateWebsites(
+				AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
+				_getWebsites(account, accountEntry));
 
-				Contact contact = accountEntry.fetchContact();
+			Contact contact = accountEntry.fetchContact();
 
-				if (contact == null) {
-					_addOrUpdateContact(
-						0, contextUser.getUserId(),
-						AccountEntry.class.getName(),
-						accountEntry.getAccountEntryId(), null, null, null,
-						null, 0, 0, true, 0, 1, 1970,
-						GetterUtil.getString(
-							accountContactInformation.getSms()),
-						GetterUtil.getString(
-							accountContactInformation.getFacebook()),
-						GetterUtil.getString(
-							accountContactInformation.getJabber()),
-						GetterUtil.getString(
-							accountContactInformation.getSkype()),
-						GetterUtil.getString(
-							accountContactInformation.getTwitter()),
-						null);
-				}
-				else {
-					_addOrUpdateContact(
-						contact.getContactId(), contact.getUserId(),
-						contact.getClassName(), contact.getClassPK(),
-						contact.getEmailAddress(), contact.getFirstName(),
-						contact.getMiddleName(), contact.getLastName(),
-						contact.getPrefixListTypeId(),
-						contact.getSuffixListTypeId(), contact.isMale(), 0, 1,
-						1970,
-						GetterUtil.getString(
-							accountContactInformation.getSms(),
-							contact.getSmsSn()),
-						GetterUtil.getString(
-							accountContactInformation.getFacebook(),
-							contact.getFacebookSn()),
-						GetterUtil.getString(
-							accountContactInformation.getJabber(),
-							contact.getJabberSn()),
-						GetterUtil.getString(
-							accountContactInformation.getSkype(),
-							contact.getSkypeSn()),
-						GetterUtil.getString(
-							accountContactInformation.getTwitter(),
-							contact.getTwitterSn()),
-						contact.getJobTitle());
-				}
+			if (contact == null) {
+				_addOrUpdateContact(
+					0, contextUser.getUserId(), AccountEntry.class.getName(),
+					accountEntry.getAccountEntryId(), null, null, null, null, 0,
+					0, true, 0, 1, 1970,
+					GetterUtil.getString(accountContactInformation.getSms()),
+					GetterUtil.getString(
+						accountContactInformation.getFacebook()),
+					GetterUtil.getString(accountContactInformation.getJabber()),
+					GetterUtil.getString(accountContactInformation.getSkype()),
+					GetterUtil.getString(
+						accountContactInformation.getTwitter()),
+					null);
+			}
+			else {
+				_addOrUpdateContact(
+					contact.getContactId(), contact.getUserId(),
+					contact.getClassName(), contact.getClassPK(),
+					contact.getEmailAddress(), contact.getFirstName(),
+					contact.getMiddleName(), contact.getLastName(),
+					contact.getPrefixListTypeId(),
+					contact.getSuffixListTypeId(), contact.isMale(), 0, 1, 1970,
+					GetterUtil.getString(
+						accountContactInformation.getSms(), contact.getSmsSn()),
+					GetterUtil.getString(
+						accountContactInformation.getFacebook(),
+						contact.getFacebookSn()),
+					GetterUtil.getString(
+						accountContactInformation.getJabber(),
+						contact.getJabberSn()),
+					GetterUtil.getString(
+						accountContactInformation.getSkype(),
+						contact.getSkypeSn()),
+					GetterUtil.getString(
+						accountContactInformation.getTwitter(),
+						contact.getTwitterSn()),
+					contact.getJobTitle());
 			}
 		}
 
@@ -426,41 +472,33 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 
 		_addAddresses(accountEntry.getAccountEntryId(), account);
 
-		if (FeatureFlagManagerUtil.isEnabled("LPD-10855")) {
-			AccountContactInformation accountContactInformation =
-				account.getAccountContactInformation();
+		AccountContactInformation accountContactInformation =
+			account.getAccountContactInformation();
 
-			if (accountContactInformation != null) {
-				UsersAdminUtil.updateAddresses(
-					AccountEntry.class.getName(),
-					accountEntry.getAccountEntryId(),
-					_getContactAddresses(account, null));
-				UsersAdminUtil.updateEmailAddresses(
-					AccountEntry.class.getName(),
-					accountEntry.getAccountEntryId(),
-					_getEmailAddresses(account, null));
-				UsersAdminUtil.updatePhones(
-					AccountEntry.class.getName(),
-					accountEntry.getAccountEntryId(),
-					_getPhones(account, null));
-				UsersAdminUtil.updateWebsites(
-					AccountEntry.class.getName(),
-					accountEntry.getAccountEntryId(),
-					_getWebsites(account, null));
+		if (accountContactInformation != null) {
+			UsersAdminUtil.updateAddresses(
+				AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
+				_getContactAddresses(account, null));
+			UsersAdminUtil.updateEmailAddresses(
+				AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
+				_getEmailAddresses(account, null));
+			UsersAdminUtil.updatePhones(
+				AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
+				_getPhones(account, null));
+			UsersAdminUtil.updateWebsites(
+				AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
+				_getWebsites(account, null));
 
-				_addOrUpdateContact(
-					0, contextUser.getUserId(), AccountEntry.class.getName(),
-					accountEntry.getAccountEntryId(), null, null, null, null, 0,
-					0, true, 0, 1, 1970,
-					GetterUtil.getString(accountContactInformation.getSms()),
-					GetterUtil.getString(
-						accountContactInformation.getFacebook()),
-					GetterUtil.getString(accountContactInformation.getJabber()),
-					GetterUtil.getString(accountContactInformation.getSkype()),
-					GetterUtil.getString(
-						accountContactInformation.getTwitter()),
-					null);
-			}
+			_addOrUpdateContact(
+				0, contextUser.getUserId(), AccountEntry.class.getName(),
+				accountEntry.getAccountEntryId(), null, null, null, null, 0, 0,
+				true, 0, 1, 1970,
+				GetterUtil.getString(accountContactInformation.getSms()),
+				GetterUtil.getString(accountContactInformation.getFacebook()),
+				GetterUtil.getString(accountContactInformation.getJabber()),
+				GetterUtil.getString(accountContactInformation.getSkype()),
+				GetterUtil.getString(accountContactInformation.getTwitter()),
+				null);
 		}
 
 		return _toAccount(accountEntry);
@@ -514,53 +552,48 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 			account.getTaxId(), _getStatus(account),
 			_createServiceContext(account));
 
-		if (FeatureFlagManagerUtil.isEnabled("LPD-10855")) {
-			UsersAdminUtil.updateAddresses(
+		UsersAdminUtil.updateAddresses(
+			AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
+			_getContactAddresses(account, null));
+		UsersAdminUtil.updateEmailAddresses(
+			AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
+			_getEmailAddresses(account, null));
+		UsersAdminUtil.updatePhones(
+			AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
+			_getPhones(account, null));
+		UsersAdminUtil.updateWebsites(
+			AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
+			_getWebsites(account, null));
+
+		long contactId = 0;
+
+		Contact contact = accountEntry.fetchContact();
+
+		if (contact != null) {
+			contactId = contact.getContactId();
+		}
+
+		AccountContactInformation accountContactInformation =
+			account.getAccountContactInformation();
+
+		if (accountContactInformation != null) {
+			_addOrUpdateContact(
+				contactId, contextUser.getUserId(),
 				AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
-				_getContactAddresses(account, null));
-			UsersAdminUtil.updateEmailAddresses(
+				null, null, null, null, 0, 0, true, 0, 1, 1970,
+				GetterUtil.getString(accountContactInformation.getSms()),
+				GetterUtil.getString(accountContactInformation.getFacebook()),
+				GetterUtil.getString(accountContactInformation.getJabber()),
+				GetterUtil.getString(accountContactInformation.getSkype()),
+				GetterUtil.getString(accountContactInformation.getTwitter()),
+				null);
+		}
+		else {
+			_addOrUpdateContact(
+				contactId, contextUser.getUserId(),
 				AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
-				_getEmailAddresses(account, null));
-			UsersAdminUtil.updatePhones(
-				AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
-				_getPhones(account, null));
-			UsersAdminUtil.updateWebsites(
-				AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
-				_getWebsites(account, null));
-
-			long contactId = 0;
-
-			Contact contact = accountEntry.fetchContact();
-
-			if (contact != null) {
-				contactId = contact.getContactId();
-			}
-
-			AccountContactInformation accountContactInformation =
-				account.getAccountContactInformation();
-
-			if (accountContactInformation != null) {
-				_addOrUpdateContact(
-					contactId, contextUser.getUserId(),
-					AccountEntry.class.getName(),
-					accountEntry.getAccountEntryId(), null, null, null, null, 0,
-					0, true, 0, 1, 1970,
-					GetterUtil.getString(accountContactInformation.getSms()),
-					GetterUtil.getString(
-						accountContactInformation.getFacebook()),
-					GetterUtil.getString(accountContactInformation.getJabber()),
-					GetterUtil.getString(accountContactInformation.getSkype()),
-					GetterUtil.getString(
-						accountContactInformation.getTwitter()),
-					null);
-			}
-			else {
-				_addOrUpdateContact(
-					contactId, contextUser.getUserId(),
-					AccountEntry.class.getName(),
-					accountEntry.getAccountEntryId(), null, null, null, null, 0,
-					0, true, 0, 1, 1970, null, null, null, null, null, null);
-			}
+				null, null, null, null, 0, 0, true, 0, 1, 1970, null, null,
+				null, null, null, null);
 		}
 
 		_addAddresses(accountId, account);
@@ -587,53 +620,48 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 				null, _getType(account), _getStatus(account),
 				_createServiceContext(account));
 
-		if (FeatureFlagManagerUtil.isEnabled("LPD-10855")) {
-			UsersAdminUtil.updateAddresses(
+		UsersAdminUtil.updateAddresses(
+			AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
+			_getContactAddresses(account, null));
+		UsersAdminUtil.updateEmailAddresses(
+			AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
+			_getEmailAddresses(account, null));
+		UsersAdminUtil.updatePhones(
+			AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
+			_getPhones(account, null));
+		UsersAdminUtil.updateWebsites(
+			AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
+			_getWebsites(account, null));
+
+		long contactId = 0;
+
+		Contact contact = accountEntry.fetchContact();
+
+		if (contact != null) {
+			contactId = contact.getContactId();
+		}
+
+		AccountContactInformation accountContactInformation =
+			account.getAccountContactInformation();
+
+		if (accountContactInformation != null) {
+			_addOrUpdateContact(
+				contactId, contextUser.getUserId(),
 				AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
-				_getContactAddresses(account, null));
-			UsersAdminUtil.updateEmailAddresses(
+				null, null, null, null, 0, 0, true, 0, 1, 1970,
+				GetterUtil.getString(accountContactInformation.getSms()),
+				GetterUtil.getString(accountContactInformation.getFacebook()),
+				GetterUtil.getString(accountContactInformation.getJabber()),
+				GetterUtil.getString(accountContactInformation.getSkype()),
+				GetterUtil.getString(accountContactInformation.getTwitter()),
+				null);
+		}
+		else {
+			_addOrUpdateContact(
+				contactId, contextUser.getUserId(),
 				AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
-				_getEmailAddresses(account, null));
-			UsersAdminUtil.updatePhones(
-				AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
-				_getPhones(account, null));
-			UsersAdminUtil.updateWebsites(
-				AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
-				_getWebsites(account, null));
-
-			long contactId = 0;
-
-			Contact contact = accountEntry.fetchContact();
-
-			if (contact != null) {
-				contactId = contact.getContactId();
-			}
-
-			AccountContactInformation accountContactInformation =
-				account.getAccountContactInformation();
-
-			if (accountContactInformation != null) {
-				_addOrUpdateContact(
-					contactId, contextUser.getUserId(),
-					AccountEntry.class.getName(),
-					accountEntry.getAccountEntryId(), null, null, null, null, 0,
-					0, true, 0, 1, 1970,
-					GetterUtil.getString(accountContactInformation.getSms()),
-					GetterUtil.getString(
-						accountContactInformation.getFacebook()),
-					GetterUtil.getString(accountContactInformation.getJabber()),
-					GetterUtil.getString(accountContactInformation.getSkype()),
-					GetterUtil.getString(
-						accountContactInformation.getTwitter()),
-					null);
-			}
-			else {
-				_addOrUpdateContact(
-					contactId, contextUser.getUserId(),
-					AccountEntry.class.getName(),
-					accountEntry.getAccountEntryId(), null, null, null, null, 0,
-					0, true, 0, 1, 1970, null, null, null, null, null, null);
-			}
+				null, null, null, null, 0, 0, true, 0, 1, 1970, null, null,
+				null, null, null, null);
 		}
 
 		return _toAccount(accountEntry);
@@ -644,7 +672,7 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 
 		PostalAddress[] postalAddresses = account.getPostalAddresses();
 
-		if ((postalAddresses == null) || (postalAddresses.length == 0)) {
+		if (ArrayUtil.isEmpty(postalAddresses)) {
 			return;
 		}
 
@@ -1042,6 +1070,29 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 			_getDTOConverterContext(accountEntry.getAccountEntryId()));
 	}
 
+	private Account _toAccount(
+			Map<String, Map<String, String>> actions, long accountId)
+		throws Exception {
+
+		DTOConverterContext dtoConverterContext = _getDTOConverterContext(
+			accountId);
+
+		Map<String, Map<String, String>> actionsMap = new HashMap<>();
+
+		if (!actions.isEmpty()) {
+			actionsMap.putAll(actions);
+		}
+
+		actionsMap.putAll(dtoConverterContext.getActions());
+
+		return _accountResourceDTOConverter.toDTO(
+			new DefaultDTOConverterContext(
+				contextAcceptLanguage.isAcceptAllLanguages(), actionsMap,
+				_dtoConverterRegistry, accountId,
+				contextAcceptLanguage.getPreferredLocale(), contextUriInfo,
+				contextUser));
+	}
+
 	@Reference
 	private AccountEntryLocalService _accountEntryLocalService;
 
@@ -1063,6 +1114,9 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 	@Reference
 	private AccountEntryUserRelLocalService _accountEntryUserRelLocalService;
 
+	@Reference
+	private AccountGroupService _accountGroupService;
+
 	@Reference(target = DTOConverterConstants.ACCOUNT_RESOURCE_DTO_CONVERTER)
 	private DTOConverter<AccountEntry, Account> _accountResourceDTOConverter;
 
@@ -1074,6 +1128,9 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 
 	@Reference
 	private DLAppLocalService _dlAppLocalService;
+
+	@Reference
+	private DTOConverterRegistry _dtoConverterRegistry;
 
 	private final EntityModel _entityModel = new AccountEntityModel();
 

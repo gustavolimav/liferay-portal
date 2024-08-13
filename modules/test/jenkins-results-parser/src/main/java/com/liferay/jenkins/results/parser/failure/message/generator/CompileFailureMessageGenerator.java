@@ -5,8 +5,6 @@
 
 package com.liferay.jenkins.results.parser.failure.message.generator;
 
-import org.dom4j.Element;
-
 /**
  * @author Kenji Heigel
  */
@@ -14,13 +12,13 @@ public class CompileFailureMessageGenerator
 	extends BaseFailureMessageGenerator {
 
 	@Override
-	public Element getMessageElement(String consoleText) {
+	public String getMessage(String consoleText) {
 		int end = consoleText.indexOf("Compile failed;");
 
 		if (end != -1) {
 			end = consoleText.indexOf("\n", end);
 
-			return getConsoleTextSnippetElementByEnd(consoleText, false, end);
+			return getConsoleTextSnippetByEnd(consoleText, false, end);
 		}
 
 		int start = consoleText.indexOf("compileJava FAILED");
@@ -28,7 +26,7 @@ public class CompileFailureMessageGenerator
 		if (start != -1) {
 			start = consoleText.lastIndexOf("\n", start);
 
-			return getConsoleTextSnippetElementByStart(consoleText, start);
+			return getConsoleTextSnippetByStart(consoleText, start);
 		}
 
 		return null;

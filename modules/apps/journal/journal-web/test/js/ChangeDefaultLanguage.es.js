@@ -44,9 +44,19 @@ describe('ChangeDefaultLanguage', () => {
 	});
 
 	it('render', () => {
+		Liferay.FeatureFlags['LPD-11228'] = true;
+
 		const {getByText} = _renderChangeDefaultLanguageComponent();
 
+		expect(
+			getByText(
+				"changing-the-default-language-will-reset-the-article's-history-making-previous-changes-untrackable"
+			)
+		).toBeInTheDocument();
+
 		expect(getByText('change')).toBeTruthy();
+
+		Liferay.FeatureFlags['LPD-11228'] = false;
 	});
 
 	it('render the default language', () => {

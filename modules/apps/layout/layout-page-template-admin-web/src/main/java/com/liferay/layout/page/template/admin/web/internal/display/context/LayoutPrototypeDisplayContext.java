@@ -40,9 +40,9 @@ public class LayoutPrototypeDisplayContext {
 	}
 
 	public Boolean getActive() {
-		String navigation = _getNavigation();
-
 		Boolean active = null;
+
+		String navigation = _getNavigation();
 
 		if (navigation.equals("active")) {
 			active = true;

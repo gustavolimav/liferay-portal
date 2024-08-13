@@ -300,6 +300,14 @@ public class OrganizationResourceTest extends BaseOrganizationResourceTestCase {
 
 	@Override
 	@Test
+	public void testPostOrganization() throws Exception {
+		super.testPostOrganization();
+
+		_testPostOrganizationWithNameOverMaximumLength();
+	}
+
+	@Override
+	@Test
 	public void testPostUserAccountByEmailAddress() throws Exception {
 		Organization organization = _toOrganization(
 			_addOrganization(randomOrganization(), "0"));
@@ -615,6 +623,18 @@ public class OrganizationResourceTest extends BaseOrganizationResourceTestCase {
 		}
 
 		return parentOrganization;
+	}
+
+	private void _testPostOrganizationWithNameOverMaximumLength()
+		throws Exception {
+
+		Organization organization = randomOrganization();
+
+		organization.setName(RandomTestUtil.randomString(101));
+
+		assertHttpResponseStatusCode(
+			400,
+			organizationResource.postOrganizationHttpResponse(organization));
 	}
 
 	private String[] _toEmailAddresses(List<User> users) {

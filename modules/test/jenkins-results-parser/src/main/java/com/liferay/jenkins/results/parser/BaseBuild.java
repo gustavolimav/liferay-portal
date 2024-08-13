@@ -552,19 +552,33 @@ public abstract class BaseBuild implements Build {
 
 	@Override
 	public String getFailureMessage() {
-		Element failureMessageElement = getFailureMessageElement();
+		for (FailureMessageGenerator failureMessageGenerator :
+				getFailureMessageGenerators()) {
 
-		if (failureMessageElement == null) {
-			return null;
+			try {
+				String failureMessage = failureMessageGenerator.getMessage(
+					this);
+
+				if (failureMessage != null) {
+					return failureMessage;
+				}
+			}
+			catch (Exception exception) {
+				exception.printStackTrace();
+
+				Class<?> clazz = failureMessageGenerator.getClass();
+
+				String className = clazz.getName();
+
+				NotificationUtil.sendEmail(
+					"Failure message generator exception, class name is: " +
+						className,
+					"Notification Util", "Failure Message Generator",
+					"calum.ragan@liferay.com");
+			}
 		}
 
-		Element codeElement = failureMessageElement.element("code");
-
-		if (codeElement == null) {
-			return null;
-		}
-
-		return codeElement.getText();
+		return null;
 	}
 
 	@Override
@@ -671,6 +685,8 @@ public abstract class BaseBuild implements Build {
 	public Map<String, String> getInjectedEnvironmentVariablesMap()
 		throws IOException {
 
+		Map<String, String> injectedEnvironmentVariablesMap = new HashMap<>();
+
 		String localBuildURL = JenkinsResultsParserUtil.getLocalURL(
 			getBuildURL());
 
@@ -680,8 +696,6 @@ public abstract class BaseBuild implements Build {
 		JSONObject envMapJSONObject = jsonObject.getJSONObject("envMap");
 
 		Set<String> envMapJSONObjectKeySet = envMapJSONObject.keySet();
-
-		Map<String, String> injectedEnvironmentVariablesMap = new HashMap<>();
 
 		for (String key : envMapJSONObjectKeySet) {
 			injectedEnvironmentVariablesMap.put(
@@ -909,11 +923,11 @@ public abstract class BaseBuild implements Build {
 
 	@Override
 	public TestResult getLongestRunningTest() {
+		TestResult longestRunningTest = null;
+
 		List<TestResult> testResults = getTestResults(null);
 
 		long longestTestDuration = 0;
-
-		TestResult longestRunningTest = null;
 
 		for (TestResult testResult : testResults) {
 			long testDuration = testResult.getDuration();
@@ -1543,6 +1557,7 @@ public abstract class BaseBuild implements Build {
 
 	@Override
 	public void reset() {
+		consoleReadCursor = 0;
 		_duration = null;
 		_jenkinsConsoleTextLoader = null;
 		_jenkinsMaster = null;
@@ -2998,6 +3013,7 @@ public abstract class BaseBuild implements Build {
 	protected static final SimpleDateFormat stopWatchTimestampSimpleDateFormat =
 		new SimpleDateFormat("MM-dd-yyyy HH:mm:ss:SSS z");
 
+	protected int consoleReadCursor;
 	protected boolean fromArchive;
 	protected boolean fromCompletedBuild;
 	protected String gitRepositoryName;

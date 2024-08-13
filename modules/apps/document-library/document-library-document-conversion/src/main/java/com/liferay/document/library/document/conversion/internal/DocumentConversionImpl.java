@@ -16,6 +16,7 @@ import com.artofsolving.jodconverter.openoffice.converter.StreamOpenOfficeDocume
 import com.liferay.document.library.document.conversion.internal.background.task.OpenOfficeConversionPreviewBackgroundTaskExecutor;
 import com.liferay.document.library.document.conversion.internal.configuration.OpenOfficeConfiguration;
 import com.liferay.document.library.kernel.document.conversion.DocumentConversion;
+import com.liferay.petra.executor.PortalExecutorManager;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
@@ -51,6 +52,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -130,20 +135,18 @@ public class DocumentConversionImpl implements DocumentConversion {
 			inputStream = documentHTMLProcessor.process(inputStream);
 		}
 
-		UnsyncByteArrayOutputStream unsyncByteArrayOutputStream =
-			new UnsyncByteArrayOutputStream();
+		try {
+			_convert(
+				inputDocumentFormat, inputStream, file, outputDocumentFormat);
+		}
+		catch (TimeoutException timeoutException) {
+			throw new IOException(timeoutException);
+		}
+		catch (Exception exception) {
+			_log.error(exception);
 
-		DocumentConverter documentConverter = _getDocumentConverter();
-
-		documentConverter.convert(
-			inputStream, inputDocumentFormat, unsyncByteArrayOutputStream,
-			outputDocumentFormat);
-
-		FileUtil.write(
-			file, unsyncByteArrayOutputStream.unsafeGetByteArray(), 0,
-			unsyncByteArrayOutputStream.size());
-
-		inputStream.close();
+			throw new IOException(exception);
+		}
 
 		return file;
 	}
@@ -271,14 +274,90 @@ public class DocumentConversionImpl implements DocumentConversion {
 	@Activate
 	@Modified
 	protected void activate(Map<String, Object> properties) {
+		_executorService = _portalExecutorManager.getPortalExecutor(
+			DocumentConversionImpl.class.getName());
+
 		_openOfficeConfiguration = ConfigurableUtil.createConfigurable(
 			OpenOfficeConfiguration.class, properties);
 	}
 
 	@Deactivate
 	protected void deactivate() {
-		if (_openOfficeConnection != null) {
+		if (_executorService != null) {
+			_executorService.shutdownNow();
+		}
+
+		if ((_openOfficeConnection != null) &&
+			_openOfficeConnection.isConnected()) {
+
 			_openOfficeConnection.disconnect();
+		}
+	}
+
+	private void _convert(
+			DocumentFormat inputDocumentFormat, InputStream inputStream,
+			File file, DocumentFormat outputDocumentFormat)
+		throws Exception {
+
+		long start = System.currentTimeMillis();
+
+		Future<?> future = _executorService.submit(
+			() -> {
+				try (UnsyncByteArrayOutputStream unsyncByteArrayOutputStream =
+						new UnsyncByteArrayOutputStream()) {
+
+					DocumentConverter documentConverter =
+						_getDocumentConverter();
+
+					documentConverter.convert(
+						inputStream, inputDocumentFormat,
+						unsyncByteArrayOutputStream, outputDocumentFormat);
+
+					FileUtil.write(
+						file, unsyncByteArrayOutputStream.unsafeGetByteArray(),
+						0, unsyncByteArrayOutputStream.size());
+
+					if (_log.isInfoEnabled()) {
+						_log.info(
+							StringBundler.concat(
+								"Converted from ",
+								inputDocumentFormat.getName(), " to ",
+								outputDocumentFormat.getName(), " in ",
+								System.currentTimeMillis() - start, " ms"));
+					}
+				}
+				catch (IOException ioException) {
+					throw new RuntimeException(ioException);
+				}
+				finally {
+					try {
+						inputStream.close();
+					}
+					catch (IOException ioException) {
+						_log.error("Unable to close input stream", ioException);
+					}
+				}
+			});
+
+		try {
+			long timeout = Math.max(
+				PropsValues.
+					DL_FILE_ENTRY_PREVIEW_GENERATION_TIMEOUT_GHOSTSCRIPT,
+				PropsValues.DL_FILE_ENTRY_PREVIEW_GENERATION_TIMEOUT_PDFBOX);
+
+			future.get(timeout, TimeUnit.SECONDS);
+		}
+		catch (TimeoutException timeoutException) {
+			String errorMessage =
+				"Timeout when converting for " + file.getPath();
+
+			if (future.cancel(true)) {
+				errorMessage += " resulted in a canceled timeout for " + future;
+			}
+
+			_log.error(errorMessage);
+
+			throw timeoutException;
 		}
 	}
 
@@ -353,8 +432,12 @@ public class DocumentConversionImpl implements DocumentConversion {
 	private CompanyLocalService _companyLocalService;
 
 	private DocumentConverter _documentConverter;
+	private volatile ExecutorService _executorService;
 	private volatile OpenOfficeConfiguration _openOfficeConfiguration;
 	private OpenOfficeConnection _openOfficeConnection;
+
+	@Reference
+	private PortalExecutorManager _portalExecutorManager;
 
 	private static class ConversionsHolder {
 

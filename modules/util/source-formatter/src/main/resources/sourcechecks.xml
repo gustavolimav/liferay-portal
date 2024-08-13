@@ -823,6 +823,10 @@
 			<category name="Bug Prevention" />
 			<description name="Checks that a `*Tag` class has a `set*` and `get*` or `is*` method for each attribute." />
 		</check>
+		<check name="JavaTestInfoAnnotationCheck">
+			<category name="Styling" />
+			<description name="Sorts the values in `@TestInfo` annotation." />
+		</check>
 		<check name="JavaTestMethodAnnotationsCheck">
 			<category name="Naming Conventions" />
 			<description name="Checks if methods with test annotations follow the naming conventions." />
@@ -1572,6 +1576,10 @@
 			<category name="Bug Prevention" />
 			<description name="Verifies property value of `build.include.dirs` in `build.properties`." />
 		</check>
+		<check name="PropertiesPlaywrightTestCheck">
+			<category name="Bug Prevention" />
+			<description name="Performs several checks on `test.properties` for Playwright test." />
+		</check>
 		<check name="PropertiesReleaseBuildCheck">
 			<category name="Bug Prevention" />
 			<description name="Verifies that the information in `release.properties` matches the information in `ReleaseInfo.java`." />
@@ -1673,6 +1681,13 @@
 			<property name="allowTrailingEmptyLines" value="true" />
 			<property name="enabled" value="false" />
 		</check>
+
+		<!-- Liferay Source Checks -->
+
+		<check name="TSConfigFileCheck">
+			<category name="Bug Prevention" />
+			<description name="Finds missing `test.properties` files." />
+		</check>
 	</source-processor>
 	<source-processor name="TXTSourceProcessor">
 		<check name="TXTEmptyLinesCheck">
@@ -1723,6 +1738,10 @@
 			<category name="Upgrade" />
 			<description name="Replaces methods referring to class `AssetEntryAssetCategory` in class `AssetCategoryLocalService` with equivalent methods in class `AssetEntryAssetCategoryRelLocalService`." />
 		</check>
+		<check name="UpgradeJavaBaseFragmentCollectionContributorExtendedClassesCheck">
+			<category name="Upgrade" />
+			<description name="Adds FragmentCollectionKey to Component annotation in classes that extend `BaseFragmentCollectionContributor`" />
+		</check>
 		<check name="UpgradeJavaBaseModelListenerCheck">
 			<category name="Upgrade" />
 			<description name="Add parameter in the onAfterUpdate and onBeforeUpdate methods of the BaseModelListener class." />
@@ -1743,6 +1762,10 @@
 		<check name="UpgradeJavaDDMFormValuesSerializerTrackerCheck">
 			<category name="Upgrade" />
 			<description name="Replaces the references of `DDMFormValuesSerializerTracker` class and also its methods usages." />
+		</check>
+		<check name="UpgradeJavaDisplayPageInfoItemCapabilityCheck">
+			<category name="Upgrade" />
+			<description name="Replace all references of DisplayPageInfoItemCapability to InfoItemCapability" />
 		</check>
 		<check name="UpgradeJavaFacetedSearcherCheck">
 			<category name="Upgrade" />
@@ -2035,6 +2058,10 @@
 			<category name="Styling" />
 			<description name="Checks the file name of workflow definition files." />
 			<property name="enabled" value="false" />
+		</check>
+		<check name="XMLWorkflowDefinitionFileStylingCheck">
+			<category name="Styling" />
+			<description name="Applies rules to enforce consistency in code style in `*workflow-definition.xml` files." />
 		</check>
 
 		<!-- Liferay Source Checks -->

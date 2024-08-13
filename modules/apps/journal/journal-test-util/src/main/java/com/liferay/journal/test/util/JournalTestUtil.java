@@ -49,6 +49,7 @@ import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.template.TemplateConstants;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
@@ -386,7 +387,9 @@ public class JournalTestUtil {
 
 		DDMTemplate ddmTemplate = DDMTemplateTestUtil.addTemplate(
 			ddmGroupId, ddmStructure.getStructureId(),
-			PortalUtil.getClassNameId(JournalArticle.class));
+			PortalUtil.getClassNameId(JournalArticle.class),
+			TemplateConstants.LANG_TYPE_FTL, "${name.getData()}",
+			LocaleUtil.getSiteDefault());
 
 		boolean neverExpire = true;
 
@@ -980,6 +983,21 @@ public class JournalTestUtil {
 		return updateArticle(
 			article, _getLocalizedMap(title), content, workflowEnabled,
 			approved, serviceContext);
+	}
+
+	public static JournalArticle updateArticle(
+			long userId, JournalArticle article, Map<Locale, String> titleMap,
+			Map<Locale, String> contentMap, Locale defaultLocale,
+			boolean workflowEnabled, boolean approved,
+			ServiceContext serviceContext)
+		throws Exception {
+
+		String content = DDMStructureTestUtil.getSampleStructuredContent(
+			contentMap, LocaleUtil.toLanguageId(defaultLocale));
+
+		return updateArticle(
+			userId, article, titleMap, content, null, workflowEnabled, approved,
+			serviceContext);
 	}
 
 	public static JournalArticle updateArticle(

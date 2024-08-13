@@ -17,7 +17,6 @@ import com.liferay.expando.kernel.service.ExpandoRowLocalService;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.User;
@@ -53,7 +52,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -399,14 +397,6 @@ public class CPOptionLocalServiceImpl extends CPOptionLocalServiceBaseImpl {
 			allowedCommerceOptionTypes =
 				CPConstants.PRODUCT_OPTION_SKU_CONTRIBUTOR_FIELD_TYPES;
 		}
-
-		allowedCommerceOptionTypes = ArrayUtil.filter(
-			allowedCommerceOptionTypes,
-			commerceOptionType ->
-				!Objects.equals(
-					CPConstants.PRODUCT_OPTION_SELECT_DATE_KEY,
-					commerceOptionType) ||
-				FeatureFlagManagerUtil.isEnabled("LPD-10887"));
 
 		if (ArrayUtil.contains(
 				allowedCommerceOptionTypes, commerceOptionTypeKey)) {

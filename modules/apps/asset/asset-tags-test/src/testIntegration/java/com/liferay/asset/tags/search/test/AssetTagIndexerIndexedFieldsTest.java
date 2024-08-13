@@ -201,9 +201,20 @@ public class AssetTagIndexerIndexedFieldsTest {
 			"assetCount_Number_sortable",
 			String.valueOf(assetTag.getAssetCount())
 		).put(
+			"groupExternalReferenceCode", _group.getExternalReferenceCode()
+		).put(
 			"name_String_sortable", StringUtil.toLowerCase(assetTag.getName())
 		).put(
+			"scopeGroupExternalReferenceCode", _group.getExternalReferenceCode()
+		).put(
 			"subscribed", "false"
+		).put(
+			"userExternalReferenceCode",
+			() -> {
+				User user = _users.get(0);
+
+				return user.getExternalReferenceCode();
+			}
 		).build();
 
 		_indexedFieldsFixture.populateUID(assetTag, map);

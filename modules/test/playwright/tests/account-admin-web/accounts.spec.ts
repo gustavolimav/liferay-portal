@@ -8,17 +8,14 @@ import {expect, mergeTests} from '@playwright/test';
 import {accountsPagesTest} from '../../fixtures/accountsPagesTest';
 import {apiHelpersTest} from '../../fixtures/apiHelpersTest';
 import {dataApiHelpersTest} from '../../fixtures/dataApiHelpersTest';
-import {featureFlagsTest} from '../../fixtures/featureFlagsTest';
 import {loginTest} from '../../fixtures/loginTest';
 import getRandomString from '../../utils/getRandomString';
+import performLogin, {performLogout, userData} from '../../utils/performLogin';
 
 export const test = mergeTests(
 	accountsPagesTest,
 	apiHelpersTest,
 	dataApiHelpersTest,
-	featureFlagsTest({
-		'LPD-10855': true,
-	}),
 	loginTest()
 );
 
@@ -247,4 +244,68 @@ test('LPD-28161 Can view role and organization name escaped', async ({
 	await editAccountPage.usersLink.click();
 
 	await expect(await accountUsersPage.roleName(roleName)).toBeVisible();
+});
+
+test('LPD-32045 All account entry can be seen by admin user', async ({
+	accountsPage,
+	apiHelpers,
+	page,
+}) => {
+	const account1 = await apiHelpers.headlessAdminUser.postAccount({
+		name: getRandomString(),
+		type: 'business',
+	});
+
+	apiHelpers.data.push({id: account1.id, type: 'account'});
+
+	const account2 = await apiHelpers.headlessAdminUser.postAccount({
+		name: getRandomString(),
+		type: 'business',
+	});
+
+	apiHelpers.data.push({id: account2.id, type: 'account'});
+
+	const account3 = await apiHelpers.headlessAdminUser.postAccount({
+		name: getRandomString(),
+		type: 'business',
+	});
+
+	apiHelpers.data.push({id: account3.id, type: 'account'});
+
+	const userAccount = await apiHelpers.headlessAdminUser.postUserAccount();
+
+	userData[userAccount.alternateName] = {
+		name: userAccount.givenName,
+		password: 'test',
+		surname: userAccount.familyName,
+	};
+
+	const role =
+		await apiHelpers.headlessAdminUser.getRoleByName('Administrator');
+
+	await apiHelpers.headlessAdminUser.postRoleByExternalReferenceCodeUserAccountAssociation(
+		role.externalReferenceCode,
+		userAccount.id
+	);
+
+	await performLogout(page);
+	await performLogin(page, userAccount.alternateName);
+
+	try {
+		await accountsPage.goto();
+
+		await expect(
+			await accountsPage.accountsTableRowLink(account1.name)
+		).toHaveCount(1);
+		await expect(
+			await accountsPage.accountsTableRowLink(account2.name)
+		).toHaveCount(1);
+		await expect(
+			await accountsPage.accountsTableRowLink(account3.name)
+		).toHaveCount(1);
+	}
+	finally {
+		await performLogout(page);
+		await performLogin(page, 'test');
+	}
 });

@@ -15,48 +15,64 @@ import {PageEditorPage} from '../layout-content-page-editor-web/PageEditorPage';
 import {UIElementsPage} from '../uielements/UIElementsPage';
 
 export class PagesAdminPage {
+	readonly page: Page;
+
 	readonly addButton: Locator;
+	readonly addPageButton: Locator;
 	readonly addPageIFrame: FrameLocator;
 	readonly addTemplatePageButton: Locator;
 	readonly blankTypeButton: Locator;
 	readonly configurationSaveButton: Locator;
 	readonly homePageLink: Locator;
 	readonly javaScriptClientExtensionsTab: Locator;
+	readonly newButton: Locator;
 	readonly oneColumnButton: Locator;
-	readonly page: Page;
+	readonly pageEditorPage: PageEditorPage;
 	readonly pageTitleBox: Locator;
+	readonly searchButton: Locator;
+	readonly searchInput: Locator;
 	readonly uiElementsPage: UIElementsPage;
 	readonly widgetPageButton: Locator;
-	readonly newButton: Locator;
-	readonly pageEditorPage: PageEditorPage;
 
 	constructor(page: Page) {
+		this.page = page;
+
+		this.addPageButton = page.getByRole('menuitem', {
+			exact: true,
+			name: 'Page',
+		});
+		this.addPageIFrame = page.frameLocator('iframe[title="Add Page"]');
+		this.addButton = this.addPageIFrame.getByRole('button', {name: 'Add'});
+		this.addTemplatePageButton = page.getByRole('menuitem', {
+			name: 'Add Site Template Page',
+		});
+		this.blankTypeButton = page.getByRole('button', {name: 'Blank'});
 		this.configurationSaveButton = page.getByRole('button', {
 			exact: true,
 			name: 'Save',
 		});
+		this.homePageLink = page.getByLabel('Home', {exact: true});
 		this.javaScriptClientExtensionsTab = page.getByRole('tab', {
 			name: 'JavaScript',
 		});
-		this.page = page;
-		this.uiElementsPage = new UIElementsPage(page);
-
-		this.addPageIFrame = page.frameLocator('iframe[title="Add Page"]');
-		this.addTemplatePageButton = page.getByRole('menuitem', {
-			name: 'Add Site Template Page',
-		});
-		this.addButton = this.addPageIFrame.getByRole('button', {name: 'Add'});
-		this.blankTypeButton = page.getByRole('button', {name: 'Blank'});
-		this.homePageLink = page.getByLabel('Home', {exact: true});
-		this.oneColumnButton = page.getByText('1 Column', {exact: true});
-		this.pageTitleBox = this.addPageIFrame.locator(
-			'input[id="_com_liferay_layout_admin_web_portlet_GroupPagesPortlet_name"]'
-		);
-		this.widgetPageButton = page.getByRole('button', {name: 'Widget Page'});
 		this.newButton = page
 			.locator('.management-bar')
 			.getByRole('button', {name: 'New'});
+		this.oneColumnButton = page.getByText('1 Column', {exact: true});
 		this.pageEditorPage = new PageEditorPage(this.page);
+		this.pageTitleBox = this.addPageIFrame.locator(
+			'input[id="_com_liferay_layout_admin_web_portlet_GroupPagesPortlet_name"]'
+		);
+		this.searchButton = this.page.getByLabel('Search for', {exact: true});
+		this.searchInput = this.page.getByPlaceholder('Search for');
+		this.uiElementsPage = new UIElementsPage(page);
+		this.widgetPageButton = page.getByRole('button', {name: 'Widget Page'});
+	}
+
+	async goto(siteUrl?: Site['friendlyUrlPath']) {
+		await this.page.goto(
+			`/group${siteUrl || '/guest'}${PORTLET_URLS.pages}`
+		);
 	}
 
 	async addContentPage(pageName: string) {
@@ -143,23 +159,46 @@ export class PagesAdminPage {
 		});
 	}
 
-	async goto(siteUrl?: Site['friendlyUrlPath']) {
-		await this.page.goto(
-			`/group${siteUrl || '/guest'}${PORTLET_URLS.pages}`
-		);
-	}
+	async createNewPage({
+		draft = false,
+		name,
+		parent,
+		template,
+	}: {
+		draft?: boolean;
+		name: string;
+		parent?: string;
+		template?: string;
+	}) {
 
-	async createNewPage(name: string, template?: string) {
-		await this.newButton.click();
+		// If no parent specified, just create from toolbar
 
-		await this.page
-			.getByRole('menuitem')
-			.getByText('Page', {exact: true})
-			.click();
+		if (!parent) {
+			await this.newButton.click();
+
+			await this.page
+				.getByRole('menuitem')
+				.getByText('Page', {exact: true})
+				.click();
+		}
+
+		// If parent is specified, create child page
+
+		else {
+			await clickAndExpectToBeVisible({
+				autoClick: true,
+				target: this.page.getByRole('menuitem', {name: 'Add Page'}),
+				trigger: this.page
+					.locator('li', {has: this.page.getByText(parent)})
+					.getByTitle('Add Child Page'),
+			});
+		}
+
+		// Select template and fill name
 
 		await this.page
 			.locator('.card-page-item')
-			.filter({hasText: template})
+			.filter({hasText: template || 'Blank'})
 			.click();
 
 		const loadingAnimation = this.page.locator(
@@ -168,15 +207,39 @@ export class PagesAdminPage {
 		await loadingAnimation.waitFor();
 		await loadingAnimation.waitFor({state: 'hidden'});
 
-		const modalFrame = await this.page.frameLocator(
-			'iframe[title="Add Page"]'
-		);
-		const inputName = await modalFrame.getByPlaceholder('Add Page Name');
+		const modalFrame = this.page.frameLocator('iframe[title="Add Page"]');
+		const inputName = modalFrame.getByPlaceholder('Add Page Name');
+
 		await inputName.fill(name);
 
 		await modalFrame.getByRole('button', {name: 'Add'}).click();
 
-		await this.pageEditorPage.publishPage();
+		await waitForSuccessAlert(
+			this.page,
+			'Success:The page was created successfully.'
+		);
+
+		// Publish is draft param is false
+
+		if (!draft) {
+			await this.pageEditorPage.publishPage();
+		}
+	}
+
+	async deletePage(name: string) {
+		await this.clickOnAction('Delete', name);
+
+		await this.page
+			.locator('.modal-title')
+			.getByText('Delete Page')
+			.waitFor();
+
+		await this.page.getByRole('button', {name: 'Delete'}).click();
+
+		await waitForSuccessAlert(
+			this.page,
+			'Success:Your request completed successfully.'
+		);
 	}
 
 	async editPage(name: string) {
@@ -193,8 +256,34 @@ export class PagesAdminPage {
 		await clickAndExpectToBeVisible({
 			autoClick: true,
 			target: this.page.getByRole('menuitem', {name: 'Configuration'}),
-			trigger: this.page.getByTestId('headerOptions'),
+			trigger: this.page
+				.locator('.control-menu-nav-item')
+				.getByTitle('Options', {exact: true}),
 		});
+	}
+
+	async gotoSelectGlobalTemplates() {
+		await this.newButton.click();
+
+		await this.page
+			.getByRole('menuitem')
+			.getByText('Page', {exact: true})
+			.click();
+
+		await this.page
+			.getByRole('menuitem')
+			.getByText('Global Templates', {exact: true})
+			.click();
+	}
+
+	async searchPage(keywords: string) {
+		await this.searchInput.click();
+		await this.searchInput.clear();
+		await this.searchInput.fill(keywords);
+
+		await this.searchButton.click();
+
+		await this.page.getByText('Search Results').waitFor();
 	}
 
 	async selectJavaScriptClientExtension(clientExtensionName: string) {
@@ -296,9 +385,7 @@ export class PagesAdminPage {
 		// Check the permissions
 
 		for (const permissionId of permissionIds) {
-			const permission = await permissionsFrame.locator(
-				`#${permissionId}`
-			);
+			const permission = permissionsFrame.locator(`#${permissionId}`);
 
 			await permission.uncheck({trial: true});
 			await permission.uncheck({timeout: 1000});

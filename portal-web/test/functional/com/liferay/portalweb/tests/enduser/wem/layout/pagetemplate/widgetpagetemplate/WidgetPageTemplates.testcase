@@ -1,4 +1,4 @@
-@component-name = "portal-wcm"
+@component-name = "portal-page-management"
 definition {
 
 	property ci.retries.disabled = "true";
@@ -21,25 +21,11 @@ definition {
 			PortalInstances.tearDownCP();
 		}
 		else {
-			PageTemplatesAdminGlobalSite.tearDownCP();
+			PageTemplatesAdminGlobalSite.openGlobalPageTemplatesAdmin();
+
+			PageTemplatesAdminGlobalSite.deleteCP(pageTemplateName = "Page Template Name");
 
 			JSONGroup.deleteGroupByName(groupName = "Site Name");
-		}
-	}
-
-	@description = "Add a page template in global site."
-	@priority = 4
-	@uitest
-	test AddGlobalPageTemplate {
-		task ("Go to page template admin in global site") {
-			PageTemplatesAdminGlobalSite.openGlobalPageTemplatesAdmin();
-		}
-
-		task ("Add an active page template") {
-			PageTemplatesAdminGlobalSite.addCP(
-				pageTemplateActive = "Active",
-				pageTemplateDescription = "This is a page template description",
-				pageTemplateName = "Page Template Name");
 		}
 	}
 
@@ -154,82 +140,6 @@ definition {
 		}
 	}
 
-	@description = "Add a active page template in global site, deactive and active it."
-	@priority = 4
-	test DeactivateAndActivateGlobalPageTemplate {
-		task ("Add an active page template") {
-			JSONLayoutpagetemplate.addGlobalPageTemplateEntry(
-				pageTemplateEntryActive = "true",
-				pageTemplateEntryName = "Page Template Name");
-		}
-
-		task ("Deactive the created page template and view status") {
-			PageTemplatesAdminGlobalSite.openGlobalPageTemplatesAdmin();
-
-			PageTemplatesAdminGlobalSite.deactivateAndActivate(
-				pageTemplateName = "Page Template Name",
-				pageTemplateStatus = "Not Active");
-
-			PageTemplatesAdminGlobalSite.viewStatus(
-				pageTemplateName = "Page Template Name",
-				pageTemplateStatus = "Not Active");
-		}
-
-		task ("View inactive page template doesn't display") {
-			PagesAdmin.openPagesAdmin(siteURLKey = "site-name");
-
-			LexiconEntry.gotoAddMenuItem(menuItem = "Page");
-
-			Navigator.gotoNavNested(navNested = "Global Templates");
-
-			PagesAdmin.viewPageTemplateTypeNotPresent(pageTemplateName = "Page Template Name");
-		}
-
-		task ("Active the created page template and view status") {
-			PageTemplatesAdminGlobalSite.openGlobalPageTemplatesAdmin();
-
-			PageTemplatesAdminGlobalSite.deactivateAndActivate(
-				pageTemplateName = "Page Template Name",
-				pageTemplateStatus = "Active");
-
-			PageTemplatesAdminGlobalSite.viewStatus(
-				pageTemplateName = "Page Template Name",
-				pageTemplateStatus = "Active");
-		}
-
-		task ("View active page template displays") {
-			PagesAdmin.openPagesAdmin(siteURLKey = "site-name");
-
-			LexiconEntry.gotoAddMenuItem(menuItem = "Page");
-
-			Navigator.gotoNavNested(navNested = "Global Templates");
-
-			PagesAdmin.viewPageTemplateTypePresent(pageTemplateName = "Page Template Name");
-		}
-	}
-
-	@description = "Delete a page template in global site."
-	@priority = 5
-	test DeleteGlobalPageTemplate {
-		property portal.acceptance = "true";
-
-		task ("Add an active page template") {
-			JSONLayoutpagetemplate.addGlobalPageTemplateEntry(
-				pageTemplateEntryActive = "true",
-				pageTemplateEntryName = "Page Template Name");
-		}
-
-		task ("Delete the created page template") {
-			PageTemplatesAdminGlobalSite.openGlobalPageTemplatesAdmin();
-
-			PageTemplatesAdminGlobalSite.deleteCP(pageTemplateName = "Page Template Name");
-		}
-
-		task ("View no new page template") {
-			PageTemplatesAdminGlobalSite.viewDefaultCP();
-		}
-	}
-
 	@description = "This is a use case for LPS-115361. Delete a widget page template in normal site."
 	@priority = 5
 	test DeletePageTemplate {
@@ -288,66 +198,6 @@ definition {
 			CalendarConfiguration.selectWeekStartsOn(weekStartDay = "Saturday");
 
 			CalendarConfiguration.save();
-		}
-	}
-
-	@description = "Edit page template description in global site."
-	@priority = 4
-	test EditGlobalPageTemplateDescription {
-		task ("Add an active page template with description") {
-			JSONLayoutpagetemplate.addGlobalPageTemplateEntry(
-				pageTemplateEntryActive = "true",
-				pageTemplateEntryDescription = "This is a page template description",
-				pageTemplateEntryName = "Page Template Name");
-		}
-
-		task ("Edit page template description") {
-			PageTemplatesAdminGlobalSite.openGlobalPageTemplatesAdmin();
-
-			PageTemplatesAdminGlobalSite.editDescription(
-				pageTemplateDescription = "This is a page template description",
-				pageTemplateName = "Page Template Name");
-		}
-
-		task ("View edited page template description") {
-			PageTemplatesAdminGlobalSite.viewDescription(
-				pageTemplateDescription = "This is a page template description edit",
-				pageTemplateName = "Page Template Name");
-		}
-	}
-
-	@description = "This is a use case for LPS-115361. Edit a widget page template in normal site."
-	@priority = 5
-	test EditPageTemplate {
-		property portal.acceptance = "true";
-
-		task ("Add a page template collection") {
-			JSONLayoutpagetemplate.addLayoutPageTemplateCollection(
-				groupName = "Site Name",
-				layoutPageTemplateCollectionName = "Page Template Collection");
-		}
-
-		task ("Add a widget page template") {
-			JSONLayoutpagetemplate.addLayoutPageTemplateEntry(
-				groupName = "Site Name",
-				layoutPageTemplateCollectionName = "Page Template Collection",
-				layoutPageTemplateEntryName = "Page Template Name",
-				layoutPageTemplateStatus = "Approved",
-				layoutPageTemplateType = "Widget Page Template");
-		}
-
-		task ("Edit the widget page template") {
-			var portalURL = PropsUtil.get("portal.url");
-			var layoutPrototypeId = JSONLayoutpagetemplate.getLayoutPrototypeId(
-				groupName = "Site Name",
-				layoutPageTemplateEntryName = "Page Template Name",
-				layoutPageTemplateType = "Widget Page Template");
-
-			Navigator.openSpecificURL(url = "${portalURL}/group/template-${layoutPrototypeId}");
-
-			Portlet.addPG(portletName = "Asset Publisher");
-
-			Portlet.viewPG(portletName = "Asset Publisher");
 		}
 	}
 
@@ -423,9 +273,15 @@ definition {
 
 			PageTemplatesAdminGlobalSite.openGlobalPageTemplatesAdmin();
 
-			PageTemplatesAdminGlobalSite.viewCP(pageTemplateName = "College Landing Page");
+			AssertTextEquals.assertPartialText(
+				key_pageTemplateName = "College Landing Page",
+				locator1 = "PageTemplates#PAGE_TEMPLATE_TABLE_NAME",
+				value1 = "College Landing Page");
 
-			PageTemplatesAdminGlobalSite.viewCP(pageTemplateName = "Department Landing Page");
+			AssertTextEquals.assertPartialText(
+				key_pageTemplateName = "Department Landing Page",
+				locator1 = "PageTemplates#PAGE_TEMPLATE_TABLE_NAME",
+				value1 = "Department Landing Page");
 
 			var siteName = TestCase.getSiteName(siteName = ${siteName});
 
@@ -456,30 +312,6 @@ definition {
 			Portlet.viewSpecificPG(portletName = "Members");
 
 			Portlet.viewSpecificPG(portletName = "Menu Display");
-		}
-	}
-
-	@description = "View page template in Spanish and English."
-	@priority = 4
-	test LocalizeGlobalDefaultPageTemplates {
-		task ("View page template name in Spanish") {
-			var portalURL = PropsUtil.get("portal.url");
-
-			Navigator.openSpecificURL(url = "${portalURL}/es");
-
-			PageTemplatesAdminGlobalSite.openGlobalPageTemplatesAdmin();
-
-			PageTemplatesAdminGlobalSite.viewDefaultLocalizedCP(
-				pageTemplateNameList = "Búsqueda",
-				portletTitle = "Plantillas de página de widget");
-		}
-
-		task ("View page template name change back to English") {
-			Navigator.openSpecificURL(url = "${portalURL}/en");
-
-			PageTemplatesAdminGlobalSite.openGlobalPageTemplatesAdmin();
-
-			PageTemplatesAdminGlobalSite.viewDefaultCP();
 		}
 	}
 
@@ -541,128 +373,6 @@ definition {
 			for (var widgetName : list "Blogs,Asset Publisher") {
 				Portlet.viewSpecificPG(portletName = ${widgetName});
 			}
-		}
-	}
-
-	@description = "Rename page template in global site."
-	@priority = 4
-	test RenameGlobalPageTemplate {
-		task ("Add an active page template") {
-			JSONLayoutpagetemplate.addGlobalPageTemplateEntry(
-				pageTemplateEntryActive = "true",
-				pageTemplateEntryName = "Page Template Name");
-		}
-
-		task ("View added page template") {
-			PageTemplatesAdminGlobalSite.openGlobalPageTemplatesAdmin();
-
-			var siteName = TestCase.getSiteName(siteName = ${siteName});
-
-			PageTemplatesAdminGlobalSite.viewPG(
-				pageTemplateName = "Page Template Name",
-				siteName = ${siteName});
-		}
-
-		task ("Rename page template and view change") {
-			PageTemplatesAdminGlobalSite.openGlobalPageTemplatesAdmin();
-
-			PageTemplatesAdminGlobalSite.editCP(
-				pageTemplateActive = "Active",
-				pageTemplateName = "Page Template Name");
-
-			PageTemplatesAdminGlobalSite.viewPG(
-				pageTemplateName = "Page Template Name Edit",
-				siteName = ${siteName});
-		}
-	}
-
-	@description = "This is a test for LPS-143456. The site designer could reset failure count and reenable propagation when merge fail count reaches the configured threshold."
-	@priority = 4
-	test ResetFailureCountAndReenablePropagation {
-		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
-
-		task ("Given a site designer has a widget page template") {
-			JSONLayoutpagetemplate.addLayoutPageTemplateCollection(
-				groupName = "Site Name",
-				layoutPageTemplateCollectionName = "Page Template Set");
-
-			JSONLayoutpagetemplate.addLayoutPageTemplateEntry(
-				groupName = "Site Name",
-				layoutPageTemplateCollectionName = "Page Template Set",
-				layoutPageTemplateEntryName = "Page Template Name",
-				layoutPageTemplateStatus = "Approved",
-				layoutPageTemplateType = "Widget Page Template");
-		}
-
-		task ("When the site desiger increases the merge fail count to reach the configured threshold") {
-			var layoutPrototypeId = JSONLayoutpagetemplate.getLayoutPrototypeId(
-				groupName = "Site Name",
-				layoutPageTemplateEntryName = "Page Template Name",
-				layoutPageTemplateType = "Widget Page Template");
-
-			var script = '''import com.liferay.portal.kernel.model.LayoutPrototype;
-    import com.liferay.layout.set.prototype.helper.LayoutSetPrototypeHelper;
-    import com.liferay.portal.kernel.module.util.SystemBundleUtil;
-    import com.liferay.portal.kernel.service.LayoutPrototypeLocalServiceUtil;
-
-    import org.osgi.framework.BundleContext;
-    import org.osgi.util.tracker.ServiceTracker;
-
-    ServiceTracker<LayoutSetPrototypeHelper, LayoutSetPrototypeHelper> serviceTracker = new ServiceTracker<>(SystemBundleUtil.getBundleContext(), LayoutSetPrototypeHelper.class, null);
-
-    serviceTracker.open();
-
-    Object layoutSetPrototypeHelper = serviceTracker.getService();
-
-    layoutSetPrototypeHelper.setMergeFailCount(LayoutPrototypeLocalServiceUtil.getLayoutPrototype(${layoutPrototypeId}), 4);
-
-    serviceTracker.close();''';
-
-			ServerAdministration.openServerAdmin();
-
-			ServerAdministration.executeScript(
-				language = "Groovy",
-				script = ${script});
-		}
-
-		task ("Then the site designer could reset the failure count and reenable propagation") {
-			PageTemplatesAdmin.openPageTemplatesAdmin(siteURLKey = "site-name");
-
-			Navigator.gotoNavNested(navNested = "Page Template Set");
-
-			PageTemplatesAdmin.gotoPageTemplateEllipsisItem(
-				item = "Configure",
-				pageTemplateName = "Page Template Name");
-
-			AssertTextPresent(value1 = "The propagation of changes from the Page Template has been disabled temporarily after 4 errors. Click Reset to reset the failure count and re-enable propagation.");
-
-			Button.click(button = "Reset");
-
-			Alert.viewSuccessMessage();
-
-			AssertConsoleTextNotPresent(value1 = "javax.portlet.PortletException: processAction method not implemented");
-		}
-	}
-
-	@description = "Assert could not add page via page template action."
-	@priority = 3
-	test ViewNoAddPageTabViaPageTemplatesCP {
-		task ("Assert could not add page via Search page template") {
-			var portalURL = PropsUtil.get("portal.url");
-			var layoutPrototypeId = JSONLayoutpagetemplate.getLayoutPrototypeId(
-				groupName = "Global",
-				layoutPageTemplateEntryName = "Search",
-				layoutPageTemplateType = "Widget Page Template");
-
-			Navigator.openSpecificURL(url = "${portalURL}/group/template-${layoutPrototypeId}");
-
-			Click(locator1 = "ControlMenu#ADD");
-
-			AssertTextEquals(
-				key_tab = "Widgets",
-				locator1 = "NavTab#TAB_LINK",
-				value1 = "Widgets");
 		}
 	}
 

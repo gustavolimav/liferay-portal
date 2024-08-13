@@ -14,6 +14,7 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.servlet.SessionMessages;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -35,6 +36,7 @@ import javax.portlet.ActionResponse;
 import javax.portlet.PortletResponse;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -61,6 +63,17 @@ public class CompleteTaskMVCActionCommand
 			WebKeys.THEME_DISPLAY);
 
 		try {
+			boolean hideDefaultSuccessMessage = ParamUtil.getBoolean(
+				actionRequest, "hideDefaultSuccessMessage");
+
+			if (hideDefaultSuccessMessage) {
+				SessionMessages.add(
+					actionRequest,
+					_portal.getPortletId(actionRequest) +
+						SessionMessages.
+							KEY_SUFFIX_HIDE_DEFAULT_SUCCESS_MESSAGE);
+			}
+
 			long workflowTaskId = ParamUtil.getLong(
 				actionRequest, "workflowTaskId");
 
@@ -72,10 +85,21 @@ public class CompleteTaskMVCActionCommand
 				themeDisplay.getCompanyId(), workflowTaskId);
 
 			ServiceContext serviceContext = (ServiceContext)workflowContext.get(
-				"serviceContext");
+				WorkflowConstants.CONTEXT_SERVICE_CONTEXT);
 
-			serviceContext.setRequest(
-				_getHttpServletRequest(actionRequest, actionResponse));
+			HttpServletRequest httpServletRequest = _getHttpServletRequest(
+				actionRequest, actionResponse);
+
+			serviceContext.setAttribute(
+				"serverName", httpServletRequest.getServerName());
+			serviceContext.setAttribute(
+				"serverPort", httpServletRequest.getServerPort());
+
+			HttpSession httpSession = httpServletRequest.getSession();
+
+			serviceContext.setAttribute("sessionId", httpSession.getId());
+
+			serviceContext.setRequest(httpServletRequest);
 
 			workflowContext.put(
 				WorkflowConstants.CONTEXT_USER_ID,

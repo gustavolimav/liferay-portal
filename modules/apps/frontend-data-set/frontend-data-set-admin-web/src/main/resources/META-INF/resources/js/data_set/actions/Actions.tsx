@@ -10,7 +10,11 @@ import ClayTabs from '@clayui/tabs';
 import {fetch, openModal} from 'frontend-js-web';
 import React, {useEffect, useState} from 'react';
 
-import {API_URL, OBJECT_RELATIONSHIP} from '../../utils/constants';
+import {
+	API_URL,
+	DEFAULT_FETCH_HEADERS,
+	OBJECT_RELATIONSHIP,
+} from '../../utils/constants';
 import openDefaultFailureToast from '../../utils/openDefaultFailureToast';
 import openDefaultSuccessToast from '../../utils/openDefaultSuccessToast';
 import {IDataSetSectionProps} from '../DataSet';
@@ -20,6 +24,14 @@ import ActionList from './components/ActionList';
 import '../../../css/Actions.scss';
 import sortItems from '../../utils/sortItems';
 import {IOrderable} from '../../utils/types';
+
+export enum EActionType {
+	ASYNC = 'async',
+	HEADLESS = 'headless',
+	LINK = 'link',
+	MODAL = 'modal',
+	SIDEPANEL = 'sidePanel',
+}
 
 const SECTIONS = {
 	CREATION_ACTIONS: 'creation-actions',
@@ -64,7 +76,7 @@ interface IAction extends IOrderable {
 	title_i18n?: {
 		[key: string]: string;
 	};
-	type: string;
+	type: EActionType;
 	url: string;
 }
 
@@ -145,7 +157,9 @@ const Actions = ({dataSet, namespace, spritemap}: IDataSetSectionProps) => {
 			setActiveSection(SECTIONS.CREATION_ACTIONS);
 		}
 
-		const response = await fetch(url);
+		const response = await fetch(url, {
+			headers: DEFAULT_FETCH_HEADERS,
+		});
 
 		if (!response.ok) {
 			setLoading(false);
@@ -198,6 +212,7 @@ const Actions = ({dataSet, namespace, spritemap}: IDataSetSectionProps) => {
 						processClose();
 
 						fetch(item.actions.delete.href, {
+							headers: DEFAULT_FETCH_HEADERS,
 							method: item.actions.delete.method,
 						})
 							.then(() => {
@@ -244,10 +259,7 @@ const Actions = ({dataSet, namespace, spritemap}: IDataSetSectionProps) => {
 				body: JSON.stringify({
 					[actionTypeOrder]: order,
 				}),
-				headers: {
-					'Accept': 'application/json',
-					'Content-Type': 'application/json',
-				},
+				headers: DEFAULT_FETCH_HEADERS,
 				method: 'PATCH',
 			}
 		);
@@ -297,6 +309,7 @@ const Actions = ({dataSet, namespace, spritemap}: IDataSetSectionProps) => {
 						<ClayTabs
 							activation="automatic"
 							active={activeTab}
+							className="actions-tabs"
 							onActiveChange={(tab: number) => {
 								setActiveTab(tab);
 
@@ -314,9 +327,10 @@ const Actions = ({dataSet, namespace, spritemap}: IDataSetSectionProps) => {
 
 						<ClayTabs.Content active={activeTab} fade>
 							<ClayTabs.TabPane
-								aria-labelledby={Liferay.Language.get(
-									'actions'
+								aria-label={Liferay.Language.get(
+									'item-actions'
 								)}
+								className="item-actions-tab-pane"
 							>
 								<ActionList
 									actions={actions}
@@ -334,9 +348,10 @@ const Actions = ({dataSet, namespace, spritemap}: IDataSetSectionProps) => {
 							</ClayTabs.TabPane>
 
 							<ClayTabs.TabPane
-								aria-labelledby={Liferay.Language.get(
-									'new-creation-action'
+								aria-label={Liferay.Language.get(
+									'creation-actions'
 								)}
+								className="creation-actions-tab-pane"
 							>
 								<ActionList
 									actions={actions}

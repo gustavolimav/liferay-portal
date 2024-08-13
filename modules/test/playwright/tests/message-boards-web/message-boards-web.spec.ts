@@ -4,6 +4,7 @@
  */
 
 import {expect, mergeTests} from '@playwright/test';
+import path from 'path';
 
 import {apiHelpersTest} from '../../fixtures/apiHelpersTest';
 import {isolatedSiteTest} from '../../fixtures/isolatedSiteTest';
@@ -30,7 +31,7 @@ test('LPD-25630 Show the status to guest user', async ({
 }) => {
 	await messageBoardsPage.setGuestCategoryPermissions(site.friendlyUrlPath);
 
-	await messageBoardsEditThreadPage.publishNewBasicTread(
+	await messageBoardsEditThreadPage.publishNewBasicThread(
 		'Thread Subject',
 		'Thread Body',
 		site.friendlyUrlPath
@@ -122,4 +123,21 @@ test('LPD-27633 Do not show site in breadcrumb', async ({
 			.frameLocator('iframe[title="Select Category"]')
 			.getByText(site.name)
 	).toBeHidden();
+});
+
+test('LPD-33132 Posting a Document to Forums', async ({
+	messageBoardsEditThreadPage,
+	page,
+	site,
+}) => {
+	const fileName = 'attachment , file.txt';
+
+	await messageBoardsEditThreadPage.publishNewBasicThread(
+		'Thread Subject',
+		'Thread Body',
+		site.friendlyUrlPath,
+		path.join(__dirname, '/dependencies/' + fileName)
+	);
+
+	await expect(page.locator('li').filter({hasText: fileName})).toBeVisible();
 });

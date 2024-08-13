@@ -25,6 +25,7 @@ import isMappedToStructure from '../../app/utils/editable_value/isMappedToStruct
 import findPageContent from '../../app/utils/findPageContent';
 import getMappingFieldsKey from '../../app/utils/getMappingFieldsKey';
 import itemSelectorValueToInfoItem from '../../app/utils/item_selector_value/itemSelectorValueToInfoItem';
+import loadCollectionFields from '../../app/utils/loadCollectionFields';
 import useCache from '../../app/utils/useCache';
 import usePageContents from '../../app/utils/usePageContents';
 import ItemSelector from './ItemSelector';
@@ -190,6 +191,37 @@ export default function MappingSelectorWrapper({
 	});
 	const mappingFields = useSelector((state) => state.mappingFields);
 	const pageContents = usePageContents();
+	const dispatch = useDispatch();
+
+	useEffect(() => {
+		if (!collectionConfig) {
+			return;
+		}
+
+		const {
+			classNameId,
+			fieldName,
+			itemSubtype,
+			itemType,
+			key: collectionKey,
+		} = collectionConfig.collection;
+
+		const key = classNameId
+			? getMappingFieldsKey(collectionConfig.collection)
+			: fieldName
+				? `${collectionKey}-${fieldName}`
+				: collectionKey;
+
+		if (!mappingFields[key]) {
+			loadCollectionFields(
+				dispatch,
+				fieldName,
+				itemType,
+				itemSubtype,
+				key
+			);
+		}
+	}, [collectionConfig, dispatch, mappingFields]);
 
 	useEffect(() => {
 		if (!collectionConfig) {

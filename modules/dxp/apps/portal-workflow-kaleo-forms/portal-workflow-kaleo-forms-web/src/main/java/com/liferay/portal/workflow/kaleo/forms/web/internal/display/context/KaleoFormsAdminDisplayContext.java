@@ -223,7 +223,7 @@ public class KaleoFormsAdminDisplayContext {
 		OrderByComparator<KaleoProcess> orderByComparator = null;
 
 		if (orderByCol.equals("create-date")) {
-			orderByComparator = new KaleoProcessCreateDateComparator(
+			orderByComparator = KaleoProcessCreateDateComparator.getInstance(
 				orderByAsc);
 		}
 		else if (orderByCol.equals("modified-date")) {
@@ -389,10 +389,11 @@ public class KaleoFormsAdminDisplayContext {
 
 			searchContainer.setResultsAndTotal(
 				() ->
-					WorkflowDefinitionManagerUtil.getActiveWorkflowDefinitions(
-						_themeDisplay.getCompanyId(),
-						searchContainer.getStart(), searchContainer.getEnd(),
-						null),
+					WorkflowDefinitionManagerUtil.
+						liberalGetActiveWorkflowDefinitions(
+							_themeDisplay.getCompanyId(),
+							searchContainer.getStart(),
+							searchContainer.getEnd(), null),
 				WorkflowDefinitionManagerUtil.getActiveWorkflowDefinitionsCount(
 					_themeDisplay.getCompanyId()));
 

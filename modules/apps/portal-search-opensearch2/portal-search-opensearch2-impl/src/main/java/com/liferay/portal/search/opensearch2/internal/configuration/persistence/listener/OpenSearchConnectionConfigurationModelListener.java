@@ -80,14 +80,11 @@ public class OpenSearchConnectionConfigurationModelListener
 
 		Dictionary<String, Object> properties = configuration.getProperties();
 
-		String connectionId = null;
-
 		if (properties != null) {
-			connectionId = StringUtil.unquote(
-				(String)properties.get("connectionId"));
+			return StringUtil.unquote((String)properties.get("connectionId"));
 		}
 
-		return connectionId;
+		return null;
 	}
 
 	private String _getMessage(String key, Object... arguments) {

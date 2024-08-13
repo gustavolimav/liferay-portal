@@ -3,6 +3,26 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+interface Creator {
+	additionalName: string;
+	contentType: string;
+	familyName: string;
+	givenName: string;
+	id: number;
+	name: string;
+}
+
+interface DefinitionInfo {
+	dateCreated: string;
+	dateModified: string;
+	totalModifications: string;
+}
+
+interface LabelValueObject<T> {
+	label: string;
+	value: T;
+}
+
 interface Role {
 	actions: {
 		'create-organization-rol-user-account-association': RoleAction;
@@ -48,10 +68,19 @@ interface RolePermission {
 interface WorkflowDefinition {
 	active: boolean;
 	content: string;
+	creator?: Creator;
+	dateCreated?: string;
+	dateModified?: string;
 	name: string;
 	title: string;
 	title_i18n: {
 		[key: string]: string;
 	};
-	version: number;
+	version: string;
+}
+
+interface WorkflowDefinitionVersion {
+	creatorName: string;
+	dateCreated: string;
+	version: string;
 }

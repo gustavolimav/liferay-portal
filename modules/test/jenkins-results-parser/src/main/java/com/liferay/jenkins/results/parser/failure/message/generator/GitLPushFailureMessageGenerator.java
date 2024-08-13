@@ -5,8 +5,6 @@
 
 package com.liferay.jenkins.results.parser.failure.message.generator;
 
-import org.dom4j.Element;
-
 /**
  * @author Yi-Chen Tsai
  */
@@ -14,7 +12,7 @@ public class GitLPushFailureMessageGenerator
 	extends BaseFailureMessageGenerator {
 
 	@Override
-	public Element getMessageElement(String consoleText) {
+	public String getMessage(String consoleText) {
 		int index = consoleText.indexOf(_TOKEN_GIT_LPUSH_VALIDATION_FAILURE);
 
 		if (index == -1) {
@@ -25,7 +23,7 @@ public class GitLPushFailureMessageGenerator
 
 		end = consoleText.indexOf("\n", end);
 
-		return getConsoleTextSnippetElementByEnd(consoleText, false, end);
+		return getConsoleTextSnippetByEnd(consoleText, false, end);
 	}
 
 	private static final String _TOKEN_ERROR = "error:";

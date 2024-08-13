@@ -3316,6 +3316,13 @@ components:
                     description:
                         The navigation menu item's creator.
                     readOnly: true
+                customFields:
+                    # @review
+                    description:
+                        A list of the custom fields associated with the navigation menu item.
+                    items:
+                        $ref: "#/components/schemas/CustomField"
+                    type: array
                 dateCreated:
                     # @review
                     description:
@@ -5861,7 +5868,7 @@ components:
 info:
     description:
         "A Java client JAR is available for use with the group ID 'com.liferay', artifact ID
-        'com.liferay.headless.delivery.client', and version '4.0.82'."
+        'com.liferay.headless.delivery.client', and version '4.0.83'."
     license:
         name: "Apache 2.0"
         url: "http://www.apache.org/licenses/LICENSE-2.0.html"

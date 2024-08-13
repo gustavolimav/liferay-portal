@@ -47,20 +47,22 @@ public class ResultRow
 
 		this(
 			rowId, object, primaryKey, pos, bold, StringPool.BLANK,
-			StringPool.BLANK);
+			StringPool.BLANK, StringPool.BLANK, StringPool.BLANK);
 	}
 
 	public ResultRow(
 		String rowId, Object object, String primaryKey, int pos, boolean bold,
-		String cssClass, String state) {
+		String ariaLabel, String cssClass, String state, String tabIndex) {
 
 		_rowId = rowId;
 		_object = object;
 		_primaryKey = primaryKey;
 		_pos = pos;
 		_bold = bold;
+		_ariaLabel = ariaLabel;
 		_cssClass = cssClass;
 		_state = state;
+		_tabIndex = tabIndex;
 
 		_searchEntries = new ArrayList<>();
 	}
@@ -484,6 +486,11 @@ public class ResultRow
 	}
 
 	@Override
+	public String getAriaLabel() {
+		return _ariaLabel;
+	}
+
+	@Override
 	public String getClassHoverName() {
 		return _classHoverName;
 	}
@@ -543,6 +550,11 @@ public class ResultRow
 	}
 
 	@Override
+	public String getTabIndex() {
+		return _tabIndex;
+	}
+
+	@Override
 	public boolean isBold() {
 		return _bold;
 	}
@@ -560,6 +572,11 @@ public class ResultRow
 	@Override
 	public void removeSearchEntry(int pos) {
 		_searchEntries.remove(pos);
+	}
+
+	@Override
+	public void setAriaLabel(String ariaLabel) {
+		_ariaLabel = ariaLabel;
 	}
 
 	@Override
@@ -626,6 +643,12 @@ public class ResultRow
 		_state = state;
 	}
 
+	@Override
+	public void setTabIndex(String tabIndex) {
+		_tabIndex = tabIndex;
+	}
+
+	private String _ariaLabel;
 	private boolean _bold;
 	private String _classHoverName;
 	private String _className;
@@ -640,5 +663,6 @@ public class ResultRow
 	private final List<SearchEntry> _searchEntries;
 	private boolean _skip;
 	private String _state;
+	private String _tabIndex;
 
 }

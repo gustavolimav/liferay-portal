@@ -5,16 +5,16 @@
 
 import {expect, mergeTests} from '@playwright/test';
 
-import {collectionsPagesTest} from '../../fixtures/CollectionsPageTest';
 import {apiHelpersTest} from '../../fixtures/apiHelpersTest';
+import {collectionsPagesTest} from '../../fixtures/collectionsPagesTest';
 import {featureFlagsTest} from '../../fixtures/featureFlagsTest';
 import {loginTest} from '../../fixtures/loginTest';
 import {pageEditorPagesTest} from '../../fixtures/pageEditorPagesTest';
-import {wemSiteTest} from '../../fixtures/wemSiteTest';
-import {ANIMALS_COLLECTION_NAME} from '../../setup/wem-site/constants';
+import {pageManagementSiteTest} from '../../fixtures/pageManagementSiteTest';
 import {clickAndExpectToBeHidden} from '../../utils/clickAndExpectToBeHidden';
 import {clickAndExpectToBeVisible} from '../../utils/clickAndExpectToBeVisible';
 import getRandomString from '../../utils/getRandomString';
+import {ANIMALS_COLLECTION_NAME} from '../setup/page-management-site/constants';
 import getCollectionDefinition from './utils/getCollectionDefinition';
 import getCollectionItemDefinition from './utils/getCollectionItemDefinition';
 import getFragmentDefinition from './utils/getFragmentDefinition';
@@ -29,15 +29,18 @@ const test = mergeTests(
 	}),
 	loginTest(),
 	pageEditorPagesTest,
-	wemSiteTest
+	pageManagementSiteTest
 );
 
-test('allows selecting specific repeatable field when mapping', async ({
+test('Allows selecting specific repeatable field when mapping', async ({
 	apiHelpers,
 	page,
 	pageEditorPage,
-	wemSite,
+	pageManagementSite,
 }) => {
+
+	// Create page with a Heading fragment and go to edit mode
+
 	const headingId = getRandomString();
 
 	const layout = await apiHelpers.headlessDelivery.createSitePage({
@@ -47,11 +50,11 @@ test('allows selecting specific repeatable field when mapping', async ({
 				key: 'BASIC_COMPONENT-heading',
 			}),
 		]),
-		siteId: wemSite.id,
-		title: 'Test Page Name',
+		siteId: pageManagementSite.id,
+		title: getRandomString(),
 	});
 
-	await pageEditorPage.goto(layout, wemSite.friendlyUrlPath);
+	await pageEditorPage.goto(layout, pageManagementSite.friendlyUrlPath);
 
 	// Map editable to repeatable field Country
 
@@ -90,6 +93,8 @@ test('allows selecting specific repeatable field when mapping', async ({
 		.getByLabel('Field')
 		.selectOption({value: 'DDMStructure_Country'});
 
+	await pageEditorPage.waitForChangesSaved();
+
 	// Check that all iteration to display option works
 
 	const fragment = page.locator('.component-heading');
@@ -118,28 +123,30 @@ test('allows selecting specific repeatable field when mapping', async ({
 
 	expect(fragment).toHaveText('Francia');
 
-	// publish and check the published page
+	// Publish and check the published page
 
 	await pageEditorPage.publishPage();
 
-	await page.goto(`/web${wemSite.friendlyUrlPath}${layout.friendlyUrlPath}`);
+	await page.goto(
+		`/web${pageManagementSite.friendlyUrlPath}${layout.friendlyUrlPath}`
+	);
 
 	expect(fragment).toHaveText('France');
 });
 
-test('allows selecting specific repeatable collection provider', async ({
+test('Allows selecting specific repeatable collection provider', async ({
 	apiHelpers,
 	collectionsPage,
 	page,
 	pageEditorPage,
-	wemSite,
+	pageManagementSite,
 }) => {
 
 	// Create definition for a collection mapped to Animals collection
 
 	const animalsClassPK = await collectionsPage.getCollectionClassPK(
 		ANIMALS_COLLECTION_NAME,
-		wemSite.friendlyUrlPath
+		pageManagementSite.friendlyUrlPath
 	);
 
 	const animalsCollection = getCollectionItemDefinition(
@@ -157,13 +164,13 @@ test('allows selecting specific repeatable collection provider', async ({
 
 	const layout = await apiHelpers.headlessDelivery.createSitePage({
 		pageDefinition: getPageDefinition([collectionDefinition]),
-		siteId: wemSite.id,
+		siteId: pageManagementSite.id,
 		title: getRandomString(),
 	});
 
 	// Go to edit mode of page
 
-	await pageEditorPage.goto(layout, wemSite.friendlyUrlPath);
+	await pageEditorPage.goto(layout, pageManagementSite.friendlyUrlPath);
 
 	// Add a repeatable field collection with heading fragment
 
@@ -190,10 +197,9 @@ test('allows selecting specific repeatable collection provider', async ({
 
 	// Select editable and map it
 
-	const headingFragment = page.locator('.component-heading').last();
+	await pageEditorPage.goToSidebarTab('Browser');
 
-	await headingFragment.click();
-	await headingFragment.click();
+	await page.getByLabel('Select element-text').click();
 
 	await page.getByLabel('Field').selectOption('Species Name');
 
@@ -206,7 +212,9 @@ test('allows selecting specific repeatable collection provider', async ({
 
 	await pageEditorPage.publishPage();
 
-	await page.goto(`/web${wemSite.friendlyUrlPath}${layout.friendlyUrlPath}`);
+	await page.goto(
+		`/web${pageManagementSite.friendlyUrlPath}${layout.friendlyUrlPath}`
+	);
 
 	expect(page.getByText('Balinese')).toBeAttached();
 	expect(page.getByText('Poodle')).toBeAttached();

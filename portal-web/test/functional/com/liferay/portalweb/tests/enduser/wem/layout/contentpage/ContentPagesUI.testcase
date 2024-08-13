@@ -1,4 +1,4 @@
-@component-name = "portal-wcm"
+@component-name = "portal-page-management"
 definition {
 
 	property ci.retries.disabled = "true";
@@ -111,16 +111,6 @@ definition {
 				locator2 = "width",
 				value1 = "280px");
 		}
-	}
-
-	@description = "This is a test for LPS-188909. The portal version info shouldn't be shown on the Home page."
-	@priority = 4
-	test CannotViewPortalVersionInfoOnHomePage {
-		ContentPages.viewFragmentText(
-			fragmentName = "paragraph",
-			id = "element-text",
-			position = 2,
-			text = "Enjoy using the best DXP on Earth!");
 	}
 
 	@description = "This is a test for LPS-158746. Could add and remove fragment to Favorites session on content page in card view."

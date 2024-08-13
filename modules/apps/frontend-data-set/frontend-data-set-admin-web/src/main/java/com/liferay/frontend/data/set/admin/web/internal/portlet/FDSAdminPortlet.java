@@ -424,190 +424,150 @@ public class FDSAdminPortlet extends MVCPortlet {
 						ObjectFieldConstants.DB_TYPE_CLOB, true, false, null,
 						_language.get(locale, "preselected-values"),
 						"preselectedValues", false)));
+		ObjectField itemKeyObjectField = ObjectFieldUtil.createObjectField(
+			ObjectFieldConstants.BUSINESS_TYPE_TEXT,
+			ObjectFieldConstants.DB_TYPE_STRING, true, false, null,
+			_language.get(locale, "item-key"), "itemKey", false);
 
-		if (FeatureFlagManagerUtil.isEnabled("LPD-10754")) {
-			ObjectField itemKeyObjectField = ObjectFieldUtil.createObjectField(
+		_objectFieldLocalService.addCustomObjectField(
+			itemKeyObjectField.getExternalReferenceCode(), userId,
+			itemKeyObjectField.getListTypeDefinitionId(),
+			fdsDynamicFilterObjectDefinition.getObjectDefinitionId(),
+			itemKeyObjectField.getBusinessType(),
+			itemKeyObjectField.getDBType(), itemKeyObjectField.isIndexed(),
+			itemKeyObjectField.isIndexedAsKeyword(),
+			itemKeyObjectField.getIndexedLanguageId(),
+			itemKeyObjectField.getLabelMap(), false,
+			itemKeyObjectField.getName(), itemKeyObjectField.getReadOnly(),
+			itemKeyObjectField.getReadOnlyConditionExpression(),
+			itemKeyObjectField.isRequired(), itemKeyObjectField.isState(),
+			itemKeyObjectField.getObjectFieldSettings());
+
+		ObjectField itemLabelObjectField = ObjectFieldUtil.createObjectField(
+			ObjectFieldConstants.BUSINESS_TYPE_TEXT,
+			ObjectFieldConstants.DB_TYPE_STRING, true, false, null,
+			_language.get(locale, "item-label"), "itemLabel", false);
+
+		_objectFieldLocalService.addCustomObjectField(
+			itemLabelObjectField.getExternalReferenceCode(), userId,
+			itemLabelObjectField.getListTypeDefinitionId(),
+			fdsDynamicFilterObjectDefinition.getObjectDefinitionId(),
+			itemLabelObjectField.getBusinessType(),
+			itemLabelObjectField.getDBType(), itemLabelObjectField.isIndexed(),
+			itemLabelObjectField.isIndexedAsKeyword(),
+			itemLabelObjectField.getIndexedLanguageId(),
+			itemLabelObjectField.getLabelMap(), false,
+			itemLabelObjectField.getName(), itemLabelObjectField.getReadOnly(),
+			itemLabelObjectField.getReadOnlyConditionExpression(),
+			itemLabelObjectField.isRequired(), itemLabelObjectField.isState(),
+			itemLabelObjectField.getObjectFieldSettings());
+
+		ObjectField restApplicationObjectField =
+			ObjectFieldUtil.createObjectField(
 				ObjectFieldConstants.BUSINESS_TYPE_TEXT,
 				ObjectFieldConstants.DB_TYPE_STRING, true, false, null,
-				_language.get(locale, "item-key"), "itemKey", false);
+				_language.get(locale, "rest-application"), "restApplication",
+				false);
 
-			_objectFieldLocalService.addCustomObjectField(
-				itemKeyObjectField.getExternalReferenceCode(), userId,
-				itemKeyObjectField.getListTypeDefinitionId(),
-				fdsDynamicFilterObjectDefinition.getObjectDefinitionId(),
-				itemKeyObjectField.getBusinessType(),
-				itemKeyObjectField.getDBType(), itemKeyObjectField.isIndexed(),
-				itemKeyObjectField.isIndexedAsKeyword(),
-				itemKeyObjectField.getIndexedLanguageId(),
-				itemKeyObjectField.getLabelMap(), false,
-				itemKeyObjectField.getName(), itemKeyObjectField.getReadOnly(),
-				itemKeyObjectField.getReadOnlyConditionExpression(),
-				itemKeyObjectField.isRequired(), itemKeyObjectField.isState(),
-				itemKeyObjectField.getObjectFieldSettings());
+		_objectFieldLocalService.addCustomObjectField(
+			restApplicationObjectField.getExternalReferenceCode(), userId,
+			restApplicationObjectField.getListTypeDefinitionId(),
+			fdsDynamicFilterObjectDefinition.getObjectDefinitionId(),
+			restApplicationObjectField.getBusinessType(),
+			restApplicationObjectField.getDBType(),
+			restApplicationObjectField.isIndexed(),
+			restApplicationObjectField.isIndexedAsKeyword(),
+			restApplicationObjectField.getIndexedLanguageId(),
+			restApplicationObjectField.getLabelMap(), false,
+			restApplicationObjectField.getName(),
+			restApplicationObjectField.getReadOnly(),
+			restApplicationObjectField.getReadOnlyConditionExpression(),
+			restApplicationObjectField.isRequired(),
+			restApplicationObjectField.isState(),
+			restApplicationObjectField.getObjectFieldSettings());
 
-			ObjectField itemLabelObjectField =
-				ObjectFieldUtil.createObjectField(
-					ObjectFieldConstants.BUSINESS_TYPE_TEXT,
-					ObjectFieldConstants.DB_TYPE_STRING, true, false, null,
-					_language.get(locale, "item-label"), "itemLabel", false);
+		ObjectField restEndpointObjectField = ObjectFieldUtil.createObjectField(
+			ObjectFieldConstants.BUSINESS_TYPE_TEXT,
+			ObjectFieldConstants.DB_TYPE_STRING, true, false, null,
+			_language.get(locale, "rest-endpoint"), "restEndpoint", false);
 
-			_objectFieldLocalService.addCustomObjectField(
-				itemLabelObjectField.getExternalReferenceCode(), userId,
-				itemLabelObjectField.getListTypeDefinitionId(),
-				fdsDynamicFilterObjectDefinition.getObjectDefinitionId(),
-				itemLabelObjectField.getBusinessType(),
-				itemLabelObjectField.getDBType(),
-				itemLabelObjectField.isIndexed(),
-				itemLabelObjectField.isIndexedAsKeyword(),
-				itemLabelObjectField.getIndexedLanguageId(),
-				itemLabelObjectField.getLabelMap(), false,
-				itemLabelObjectField.getName(),
-				itemLabelObjectField.getReadOnly(),
-				itemLabelObjectField.getReadOnlyConditionExpression(),
-				itemLabelObjectField.isRequired(),
-				itemLabelObjectField.isState(),
-				itemLabelObjectField.getObjectFieldSettings());
+		_objectFieldLocalService.addCustomObjectField(
+			restEndpointObjectField.getExternalReferenceCode(), userId,
+			restEndpointObjectField.getListTypeDefinitionId(),
+			fdsDynamicFilterObjectDefinition.getObjectDefinitionId(),
+			restEndpointObjectField.getBusinessType(),
+			restEndpointObjectField.getDBType(),
+			restEndpointObjectField.isIndexed(),
+			restEndpointObjectField.isIndexedAsKeyword(),
+			restEndpointObjectField.getIndexedLanguageId(),
+			restEndpointObjectField.getLabelMap(), false,
+			restEndpointObjectField.getName(),
+			restEndpointObjectField.getReadOnly(),
+			restEndpointObjectField.getReadOnlyConditionExpression(),
+			restEndpointObjectField.isRequired(),
+			restEndpointObjectField.isState(),
+			restEndpointObjectField.getObjectFieldSettings());
 
-			ObjectField restApplicationObjectField =
-				ObjectFieldUtil.createObjectField(
-					ObjectFieldConstants.BUSINESS_TYPE_TEXT,
-					ObjectFieldConstants.DB_TYPE_STRING, true, false, null,
-					_language.get(locale, "rest-application"),
-					"restApplication", false);
+		ObjectField restSchemaObjectField = ObjectFieldUtil.createObjectField(
+			ObjectFieldConstants.BUSINESS_TYPE_TEXT,
+			ObjectFieldConstants.DB_TYPE_STRING, true, false, null,
+			_language.get(locale, "rest-schema"), "restSchema", false);
 
-			_objectFieldLocalService.addCustomObjectField(
-				restApplicationObjectField.getExternalReferenceCode(), userId,
-				restApplicationObjectField.getListTypeDefinitionId(),
-				fdsDynamicFilterObjectDefinition.getObjectDefinitionId(),
-				restApplicationObjectField.getBusinessType(),
-				restApplicationObjectField.getDBType(),
-				restApplicationObjectField.isIndexed(),
-				restApplicationObjectField.isIndexedAsKeyword(),
-				restApplicationObjectField.getIndexedLanguageId(),
-				restApplicationObjectField.getLabelMap(), false,
-				restApplicationObjectField.getName(),
-				restApplicationObjectField.getReadOnly(),
-				restApplicationObjectField.getReadOnlyConditionExpression(),
-				restApplicationObjectField.isRequired(),
-				restApplicationObjectField.isState(),
-				restApplicationObjectField.getObjectFieldSettings());
+		_objectFieldLocalService.addCustomObjectField(
+			restSchemaObjectField.getExternalReferenceCode(), userId,
+			restSchemaObjectField.getListTypeDefinitionId(),
+			fdsDynamicFilterObjectDefinition.getObjectDefinitionId(),
+			restSchemaObjectField.getBusinessType(),
+			restSchemaObjectField.getDBType(),
+			restSchemaObjectField.isIndexed(),
+			restSchemaObjectField.isIndexedAsKeyword(),
+			restSchemaObjectField.getIndexedLanguageId(),
+			restSchemaObjectField.getLabelMap(), false,
+			restSchemaObjectField.getName(),
+			restSchemaObjectField.getReadOnly(),
+			restSchemaObjectField.getReadOnlyConditionExpression(),
+			restSchemaObjectField.isRequired(), restSchemaObjectField.isState(),
+			restSchemaObjectField.getObjectFieldSettings());
 
-			ObjectField restEndpointObjectField =
-				ObjectFieldUtil.createObjectField(
-					ObjectFieldConstants.BUSINESS_TYPE_TEXT,
-					ObjectFieldConstants.DB_TYPE_STRING, true, false, null,
-					_language.get(locale, "rest-endpoint"), "restEndpoint",
-					false);
+		ObjectField sourceObjectField = ObjectFieldUtil.createObjectField(
+			ObjectFieldConstants.BUSINESS_TYPE_TEXT,
+			ObjectFieldConstants.DB_TYPE_STRING, true, false, null,
+			_language.get(locale, "source"), "source", false);
 
-			_objectFieldLocalService.addCustomObjectField(
-				restEndpointObjectField.getExternalReferenceCode(), userId,
-				restEndpointObjectField.getListTypeDefinitionId(),
-				fdsDynamicFilterObjectDefinition.getObjectDefinitionId(),
-				restEndpointObjectField.getBusinessType(),
-				restEndpointObjectField.getDBType(),
-				restEndpointObjectField.isIndexed(),
-				restEndpointObjectField.isIndexedAsKeyword(),
-				restEndpointObjectField.getIndexedLanguageId(),
-				restEndpointObjectField.getLabelMap(), false,
-				restEndpointObjectField.getName(),
-				restEndpointObjectField.getReadOnly(),
-				restEndpointObjectField.getReadOnlyConditionExpression(),
-				restEndpointObjectField.isRequired(),
-				restEndpointObjectField.isState(),
-				restEndpointObjectField.getObjectFieldSettings());
+		_objectFieldLocalService.addCustomObjectField(
+			sourceObjectField.getExternalReferenceCode(), userId,
+			sourceObjectField.getListTypeDefinitionId(),
+			fdsDynamicFilterObjectDefinition.getObjectDefinitionId(),
+			sourceObjectField.getBusinessType(), sourceObjectField.getDBType(),
+			sourceObjectField.isIndexed(),
+			sourceObjectField.isIndexedAsKeyword(),
+			sourceObjectField.getIndexedLanguageId(),
+			sourceObjectField.getLabelMap(), false, sourceObjectField.getName(),
+			sourceObjectField.getReadOnly(),
+			sourceObjectField.getReadOnlyConditionExpression(),
+			sourceObjectField.isRequired(), sourceObjectField.isState(),
+			sourceObjectField.getObjectFieldSettings());
 
-			ObjectField restSchemaObjectField =
-				ObjectFieldUtil.createObjectField(
-					ObjectFieldConstants.BUSINESS_TYPE_TEXT,
-					ObjectFieldConstants.DB_TYPE_STRING, true, false, null,
-					_language.get(locale, "rest-schema"), "restSchema", false);
+		ObjectField sourceTypeObjectField = ObjectFieldUtil.createObjectField(
+			ObjectFieldConstants.BUSINESS_TYPE_TEXT,
+			ObjectFieldConstants.DB_TYPE_STRING, true, false, null,
+			_language.get(locale, "source-type"), "sourceType", false);
 
-			_objectFieldLocalService.addCustomObjectField(
-				restSchemaObjectField.getExternalReferenceCode(), userId,
-				restSchemaObjectField.getListTypeDefinitionId(),
-				fdsDynamicFilterObjectDefinition.getObjectDefinitionId(),
-				restSchemaObjectField.getBusinessType(),
-				restSchemaObjectField.getDBType(),
-				restSchemaObjectField.isIndexed(),
-				restSchemaObjectField.isIndexedAsKeyword(),
-				restSchemaObjectField.getIndexedLanguageId(),
-				restSchemaObjectField.getLabelMap(), false,
-				restSchemaObjectField.getName(),
-				restSchemaObjectField.getReadOnly(),
-				restSchemaObjectField.getReadOnlyConditionExpression(),
-				restSchemaObjectField.isRequired(),
-				restSchemaObjectField.isState(),
-				restSchemaObjectField.getObjectFieldSettings());
-
-			ObjectField sourceObjectField = ObjectFieldUtil.createObjectField(
-				ObjectFieldConstants.BUSINESS_TYPE_TEXT,
-				ObjectFieldConstants.DB_TYPE_STRING, true, false, null,
-				_language.get(locale, "source"), "source", false);
-
-			_objectFieldLocalService.addCustomObjectField(
-				sourceObjectField.getExternalReferenceCode(), userId,
-				sourceObjectField.getListTypeDefinitionId(),
-				fdsDynamicFilterObjectDefinition.getObjectDefinitionId(),
-				sourceObjectField.getBusinessType(),
-				sourceObjectField.getDBType(), sourceObjectField.isIndexed(),
-				sourceObjectField.isIndexedAsKeyword(),
-				sourceObjectField.getIndexedLanguageId(),
-				sourceObjectField.getLabelMap(), false,
-				sourceObjectField.getName(), sourceObjectField.getReadOnly(),
-				sourceObjectField.getReadOnlyConditionExpression(),
-				sourceObjectField.isRequired(), sourceObjectField.isState(),
-				sourceObjectField.getObjectFieldSettings());
-
-			ObjectField sourceTypeObjectField =
-				ObjectFieldUtil.createObjectField(
-					ObjectFieldConstants.BUSINESS_TYPE_TEXT,
-					ObjectFieldConstants.DB_TYPE_STRING, true, false, null,
-					_language.get(locale, "source-type"), "sourceType", false);
-
-			_objectFieldLocalService.addCustomObjectField(
-				sourceTypeObjectField.getExternalReferenceCode(), userId,
-				sourceTypeObjectField.getListTypeDefinitionId(),
-				fdsDynamicFilterObjectDefinition.getObjectDefinitionId(),
-				sourceTypeObjectField.getBusinessType(),
-				sourceTypeObjectField.getDBType(),
-				sourceTypeObjectField.isIndexed(),
-				sourceTypeObjectField.isIndexedAsKeyword(),
-				sourceTypeObjectField.getIndexedLanguageId(),
-				sourceTypeObjectField.getLabelMap(), false,
-				sourceTypeObjectField.getName(),
-				sourceTypeObjectField.getReadOnly(),
-				sourceTypeObjectField.getReadOnlyConditionExpression(),
-				sourceTypeObjectField.isRequired(),
-				sourceTypeObjectField.isState(),
-				sourceTypeObjectField.getObjectFieldSettings());
-		}
-		else {
-			ObjectField listTypeDefinitionERCObjectField =
-				ObjectFieldUtil.createObjectField(
-					ObjectFieldConstants.BUSINESS_TYPE_TEXT,
-					ObjectFieldConstants.DB_TYPE_STRING, true, false, null,
-					_language.get(locale, "list-type-definition-erc"),
-					"listTypeDefinitionERC", false);
-
-			_objectFieldLocalService.addCustomObjectField(
-				listTypeDefinitionERCObjectField.getExternalReferenceCode(),
-				userId,
-				listTypeDefinitionERCObjectField.getListTypeDefinitionId(),
-				fdsDynamicFilterObjectDefinition.getObjectDefinitionId(),
-				listTypeDefinitionERCObjectField.getBusinessType(),
-				listTypeDefinitionERCObjectField.getDBType(),
-				listTypeDefinitionERCObjectField.isIndexed(),
-				listTypeDefinitionERCObjectField.isIndexedAsKeyword(),
-				listTypeDefinitionERCObjectField.getIndexedLanguageId(),
-				listTypeDefinitionERCObjectField.getLabelMap(), false,
-				listTypeDefinitionERCObjectField.getName(),
-				listTypeDefinitionERCObjectField.getReadOnly(),
-				listTypeDefinitionERCObjectField.
-					getReadOnlyConditionExpression(),
-				listTypeDefinitionERCObjectField.isRequired(),
-				listTypeDefinitionERCObjectField.isState(),
-				listTypeDefinitionERCObjectField.getObjectFieldSettings());
-		}
+		_objectFieldLocalService.addCustomObjectField(
+			sourceTypeObjectField.getExternalReferenceCode(), userId,
+			sourceTypeObjectField.getListTypeDefinitionId(),
+			fdsDynamicFilterObjectDefinition.getObjectDefinitionId(),
+			sourceTypeObjectField.getBusinessType(),
+			sourceTypeObjectField.getDBType(),
+			sourceTypeObjectField.isIndexed(),
+			sourceTypeObjectField.isIndexedAsKeyword(),
+			sourceTypeObjectField.getIndexedLanguageId(),
+			sourceTypeObjectField.getLabelMap(), false,
+			sourceTypeObjectField.getName(),
+			sourceTypeObjectField.getReadOnly(),
+			sourceTypeObjectField.getReadOnlyConditionExpression(),
+			sourceTypeObjectField.isRequired(), sourceTypeObjectField.isState(),
+			sourceTypeObjectField.getObjectFieldSettings());
 
 		_enableLocalization(fdsDynamicFilterObjectDefinition);
 
@@ -767,29 +727,17 @@ public class FDSAdminPortlet extends MVCPortlet {
 
 		List<ObjectField> objectFields = Arrays.asList(
 			ObjectFieldUtil.createObjectField(
+				ObjectFieldConstants.BUSINESS_TYPE_BOOLEAN,
+				ObjectFieldConstants.DB_TYPE_BOOLEAN, true, false, null,
+				_language.get(locale, "default"), "default", false),
+			ObjectFieldUtil.createObjectField(
 				ObjectFieldConstants.BUSINESS_TYPE_TEXT,
 				ObjectFieldConstants.DB_TYPE_STRING, true, false, null,
 				_language.get(locale, "field-name"), "fieldName", true),
 			ObjectFieldUtil.createObjectField(
 				ObjectFieldConstants.BUSINESS_TYPE_TEXT,
 				ObjectFieldConstants.DB_TYPE_STRING, true, false, null,
-				_language.get(locale, "sorting"), "sortingDirection", true));
-
-		if (FeatureFlagManagerUtil.isEnabled("LPD-19465")) {
-			objectFields = Arrays.asList(
-				ObjectFieldUtil.createObjectField(
-					ObjectFieldConstants.BUSINESS_TYPE_BOOLEAN,
-					ObjectFieldConstants.DB_TYPE_BOOLEAN, true, false, null,
-					_language.get(locale, "default"), "default", false),
-				ObjectFieldUtil.createObjectField(
-					ObjectFieldConstants.BUSINESS_TYPE_TEXT,
-					ObjectFieldConstants.DB_TYPE_STRING, true, false, null,
-					_language.get(locale, "field-name"), "fieldName", true),
-				ObjectFieldUtil.createObjectField(
-					ObjectFieldConstants.BUSINESS_TYPE_TEXT,
-					ObjectFieldConstants.DB_TYPE_STRING, true, false, null,
-					_language.get(locale, "order-type"), "orderType", true));
-		}
+				_language.get(locale, "order-type"), "orderType", true));
 
 		ObjectDefinition fdsSortObjectDefinition =
 			_objectDefinitionLocalService.addSystemObjectDefinition(
@@ -800,13 +748,11 @@ public class FDSAdminPortlet extends MVCPortlet {
 				ObjectDefinitionConstants.SCOPE_COMPANY, null, 1,
 				WorkflowConstants.STATUS_DRAFT, objectFields);
 
-		if (FeatureFlagManagerUtil.isEnabled("LPD-19465")) {
-			_enableLocalization(fdsSortObjectDefinition);
+		_enableLocalization(fdsSortObjectDefinition);
 
-			_addLocalizedCustomObjectField(
-				_language.get(locale, "label"), "label",
-				fdsSortObjectDefinition, userId);
-		}
+		_addLocalizedCustomObjectField(
+			_language.get(locale, "label"), "label", fdsSortObjectDefinition,
+			userId);
 
 		_objectDefinitionLocalService.publishSystemObjectDefinition(
 			userId, fdsSortObjectDefinition.getObjectDefinitionId());
@@ -830,7 +776,7 @@ public class FDSAdminPortlet extends MVCPortlet {
 				LocalizedMapUtil.getLocalizedMap("Data Set"), true, "FDSView",
 				null, null, null, null,
 				LocalizedMapUtil.getLocalizedMap("Data Sets"), false,
-				ObjectDefinitionConstants.SCOPE_COMPANY, null, 1,
+				ObjectDefinitionConstants.SCOPE_COMPANY, "label", 1,
 				WorkflowConstants.STATUS_DRAFT,
 				Arrays.asList(
 					ObjectFieldUtil.createObjectField(

@@ -554,6 +554,16 @@ public class ServletDataImpl implements ServletData {
 							OptionCategoryResourceImpl.class,
 							"postOptionCategoryBatch"));
 					put(
+						"mutation#deleteOptionCategoryByExternalReferenceCode",
+						new ObjectValuePair<>(
+							OptionCategoryResourceImpl.class,
+							"deleteOptionCategoryByExternalReferenceCode"));
+					put(
+						"mutation#patchOptionCategoryByExternalReferenceCode",
+						new ObjectValuePair<>(
+							OptionCategoryResourceImpl.class,
+							"patchOptionCategoryByExternalReferenceCode"));
+					put(
 						"mutation#deleteOptionCategory",
 						new ObjectValuePair<>(
 							OptionCategoryResourceImpl.class,
@@ -996,6 +1006,16 @@ public class ServletDataImpl implements ServletData {
 							SpecificationResourceImpl.class,
 							"postSpecificationBatch"));
 					put(
+						"mutation#deleteSpecificationByExternalReferenceCode",
+						new ObjectValuePair<>(
+							SpecificationResourceImpl.class,
+							"deleteSpecificationByExternalReferenceCode"));
+					put(
+						"mutation#patchSpecificationByExternalReferenceCode",
+						new ObjectValuePair<>(
+							SpecificationResourceImpl.class,
+							"patchSpecificationByExternalReferenceCode"));
+					put(
 						"mutation#deleteSpecification",
 						new ObjectValuePair<>(
 							SpecificationResourceImpl.class,
@@ -1143,6 +1163,11 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							OptionCategoryResourceImpl.class,
 							"getOptionCategoriesPage"));
+					put(
+						"query#optionCategoryByExternalReferenceCode",
+						new ObjectValuePair<>(
+							OptionCategoryResourceImpl.class,
+							"getOptionCategoryByExternalReferenceCode"));
 					put(
 						"query#optionCategory",
 						new ObjectValuePair<>(
@@ -1418,6 +1443,11 @@ public class ServletDataImpl implements ServletData {
 							SpecificationResourceImpl.class,
 							"getSpecificationsPage"));
 					put(
+						"query#specificationByExternalReferenceCode",
+						new ObjectValuePair<>(
+							SpecificationResourceImpl.class,
+							"getSpecificationByExternalReferenceCode"));
+					put(
 						"query#specification",
 						new ObjectValuePair<>(
 							SpecificationResourceImpl.class,
@@ -1468,6 +1498,11 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							CatalogResourceImpl.class,
 							"getCatalogByExternalReferenceCode"));
+					put(
+						"query#Catalog.specificationByExternalReferenceCode",
+						new ObjectValuePair<>(
+							SpecificationResourceImpl.class,
+							"getSpecificationByExternalReferenceCode"));
 					put(
 						"query#Catalog.productByExternalReferenceCodeMappedProducts",
 						new ObjectValuePair<>(
@@ -1578,6 +1613,11 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							ProductVirtualSettingsResourceImpl.class,
 							"getProductByExternalReferenceCodeProductVirtualSettings"));
+					put(
+						"query#Catalog.optionCategoryByExternalReferenceCode",
+						new ObjectValuePair<>(
+							OptionCategoryResourceImpl.class,
+							"getOptionCategoryByExternalReferenceCode"));
 				}
 			};
 

@@ -182,6 +182,24 @@ public class AssetListEntryServiceImpl extends AssetListEntryServiceBaseImpl {
 	}
 
 	@Override
+	public AssetListEntry fetchAssetListEntryByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		AssetListEntry assetListEntry =
+			assetListEntryLocalService.
+				fetchAssetListEntryByExternalReferenceCode(
+					externalReferenceCode, groupId);
+
+		if (assetListEntry != null) {
+			_assetListEntryModelResourcePermission.check(
+				getPermissionChecker(), assetListEntry, ActionKeys.VIEW);
+		}
+
+		return assetListEntry;
+	}
+
+	@Override
 	public List<AssetListEntry> getAssetListEntries(
 		long groupId, int start, int end,
 		OrderByComparator<AssetListEntry> orderByComparator) {
@@ -346,6 +364,21 @@ public class AssetListEntryServiceImpl extends AssetListEntryServiceBaseImpl {
 		AssetListEntry assetListEntry =
 			assetListEntryLocalService.getAssetListEntry(
 				groupId, assetListEntryKey);
+
+		_assetListEntryModelResourcePermission.check(
+			getPermissionChecker(), assetListEntry, ActionKeys.VIEW);
+
+		return assetListEntry;
+	}
+
+	@Override
+	public AssetListEntry getAssetListEntryByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		AssetListEntry assetListEntry =
+			assetListEntryLocalService.getAssetListEntryByExternalReferenceCode(
+				externalReferenceCode, groupId);
 
 		_assetListEntryModelResourcePermission.check(
 			getPermissionChecker(), assetListEntry, ActionKeys.VIEW);

@@ -24,13 +24,11 @@ public class ActionUtil {
 
 		long userGroupId = ParamUtil.getLong(httpServletRequest, "userGroupId");
 
-		UserGroup userGroup = null;
-
 		if (userGroupId > 0) {
-			userGroup = UserGroupServiceUtil.fetchUserGroup(userGroupId);
+			return UserGroupServiceUtil.fetchUserGroup(userGroupId);
 		}
 
-		return userGroup;
+		return null;
 	}
 
 	public static UserGroup getUserGroup(PortletRequest portletRequest)

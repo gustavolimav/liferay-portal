@@ -19,7 +19,9 @@ boolean fixedHeader = GetterUtil.getBoolean((String)request.getAttribute("lifera
 String markupView = (String)request.getAttribute("liferay-ui:search-iterator:markupView");
 boolean paginate = GetterUtil.getBoolean((String)request.getAttribute("liferay-ui:search-iterator:paginate"));
 ResultRowSplitter resultRowSplitter = (ResultRowSplitter)request.getAttribute("liferay-ui:search-iterator:resultRowSplitter");
+String searchContainerRowAriaLabel = GetterUtil.getString((String)request.getAttribute("liferay-ui:search-container-row:ariaLabel"));
 String searchContainerRowCssClass = GetterUtil.getString((String)request.getAttribute("liferay-ui:search-container-row:cssClass"));
+String searchContainerRowTabIndex = GetterUtil.getString((String)request.getAttribute("liferay-ui:search-container-row:tabIndex"));
 String searchResultCssClass = (String)request.getAttribute("liferay-ui:search-iterator:searchResultCssClass");
 String type = (String)request.getAttribute("liferay-ui:search:type");
 

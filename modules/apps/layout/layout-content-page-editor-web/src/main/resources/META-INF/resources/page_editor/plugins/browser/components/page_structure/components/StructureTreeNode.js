@@ -12,7 +12,6 @@ import {sub} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {useEffect, useMemo, useRef} from 'react';
 
-import {addMappingFields} from '../../../../../app/actions/index';
 import {fromControlsId} from '../../../../../app/components/layout_data_items/Collection';
 import {ITEM_ACTIVATION_ORIGINS} from '../../../../../app/config/constants/itemActivationOrigins';
 import {ITEM_TYPES} from '../../../../../app/config/constants/itemTypes';
@@ -26,7 +25,7 @@ import {LAYOUT_DATA_ITEM_TYPES} from '../../../../../app/config/constants/layout
 import {VIEWPORT_SIZES} from '../../../../../app/config/constants/viewportSizes';
 import {
 	useActivationOrigin,
-	useActiveItemId,
+	useActiveItemIds,
 	useSelectItem,
 } from '../../../../../app/contexts/ControlsContext';
 import {
@@ -37,13 +36,16 @@ import {
 	useSetMovementText,
 } from '../../../../../app/contexts/KeyboardMovementContext';
 import {
+	useEditedNodeId,
+	useSetEditedNodeId,
+} from '../../../../../app/contexts/ShortcutContext';
+import {
 	useDispatch,
 	useSelector,
 	useSelectorCallback,
 	useSelectorRef,
 } from '../../../../../app/contexts/StoreContext';
 import selectCanUpdatePageStructure from '../../../../../app/selectors/selectCanUpdatePageStructure';
-import CollectionService from '../../../../../app/services/CollectionService';
 import moveItem from '../../../../../app/thunks/moveItem';
 import updateItemConfig from '../../../../../app/thunks/updateItemConfig';
 import canBeRenamed from '../../../../../app/utils/canBeRenamed';
@@ -69,41 +71,17 @@ import {formIsUnavailable} from '../../../../../app/utils/formIsUnavailable';
 import getFirstControlsId from '../../../../../app/utils/getFirstControlsId';
 import getMappingFieldsKey from '../../../../../app/utils/getMappingFieldsKey';
 import isItemWidget from '../../../../../app/utils/isItemWidget';
+import loadCollectionFields from '../../../../../app/utils/loadCollectionFields';
 
 const HOVER_EXPAND_DELAY = 1000;
 
-const loadCollectionFields = (
-	dispatch,
-	fieldName,
-	itemType,
-	itemSubtype,
-	mappingFieldsKey
-) => {
-	CollectionService.getCollectionMappingFields({
-		fieldName: fieldName || '',
-		itemSubtype: itemSubtype || '',
-		itemType,
-	})
-		.then((response) => {
-			dispatch(
-				addMappingFields({
-					fields: response.mappingFields,
-					key: mappingFieldsKey,
-				})
-			);
-		})
-		.catch((error) => {
-			if (process.env.NODE_ENV === 'development') {
-				console.error(error);
-			}
-		});
-};
-
-export default function StructureTreeNode({node, setEditingNodeId}) {
+export default function StructureTreeNode({node}) {
 	const activationOrigin = useActivationOrigin();
-	const activeItemId = useActiveItemId();
+	const activeItemIds = useActiveItemIds();
 	const dispatch = useDispatch();
-	const isSelected = node.id === fromControlsId(activeItemId);
+	const isSelected = Liferay.FeatureFlags['LPD-18221']
+		? activeItemIds.includes(node.id)
+		: node.id === fromControlsId(activeItemIds);
 
 	const fragmentEntryLinks = useSelector((state) => state.fragmentEntryLinks);
 	const layoutData = useSelector((state) => state.layoutData);
@@ -160,7 +138,6 @@ export default function StructureTreeNode({node, setEditingNodeId}) {
 			isActive={node.activable && isSelected}
 			isMapped={node.mapped}
 			node={node}
-			setEditingNodeId={setEditingNodeId}
 		/>
 	);
 }
@@ -183,7 +160,6 @@ function StructureTreeNodeContent({
 	isActive,
 	isMapped,
 	node,
-	setEditingNodeId,
 }) {
 	const canUpdatePageStructure = useSelector(selectCanUpdatePageStructure);
 	const dispatch = useDispatch();
@@ -193,6 +169,7 @@ function StructureTreeNodeContent({
 		(state) => state.selectedViewportSize
 	);
 	const selectItem = useSelectItem();
+	const setEditedNodeId = useSetEditedNodeId();
 	const setText = useSetMovementText();
 
 	const layoutDataRef = useSelectorRef((store) => store.layoutData);
@@ -278,7 +255,7 @@ function StructureTreeNodeContent({
 			);
 		}
 
-		setEditingNodeId(null);
+		setEditedNodeId(null);
 		setText(Liferay.Language.get('name-saved'));
 	};
 
@@ -303,7 +280,7 @@ function StructureTreeNodeContent({
 	useEffect(() => {
 		if (
 			item.itemId === keyboardMovementTargetId ||
-			(activationOrigin === ITEM_ACTIVATION_ORIGINS.pageEditor &&
+			(activationOrigin === ITEM_ACTIVATION_ORIGINS.layout &&
 				nodeRef.current &&
 				isActive)
 		) {
@@ -377,8 +354,9 @@ function StructureTreeNodeContent({
 				}}
 				onDoubleClick={(event) => {
 					event.stopPropagation();
+
 					if (canBeRenamed(item)) {
-						setEditingNodeId(item.itemId);
+						setEditedNodeId(item.itemId);
 					}
 				}}
 				ref={
@@ -400,11 +378,11 @@ function StructureTreeNodeContent({
 			/>
 
 			<NameLabel
-				editingName={node.editingName}
 				hidden={node.hidden || node.hiddenAncestor}
 				icon={node.icon}
 				isMapped={isMapped}
 				isMasterItem={node.isMasterItem}
+				itemId={node.id}
 				name={node.name}
 				nameInfo={node.nameInfo}
 				onEditName={onEditName}
@@ -432,11 +410,11 @@ function StructureTreeNodeContent({
 const NameLabel = React.forwardRef(
 	(
 		{
-			editingName,
 			hidden,
 			icon,
 			isMapped,
 			isMasterItem,
+			itemId,
 			name: defaultName,
 			nameInfo,
 			onEditName,
@@ -445,9 +423,11 @@ const NameLabel = React.forwardRef(
 		},
 		ref
 	) => {
+		const editedNodeId = useEditedNodeId();
 		const inputRef = useRef();
-
 		const [name, setName] = useControlledState(defaultName);
+
+		const editingName = editedNodeId === itemId;
 
 		useEffect(() => {
 			if (editingName && inputRef.current) {

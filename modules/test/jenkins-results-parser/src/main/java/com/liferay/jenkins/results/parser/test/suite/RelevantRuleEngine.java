@@ -37,25 +37,6 @@ public class RelevantRuleEngine {
 		return _relevantRuleEngine;
 	}
 
-	public static RelevantRuleEngine getInstance(File baseDir) {
-		if (_relevantRuleEngine == null) {
-			_relevantRuleEngine = new RelevantRuleEngine(baseDir);
-		}
-
-		return _relevantRuleEngine;
-	}
-
-	public static RelevantRuleEngine getInstance(
-		File baseDir, String testSuiteName) {
-
-		if (_relevantRuleEngine == null) {
-			_relevantRuleEngine = new RelevantRuleEngine(
-				baseDir, testSuiteName);
-		}
-
-		return _relevantRuleEngine;
-	}
-
 	public static RelevantRuleEngine getInstance(
 		PortalAcceptancePullRequestJob portalAcceptancePullRequestJob) {
 
@@ -100,25 +81,22 @@ public class RelevantRuleEngine {
 		return matchingRelevantRules;
 	}
 
+	public List<String> getRelevantRuleNames(List<RelevantRule> relevantRules) {
+		List<String> relevantRuleNames = new ArrayList<>();
+
+		for (RelevantRule relevantRule : relevantRules) {
+			relevantRuleNames.add(relevantRule.getName());
+		}
+
+		return relevantRuleNames;
+	}
+
 	public String getTestSuiteName() {
 		return _testSuiteName;
 	}
 
 	public void setBaseDir(File baseDir) {
 		_baseDir = baseDir;
-	}
-
-	private RelevantRuleEngine(File baseDir) {
-		_baseDir = baseDir;
-
-		_relevantRuleEngine = this;
-	}
-
-	private RelevantRuleEngine(File baseDir, String testSuiteName) {
-		_baseDir = baseDir;
-		_testSuiteName = testSuiteName;
-
-		_relevantRuleEngine = this;
 	}
 
 	private RelevantRuleEngine(
@@ -136,7 +114,8 @@ public class RelevantRuleEngine {
 	}
 
 	private RelevantRule _getRelevantRule(
-		String filePath, String relevantRuleName, Properties properties) {
+		String filePath, Job job, String relevantRuleName,
+		Properties properties) {
 
 		String relevantRuleKey = filePath + "_" + relevantRuleName;
 
@@ -147,7 +126,7 @@ public class RelevantRuleEngine {
 		}
 
 		RelevantRule relevantRule = new RelevantRule(
-			filePath, relevantRuleName, properties);
+			filePath, job, relevantRuleName, properties);
 
 		_relevantRuleMap.put(relevantRule, new HashSet<>());
 
@@ -194,7 +173,7 @@ public class RelevantRuleEngine {
 			testPropertiesFilePaths.add(testPropertiesFilePath);
 		}
 
-		if (file.equals(getBaseDir())) {
+		if (file.equals(_baseDir)) {
 			return testPropertiesFilePaths;
 		}
 
@@ -250,7 +229,7 @@ public class RelevantRuleEngine {
 			for (String relevantRuleName : relevantRuleNames.split(",")) {
 				_relevantRuleMap.put(
 					_getRelevantRule(
-						testPropertiesFilePath, relevantRuleName,
+						testPropertiesFilePath, _job, relevantRuleName,
 						_getRelevantRuleProperties(
 							relevantRuleName, properties)),
 					entry.getValue());
@@ -261,9 +240,9 @@ public class RelevantRuleEngine {
 	private static RelevantRuleEngine _relevantRuleEngine;
 
 	private File _baseDir;
-	private Job _job;
+	private final Job _job;
 	private final Map<RelevantRule, Set<File>> _relevantRuleMap =
 		new HashMap<>();
-	private String _testSuiteName = "relevant";
+	private final String _testSuiteName;
 
 }

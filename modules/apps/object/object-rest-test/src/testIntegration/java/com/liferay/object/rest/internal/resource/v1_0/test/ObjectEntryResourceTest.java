@@ -64,7 +64,6 @@ import com.liferay.object.test.util.ObjectDefinitionTestUtil;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 import com.liferay.petra.function.UnsafeFunction;
-import com.liferay.petra.function.UnsafeRunnable;
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.function.UnsafeTriConsumer;
 import com.liferay.petra.function.transform.TransformUtil;
@@ -172,7 +171,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
-import org.junit.ComparisonFailure;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -5142,10 +5140,14 @@ public class ObjectEntryResourceTest {
 
 	@Test
 	public void testGetObjectEntryFilteredByKeywords() throws Exception {
+		_postObjectEntryWithKeywords();
 		_postObjectEntryWithKeywords("tag1");
 		_postObjectEntryWithKeywords("TAG1");
 		_postObjectEntryWithKeywords("tag1", "tag2");
 		_postObjectEntryWithKeywords("tag1", "tag2", "tag3");
+
+		_assertFilteredObjectEntries(4, "keywords/any()");
+		_assertFilteredObjectEntries(1, "not keywords/any()");
 
 		_assertFilteredObjectEntries(4, "keywords/any(k:k eq 'tag1')");
 		_assertFilteredObjectEntries(4, "keywords/any(k:k eq 'TAG1')");
@@ -5208,6 +5210,12 @@ public class ObjectEntryResourceTest {
 			_objectDefinition1,
 			HashMapBuilder.<String, Serializable>put(
 				_OBJECT_FIELD_NAME_1, RandomTestUtil.randomString()
+			).build(),
+			_TAG_1);
+		ObjectEntryTestUtil.addObjectEntry(
+			_objectDefinition1,
+			HashMapBuilder.<String, Serializable>put(
+				_OBJECT_FIELD_NAME_1, RandomTestUtil.randomString()
 			).put(
 				_OBJECT_FIELD_NAME_MULTISELECT_PICKLIST, _LIST_TYPE_ENTRY_KEY_1
 			).build(),
@@ -5234,6 +5242,13 @@ public class ObjectEntryResourceTest {
 			).build(),
 			_TAG_1);
 
+		_assertFilteredObjectEntries(
+			3,
+			String.format("%s/any()", _OBJECT_FIELD_NAME_MULTISELECT_PICKLIST));
+		_assertFilteredObjectEntries(
+			1,
+			String.format(
+				"not %s/any()", _OBJECT_FIELD_NAME_MULTISELECT_PICKLIST));
 		_assertFilteredObjectEntries(
 			3,
 			String.format(
@@ -5390,6 +5405,8 @@ public class ObjectEntryResourceTest {
 		_postObjectEntryWithTaxonomyCategories(
 			taxonomyCategory1, taxonomyCategory2, taxonomyCategory3);
 
+		_assertFilteredObjectEntries(3, "taxonomyCategoryIds/any()");
+		_assertFilteredObjectEntries(1, "not taxonomyCategoryIds/any()");
 		_assertFilteredObjectEntries(
 			3,
 			String.format(
@@ -7349,6 +7366,60 @@ public class ObjectEntryResourceTest {
 				_objectDefinitionLocalService.updateObjectDefinition(
 					_objectDefinition1);
 		}
+	}
+
+	@Test
+	public void testPostRelatedObjectEntryInDifferentCompany()
+		throws Exception {
+
+		ObjectRelationship objectRelationship1 = _addObjectRelationship(
+			TestPropsValues.getCompanyId());
+
+		ObjectEntry objectEntry = ObjectEntryTestUtil.addObjectEntry(
+			_objectDefinitionLocalService.getObjectDefinition(
+				objectRelationship1.getObjectDefinitionId1()),
+			_OBJECT_FIELD_NAME_TEXT, RandomTestUtil.randomString());
+
+		JSONObject jsonObject = HTTPTestUtil.invokeToJSONObject(
+			JSONUtil.put(
+				"domain", "able.com"
+			).put(
+				"portalInstanceId", "able.com"
+			).put(
+				"virtualHost", "www.able.com"
+			).toString(),
+			"headless-portal-instances/v1.0/portal-instances",
+			Http.Method.POST);
+
+		ObjectRelationship objectRelationship2 = _addObjectRelationship(
+			jsonObject.getLong("companyId"));
+
+		HTTPTestUtil.customize(
+		).withBaseURL(
+			"http://www.able.com:8080"
+		).withCredentials(
+			"test@able.com", PropsValues.DEFAULT_ADMIN_PASSWORD
+		).apply(
+			() -> {
+				ObjectDefinition objectDefinition =
+					_objectDefinitionLocalService.getObjectDefinition(
+						objectRelationship2.getObjectDefinitionId2());
+
+				ObjectField objectField =
+					_objectFieldLocalService.getObjectField(
+						objectRelationship2.getObjectFieldId2());
+
+				Assert.assertEquals(
+					400,
+					HTTPTestUtil.invokeToHttpCode(
+						JSONUtil.put(
+							objectField.getName(),
+							objectEntry.getObjectEntryId()
+						).toString(),
+						objectDefinition.getRESTContextPath(),
+						Http.Method.POST));
+			}
+		);
 	}
 
 	@Test
@@ -9445,9 +9516,6 @@ public class ObjectEntryResourceTest {
 				manyToOneDepth1JSONObjects[1] = HTTPTestUtil.invokeToJSONObject(
 					JSONUtil.put(
 						"externalReferenceCode", "ERC1_1"
-					).put(
-						"status",
-						JSONUtil.put("code", WorkflowConstants.STATUS_DRAFT)
 					).toString(),
 					endpoint2, Http.Method.POST)
 		);
@@ -9477,9 +9545,6 @@ public class ObjectEntryResourceTest {
 				manyToOneDepth2JSONObjects[1] = HTTPTestUtil.invokeToJSONObject(
 					JSONUtil.put(
 						"externalReferenceCode", "ERC1_2"
-					).put(
-						"status",
-						JSONUtil.put("code", WorkflowConstants.STATUS_DRAFT)
 					).toString(),
 					endpoint3, Http.Method.POST)
 		);
@@ -9632,6 +9697,9 @@ public class ObjectEntryResourceTest {
 			_testSortByFieldName(
 				endpoint1, jsonObject1, jsonObject2, jsonObject3, jsonObject4,
 				String.format("%s/id", _objectRelationship1.getName()));
+			_testSortByFieldName(
+				endpoint1, jsonObject3, jsonObject4, jsonObject1, jsonObject2,
+				String.format("%s/status", _objectRelationship1.getName()));
 
 			// Depth 2
 
@@ -9665,6 +9733,11 @@ public class ObjectEntryResourceTest {
 				endpoint1, jsonObject1, jsonObject2, jsonObject3, jsonObject4,
 				String.format(
 					"%s/%s/id", _objectRelationship1.getName(),
+					_objectRelationship2.getName()));
+			_testSortByFieldName(
+				endpoint1, jsonObject3, jsonObject4, jsonObject1, jsonObject2,
+				String.format(
+					"%s/%s/status", _objectRelationship1.getName(),
 					_objectRelationship2.getName()));
 			_testSortByFieldName(
 				endpoint1, jsonObject3, jsonObject4, jsonObject1, jsonObject2,
@@ -9707,24 +9780,6 @@ public class ObjectEntryResourceTest {
 				String.format(
 					"%s/%s/userId", _objectRelationship1.getName(),
 					_objectRelationship2.getName()));
-
-			// TODO LPD-20530
-
-			_assertFailure(
-				ComparisonFailure.class,
-				() -> _testSortByFieldName(
-					endpoint1, jsonObject1, jsonObject2, jsonObject3,
-					jsonObject4,
-					String.format(
-						"%s/status", _objectRelationship1.getName())));
-			_assertFailure(
-				ComparisonFailure.class,
-				() -> _testSortByFieldName(
-					endpoint1, jsonObject1, jsonObject2, jsonObject3,
-					jsonObject4,
-					String.format(
-						"%s/%s/status", _objectRelationship1.getName(),
-						_objectRelationship2.getName())));
 		}
 		finally {
 			if (jsonObject1 != null) {
@@ -10737,6 +10792,9 @@ public class ObjectEntryResourceTest {
 			_testSortByFieldName(
 				endpoint1, jsonObject1, jsonObject2,
 				String.format("%s/id", _objectRelationship1.getName()));
+			_testSortByFieldName(
+				endpoint1, jsonObject2, jsonObject1,
+				String.format("%s/status", _objectRelationship1.getName()));
 
 			// Depth 2
 
@@ -10770,6 +10828,11 @@ public class ObjectEntryResourceTest {
 				endpoint1, jsonObject1, jsonObject2,
 				String.format(
 					"%s/%s/id", _objectRelationship1.getName(),
+					_objectRelationship2.getName()));
+			_testSortByFieldName(
+				endpoint1, jsonObject2, jsonObject1,
+				String.format(
+					"%s/%s/status", _objectRelationship1.getName(),
 					_objectRelationship2.getName()));
 			_testSortByFieldName(
 				endpoint1, jsonObject2, jsonObject1,
@@ -10812,22 +10875,6 @@ public class ObjectEntryResourceTest {
 				String.format(
 					"%s/%s/userId", _objectRelationship1.getName(),
 					_objectRelationship2.getName()));
-
-			// TODO LPD-20530
-
-			_assertFailure(
-				ComparisonFailure.class,
-				() -> _testSortByFieldName(
-					endpoint1, jsonObject2, jsonObject1,
-					String.format(
-						"%s/status", _objectRelationship1.getName())));
-			_assertFailure(
-				ComparisonFailure.class,
-				() -> _testSortByFieldName(
-					endpoint1, jsonObject2, jsonObject1,
-					String.format(
-						"%s/%s/status", _objectRelationship1.getName(),
-						_objectRelationship2.getName())));
 		}
 		finally {
 			for (JSONObject jsonObject :
@@ -11061,6 +11108,39 @@ public class ObjectEntryResourceTest {
 			false);
 	}
 
+	private ObjectRelationship _addObjectRelationship(long companyId)
+		throws Exception {
+
+		User user = UserTestUtil.getAdminUser(companyId);
+
+		ObjectDefinition objectDefinition1 =
+			ObjectDefinitionTestUtil.publishObjectDefinition(
+				Collections.singletonList(
+					new TextObjectFieldBuilder(
+					).labelMap(
+						LocalizedMapUtil.getLocalizedMap(
+							RandomTestUtil.randomString())
+					).name(
+						_OBJECT_FIELD_NAME_TEXT
+					).build()),
+				ObjectDefinitionConstants.SCOPE_COMPANY, user.getUserId());
+		ObjectDefinition objectDefinition2 =
+			ObjectDefinitionTestUtil.publishObjectDefinition(
+				Collections.singletonList(
+					new TextObjectFieldBuilder(
+					).labelMap(
+						LocalizedMapUtil.getLocalizedMap(
+							RandomTestUtil.randomString())
+					).name(
+						_OBJECT_FIELD_NAME_TEXT
+					).build()),
+				ObjectDefinitionConstants.SCOPE_COMPANY, user.getUserId());
+
+		return ObjectRelationshipTestUtil.addObjectRelationship(
+			objectDefinition1, objectDefinition2, user.getUserId(),
+			ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
+	}
+
 	private ObjectRelationship _addObjectRelationshipAndRelateObjectEntries(
 			ObjectDefinition objectDefinition1,
 			ObjectDefinition objectDefinition2, long primaryKey1,
@@ -11168,24 +11248,6 @@ public class ObjectEntryResourceTest {
 				)
 			).toString(),
 			nestedObjectEntriesJSONArray.toString(), JSONCompareMode.LENIENT);
-	}
-
-	private void _assertFailure(
-		Class<?> clazz, UnsafeRunnable<Exception> unsafeRunnable) {
-
-		try {
-			unsafeRunnable.run();
-
-			Assert.fail();
-		}
-		catch (Throwable throwable) {
-			Class<?> throwableClass = throwable.getClass();
-
-			Assert.assertTrue(
-				throwableClass.getName() + " is not an instance of " +
-					clazz.getName(),
-				clazz.isInstance(throwable));
-		}
 	}
 
 	private void _assertFilteredObjectEntries(

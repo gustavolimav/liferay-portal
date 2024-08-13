@@ -75,11 +75,15 @@ public class CPSpecificationOptionLocalServiceImpl
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public CPSpecificationOption addCPSpecificationOption(
-			long userId, long cpOptionCategoryId, long listTypeDefinitionId,
-			Map<Locale, String> titleMap, Map<Locale, String> descriptionMap,
-			boolean facetable, String key, double priority,
-			ServiceContext serviceContext)
+			String externalReferenceCode, long userId, long cpOptionCategoryId,
+			long listTypeDefinitionId, Map<Locale, String> titleMap,
+			Map<Locale, String> descriptionMap, boolean facetable, String key,
+			double priority, ServiceContext serviceContext)
 		throws PortalException {
+
+		if (Validator.isBlank(externalReferenceCode)) {
+			externalReferenceCode = null;
+		}
 
 		User user = _userLocalService.getUser(userId);
 
@@ -94,6 +98,7 @@ public class CPSpecificationOptionLocalServiceImpl
 		CPSpecificationOption cpSpecificationOption =
 			cpSpecificationOptionPersistence.create(cpSpecificationOptionId);
 
+		cpSpecificationOption.setExternalReferenceCode(externalReferenceCode);
 		cpSpecificationOption.setCompanyId(user.getCompanyId());
 		cpSpecificationOption.setUserId(user.getUserId());
 		cpSpecificationOption.setUserName(user.getFullName());
@@ -230,11 +235,16 @@ public class CPSpecificationOptionLocalServiceImpl
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public CPSpecificationOption updateCPSpecificationOption(
-			long cpSpecificationOptionId, long cpOptionCategoryId,
-			long listTypeDefinitionId, Map<Locale, String> titleMap,
-			Map<Locale, String> descriptionMap, boolean facetable, String key,
-			double priority, ServiceContext serviceContext)
+			String externalReferenceCode, long cpSpecificationOptionId,
+			long cpOptionCategoryId, long listTypeDefinitionId,
+			Map<Locale, String> titleMap, Map<Locale, String> descriptionMap,
+			boolean facetable, String key, double priority,
+			ServiceContext serviceContext)
 		throws PortalException {
+
+		if (Validator.isBlank(externalReferenceCode)) {
+			externalReferenceCode = null;
+		}
 
 		CPSpecificationOption cpSpecificationOption =
 			cpSpecificationOptionPersistence.findByPrimaryKey(
@@ -248,6 +258,7 @@ public class CPSpecificationOptionLocalServiceImpl
 			cpSpecificationOption.getCPSpecificationOptionId(),
 			cpSpecificationOption.getCompanyId(), titleMap, key);
 
+		cpSpecificationOption.setExternalReferenceCode(externalReferenceCode);
 		cpSpecificationOption.setCPOptionCategoryId(cpOptionCategoryId);
 		cpSpecificationOption.setListTypeDefinitionId(listTypeDefinitionId);
 		cpSpecificationOption.setTitleMap(titleMap);

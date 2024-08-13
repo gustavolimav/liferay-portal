@@ -229,11 +229,12 @@
 		</or>
 	</condition>
 
-	<fail message="Please use Java 1.8 or 21.">
+	<fail message="Please use Java 1.8, 17, or 21.">
 		<condition>
 			<not>
 				<or>
 					<equals arg1="${java.specification.version}" arg2="1.8" />
+					<equals arg1="${java.specification.version}" arg2="17" />
 					<equals arg1="${java.specification.version}" arg2="21" />
 					<isset property="env.JENKINS_HOME" />
 				</or>
@@ -1233,7 +1234,7 @@ information.
 				<jvmarg value="-Xss2m" />
 				<jvmarg value="-Dexternal-properties=${test.properties}" />
 				<jvmarg value="-Dfixed.issues=${fixed.issues}" />
-				<jvmarg value="-Djava.locale.providers=JRE,COMPAT,CLDR" />
+				<jvmarg value="-Djava.locale.providers=CLDR" />
 				<jvmarg value="-Dliferay.log.dir=${liferay.home}/logs" />
 				<jvmarg value="-Dosgi.state.dir=${liferay.home}/osgi/state" />
 				<jvmarg value="-Drelease.versions.test.other.dir=${release.versions.test.other.dir}" />
@@ -1698,15 +1699,31 @@ artifact.url=${remote.repository.cdn.url}/com/liferay/portal/com.liferay.${proce
 			<if>
 				<os family="mac" />
 				<then>
-					<mirrors-get
-						dest="${nodejs.sass.dir}"
-						src="${nodejs.sass.mac.url}"
-					/>
-					<untar
-						compression="gzip"
-						dest="${nodejs.sass.dir}"
-						src="${nodejs.sass.dir}/${nodejs.sass.mac.name}"
-					/>
+					<if>
+						<os arch="arm64" />
+						<then>
+							<mirrors-get
+								dest="${nodejs.sass.dir}"
+								src="${nodejs.sass.mac.arm.url}"
+							/>
+							<untar
+								compression="gzip"
+								dest="${nodejs.sass.dir}"
+								src="${nodejs.sass.dir}/${nodejs.sass.mac.arm.name}"
+							/>
+						</then>
+						<else>
+							<mirrors-get
+								dest="${nodejs.sass.dir}"
+								src="${nodejs.sass.mac.url}"
+							/>
+							<untar
+								compression="gzip"
+								dest="${nodejs.sass.dir}"
+								src="${nodejs.sass.dir}/${nodejs.sass.mac.name}"
+							/>
+						</else>
+					</if>
 				</then>
 				<elseif>
 					<os family="unix" />

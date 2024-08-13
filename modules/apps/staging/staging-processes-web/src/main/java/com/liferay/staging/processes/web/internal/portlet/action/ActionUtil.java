@@ -45,20 +45,19 @@ public class ActionUtil {
 	public static Group getGroup(HttpServletRequest httpServletRequest)
 		throws Exception {
 
-		ThemeDisplay themeDisplay =
-			(ThemeDisplay)httpServletRequest.getAttribute(
-				WebKeys.THEME_DISPLAY);
+		Group group = null;
 
 		String cmd = ParamUtil.getString(httpServletRequest, Constants.CMD);
-
 		long groupId = ParamUtil.getLong(httpServletRequest, "groupId");
-
-		Group group = null;
 
 		if (groupId > 0) {
 			group = GroupLocalServiceUtil.getGroup(groupId);
 		}
 		else if (!cmd.equals(Constants.ADD)) {
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)httpServletRequest.getAttribute(
+					WebKeys.THEME_DISPLAY);
+
 			group = themeDisplay.getSiteGroup();
 		}
 

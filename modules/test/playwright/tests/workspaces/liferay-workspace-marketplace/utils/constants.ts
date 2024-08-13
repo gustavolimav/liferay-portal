@@ -11,6 +11,12 @@ const dependenciesFolder = path.join(__dirname, '..', 'dependencies');
 
 export const MARKETPLACE_CHANNEL = 'Marketplace Channel';
 
+export const ORDER_ITEMS = {
+	DECIMAL_QUANTITY: 1,
+	QUANTITY: 1,
+	UNIT_PRICE: 1,
+};
+
 export const products = {
 	cloud_free: {
 		categories: ['Analytics and Optimization'],
@@ -61,15 +67,15 @@ export const products = {
 		zipFiles: [path.join(dependenciesFolder, 'folder.marketplace.zip')],
 	},
 	dxp_free: {
-		categories: ['Customer Data Management'],
+		categories: ['Analytics and Optimization'],
 		cloudCompatible: false,
-		compatibleOfferings: ['Self-Hosted'],
-		description: 'My free dxp app',
-		dxpVersions: ['7.3', '7.4'],
+		compatibleOfferings: ['Self-Hosted', 'Self-Managed', 'Fully-Managed'],
+		description: 'My free Dxp app',
+		dxpVersions: ['7.3'],
 		logo: path.join(dependenciesFolder, 'marketplace-icon.png'),
 		name: 'DXP App - Free',
 		priceModel: 'free',
-		tags: ['Client Extension Type'],
+		tags: ['Business Use'],
 		version: {
 			notes: 'Lorem Ipsum...',
 			version: '1.0.0',
@@ -139,6 +145,8 @@ export const solutions: {
 		},
 	},
 };
+
+export const SOLUTION_PUBLISHER_ROLE = 'Solution Publisher';
 
 export enum PAYMENT_STATUS {
 	AUTHORIZED = '2',

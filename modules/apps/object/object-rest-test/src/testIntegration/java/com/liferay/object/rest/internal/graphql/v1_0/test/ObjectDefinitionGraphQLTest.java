@@ -9,6 +9,8 @@ import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.list.type.model.ListTypeDefinition;
 import com.liferay.list.type.service.ListTypeDefinitionLocalServiceUtil;
 import com.liferay.list.type.service.ListTypeEntryLocalServiceUtil;
+import com.liferay.object.admin.rest.dto.v1_0.ObjectField;
+import com.liferay.object.admin.rest.resource.v1_0.ObjectFieldResource;
 import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.constants.ObjectRelationshipConstants;
 import com.liferay.object.field.builder.LongTextObjectFieldBuilder;
@@ -20,6 +22,7 @@ import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.rest.test.util.ObjectEntryTestUtil;
 import com.liferay.object.service.ObjectDefinitionLocalService;
+import com.liferay.object.service.ObjectEntryLocalService;
 import com.liferay.object.service.ObjectEntryLocalServiceUtil;
 import com.liferay.object.service.ObjectRelationshipLocalServiceUtil;
 import com.liferay.object.test.util.ObjectDefinitionTestUtil;
@@ -35,6 +38,7 @@ import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Http;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.TextFormatter;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -43,6 +47,7 @@ import com.liferay.portal.test.log.LoggerTestUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
+import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
 import java.io.Serializable;
@@ -51,11 +56,13 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -76,6 +83,30 @@ public class ObjectDefinitionGraphQLTest {
 		new AggregateTestRule(
 			new LiferayIntegrationTestRule(),
 			PermissionCheckerMethodTestRule.INSTANCE);
+
+	@BeforeClass
+	public static void setUpClass() throws Exception {
+		_objectFieldResource.setContextAcceptLanguage(
+			new AcceptLanguage() {
+
+				@Override
+				public List<Locale> getLocales() {
+					return Arrays.asList(LocaleUtil.getDefault());
+				}
+
+				@Override
+				public String getPreferredLanguageId() {
+					return LocaleUtil.toLanguageId(LocaleUtil.getDefault());
+				}
+
+				@Override
+				public Locale getPreferredLocale() {
+					return LocaleUtil.getDefault();
+				}
+
+			});
+		_objectFieldResource.setContextUser(TestPropsValues.getUser());
+	}
 
 	@Before
 	public void setUp() throws Exception {
@@ -453,6 +484,49 @@ public class ObjectDefinitionGraphQLTest {
 			JSONUtil.getValueAsString(
 				jsonObject, "JSONObject/data", "JSONObject/c",
 				"JSONObject/" + key, "Object/status"));
+
+		ObjectField objectField =
+			_objectFieldResource.postObjectDefinitionObjectField(
+				_parentObjectDefinition.getObjectDefinitionId(),
+				new ObjectField() {
+					{
+						businessType = BusinessType.TEXT;
+						DBType = ObjectField.DBType.STRING;
+						label = Collections.singletonMap(
+							LocaleUtil.US.toString(),
+							RandomTestUtil.randomString());
+						name = StringUtil.randomId();
+						required = RandomTestUtil.randomBoolean();
+					}
+				});
+
+		ObjectEntry objectEntry = _objectEntryLocalService.addObjectEntry(
+			TestPropsValues.getUserId(), 0,
+			_parentObjectDefinition.getObjectDefinitionId(),
+			HashMapBuilder.<String, Serializable>put(
+				_LIST_FIELD_NAME, _LIST_FIELD_VALUE_KEY
+			).put(
+				objectField.getName(), "matthew@liferay.com"
+			).build(),
+			ServiceContextTestUtil.getServiceContext());
+
+		Assert.assertEquals(
+			"matthew@liferay.com",
+			JSONUtil.getValueAsString(
+				_invoke(
+					new GraphQLField(
+						"query",
+						new GraphQLField(
+							"c",
+							new GraphQLField(
+								key,
+								HashMapBuilder.<String, Object>put(
+									primaryKeyName,
+									objectEntry.getObjectEntryId()
+								).build(),
+								new GraphQLField(objectField.getName()))))),
+				"JSONObject/data", "JSONObject/c", "JSONObject/" + key,
+				"Object/" + objectField.getName()));
 	}
 
 	@Test
@@ -1065,6 +1139,9 @@ public class ObjectDefinitionGraphQLTest {
 
 	private static final String _RELATIONSHIP_NAME = "parent";
 
+	@Inject
+	private static ObjectFieldResource _objectFieldResource;
+
 	private String _childObjectDefinitionName;
 	private ObjectEntry _childObjectEntry;
 
@@ -1075,6 +1152,9 @@ public class ObjectDefinitionGraphQLTest {
 
 	@Inject
 	private ObjectDefinitionLocalService _objectDefinitionLocalService;
+
+	@Inject
+	private ObjectEntryLocalService _objectEntryLocalService;
 
 	@DeleteAfterTestRun
 	private ObjectDefinition _parentObjectDefinition;

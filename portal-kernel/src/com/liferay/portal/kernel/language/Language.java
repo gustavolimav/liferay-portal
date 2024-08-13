@@ -114,6 +114,8 @@ public interface Language {
 
 	public Set<Locale> getAvailableLocales(long groupId);
 
+	public String getBCP47LangTag(Locale locale);
+
 	public String getBCP47LanguageId(HttpServletRequest httpServletRequest);
 
 	public String getBCP47LanguageId(Locale locale);

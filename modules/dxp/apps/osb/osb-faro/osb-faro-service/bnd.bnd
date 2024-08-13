@@ -8,6 +8,7 @@ Import-Package:\
 	com.liferay.petra.function;version="[1.5.0,9999.0.0)",\
 	com.liferay.petra.function.transform;version="[1.2.0,9999.0.0)",\
 	com.liferay.petra.lang;version="[1.3.0,9999.0.0)",\
+	com.liferay.petra.sql.dsl;version="[1.0.0,9999.0.0)",\
 	com.liferay.petra.sql.dsl.query;version="[1.0.0,9999.0.0)",\
 	com.liferay.portal.kernel.bean;version="[1.0.0,9999.0.0)",\
 	com.liferay.portal.kernel.dao.db;version="[12.0.0,9999.0.0)",\
@@ -28,6 +29,7 @@ Import-Package:\
 	com.liferay.portal.kernel.transaction;version="[1.0.0,9999.0.0)",\
 	com.liferay.portal.kernel.upgrade;version="[1.0.0,9999.0.0)",\
 	com.liferay.portal.kernel.util;version="[59.0.0,9999.0.0)",\
+	com.liferay.portal.kernel.util.comparator;version="[3.0.0,9999.0.0)",\
 	com.liferay.portal.kernel.uuid;version="[6.0.0,9999.0.0)",\
 	\
 	*

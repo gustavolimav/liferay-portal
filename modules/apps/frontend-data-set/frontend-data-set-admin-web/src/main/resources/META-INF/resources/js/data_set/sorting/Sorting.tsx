@@ -12,13 +12,18 @@ import ClayLoadingIndicator from '@clayui/loading-indicator';
 import ClayModal from '@clayui/modal';
 import {InputLocalized} from 'frontend-js-components-web';
 import {fetch, openModal} from 'frontend-js-web';
-import React, {useEffect, useState} from 'react';
+import fuzzy from 'fuzzy';
+import React, {useCallback, useEffect, useState} from 'react';
 
 import {IDataSet} from '../../DataSets';
 import {FDSViewType} from '../../FDSViews';
 import OrderableTable from '../../components/OrderableTable';
 import RequiredMark from '../../components/RequiredMark';
-import {API_URL, OBJECT_RELATIONSHIP} from '../../utils/constants';
+import {
+	API_URL,
+	FUZZY_OPTIONS,
+	OBJECT_RELATIONSHIP,
+} from '../../utils/constants';
 import openDefaultFailureToast from '../../utils/openDefaultFailureToast';
 import openDefaultSuccessToast from '../../utils/openDefaultSuccessToast';
 import sortItems from '../../utils/sortItems';
@@ -62,18 +67,51 @@ const DefaultComponent = ({item}: IContentRendererProps) => {
 	);
 };
 
+const LabelComponent = ({item, query}: IContentRendererProps) => {
+	const label =
+		item.label ||
+		item.label_i18n?.[Liferay.ThemeDisplay.getDefaultLanguageId()] ||
+		'';
+
+	const fuzzyMatch = fuzzy.match(query, label, FUZZY_OPTIONS);
+
+	return (
+		<span className="table-list-title">
+			{fuzzyMatch ? (
+				<span
+					dangerouslySetInnerHTML={{
+						__html: fuzzyMatch.rendered,
+					}}
+				/>
+			) : (
+				<span>{label}</span>
+			)}
+		</span>
+	);
+};
+
+const labelTextMatch = (item: IFDSSort) => {
+	return (
+		item.label ||
+		item.label_i18n[Liferay.ThemeDisplay.getDefaultLanguageId()] ||
+		''
+	);
+};
+
 const AddFDSSortModalContent = ({
 	closeModal,
 	dataSet,
 	fields,
 	namespace,
 	onSave,
+	saveFDSSortURL,
 }: {
 	closeModal: Function;
 	dataSet: IDataSet | FDSViewType;
 	fields: IField[];
 	namespace: string;
-	onSave: (newSort: IFDSSort) => void;
+	onSave: Function;
+	saveFDSSortURL: string;
 }) => {
 	const [labelI18n, setLabelI18n] = useState<
 		Liferay.Language.LocalizedValue<string>
@@ -88,28 +126,19 @@ const AddFDSSortModalContent = ({
 	const handleSave = async () => {
 		setSaveButtonDisabled(true);
 
-		const field = fields.find(
-			(item: IField) => item.name === selectedFieldName
+		const formData = new FormData();
+
+		formData.append(`${namespace}dataSetId`, dataSet.id);
+		formData.append(
+			`${namespace}useAsDefaultSorting`,
+			String(useAsDefaultSorting)
 		);
+		formData.append(`${namespace}fieldName`, selectedFieldName);
+		formData.append(`${namespace}labelI18n`, JSON.stringify(labelI18n));
+		formData.append(`${namespace}orderType`, selectedOrderType);
 
-		if (!field) {
-			openDefaultFailureToast();
-
-			return;
-		}
-
-		const response = await fetch(API_URL.SORTS, {
-			body: JSON.stringify({
-				[OBJECT_RELATIONSHIP.DATA_SET_SORT_ID]: dataSet.id,
-				default: useAsDefaultSorting,
-				fieldName: selectedFieldName,
-				label_i18n: labelI18n,
-				orderType: selectedOrderType,
-			}),
-			headers: {
-				'Accept': 'application/json',
-				'Content-Type': 'application/json',
-			},
+		const response = await fetch(saveFDSSortURL, {
+			body: formData,
 			method: 'POST',
 		});
 
@@ -121,11 +150,11 @@ const AddFDSSortModalContent = ({
 			return;
 		}
 
-		const responseJSON = await response.json();
+		const newFDSSort = await response.json();
+
+		onSave({newFDSSort});
 
 		openDefaultSuccessToast();
-
-		onSave(responseJSON);
 
 		closeModal();
 	};
@@ -249,21 +278,23 @@ const AddFDSSortModalContent = ({
 	);
 };
 
-interface IEditFDSSortModalContentProps {
-	closeModal: Function;
-	fdsSort: IFDSSort;
-	fields: IField[];
-	namespace: string;
-	onSave: Function;
-}
-
 const EditFDSSortModalContent = ({
 	closeModal,
+	dataSet,
 	fdsSort,
 	fields,
 	namespace,
 	onSave,
-}: IEditFDSSortModalContentProps) => {
+	saveFDSSortURL,
+}: {
+	closeModal: Function;
+	dataSet: IDataSet | FDSViewType;
+	fdsSort: IFDSSort;
+	fields: IField[];
+	namespace: string;
+	onSave: Function;
+	saveFDSSortURL: string;
+}) => {
 	const [labelI18n, setLabelI18n] = useState<
 		Liferay.Language.LocalizedValue<string>
 	>(fdsSort.label_i18n);
@@ -281,22 +312,25 @@ const EditFDSSortModalContent = ({
 	const handleSave = async () => {
 		setSaveButtonDisabled(true);
 
-		const response = await fetch(
-			`${API_URL.SORTS}/by-external-reference-code/${fdsSort.externalReferenceCode}`,
-			{
-				body: JSON.stringify({
-					default: useAsDefaultSorting,
-					fieldName: selectedFieldName,
-					label_i18n: labelI18n,
-					orderType: selectedOrderType,
-				}),
-				headers: {
-					'Accept': 'application/json',
-					'Content-Type': 'application/json',
-				},
-				method: 'PATCH',
-			}
+		const formData = new FormData();
+
+		formData.append(`${namespace}dataSetId`, dataSet.id);
+		formData.append(
+			`${namespace}externalReferenceCode`,
+			fdsSort.externalReferenceCode
 		);
+		formData.append(`${namespace}fieldName`, selectedFieldName);
+		formData.append(`${namespace}labelI18n`, JSON.stringify(labelI18n));
+		formData.append(`${namespace}orderType`, selectedOrderType);
+		formData.append(
+			`${namespace}useAsDefaultSorting`,
+			String(useAsDefaultSorting)
+		);
+
+		const response = await fetch(saveFDSSortURL, {
+			body: formData,
+			method: 'POST',
+		});
 
 		if (!response.ok) {
 			setSaveButtonDisabled(false);
@@ -306,13 +340,13 @@ const EditFDSSortModalContent = ({
 			return;
 		}
 
-		const editedFDSSort = await response.json();
+		const newFDSSort = await response.json();
 
-		closeModal();
+		onSave({newFDSSort});
 
 		openDefaultSuccessToast();
 
-		onSave({editedFDSSort});
+		closeModal();
 	};
 
 	const fdsSortLabelInput = `${namespace}fdsSortLabelInput`;
@@ -332,7 +366,7 @@ const EditFDSSortModalContent = ({
 				<ClayForm.Group>
 					<p className="text-secondary">
 						{Liferay.Language.get(
-							'create-a-sorting-option-for-the-dataset-fragment.-add-a-label-name-and-choose-a-field-to-be-displayed-in-the-sorting-dropdown'
+							'create-a-sorting-option-for-the-dataset-fragment'
 						)}
 					</p>
 
@@ -442,37 +476,47 @@ const Sorting = ({
 	dataSet,
 	fieldTreeItems,
 	namespace,
+	saveFDSSortURL,
 }: IDataSetSectionProps) => {
 	const fields = fieldTreeItems.filter((field) => field.sortable);
 	const [fdsSorts, setFDSSorts] = useState<Array<IFDSSort>>([]);
 	const [loading, setLoading] = useState(true);
 
-	useEffect(() => {
-		const getFDSSort = async () => {
-			const response = await fetch(
-				`${API_URL.SORTS}?filter=(${OBJECT_RELATIONSHIP.DATA_SET_SORT_ID} eq '${dataSet.id}')&nestedFields=${OBJECT_RELATIONSHIP.DATA_SET_SORT}&sort=dateCreated:asc`
-			);
+	const fetchFDSSorts = useCallback(async () => {
+		setLoading(true);
 
-			const responseJSON = await response.json();
+		const response = await fetch(
+			`${API_URL.SORTS}?filter=(${OBJECT_RELATIONSHIP.DATA_SET_SORT_ID} eq '${dataSet.id}')&nestedFields=${OBJECT_RELATIONSHIP.DATA_SET_SORT}&sort=dateCreated:asc`,
+			{
+				headers: {
+					'Accept': 'application/json',
+					'Accept-Language':
+						Liferay.ThemeDisplay.getBCP47LanguageId(),
+				},
+			}
+		);
 
-			const storedFDSSorts: IFDSSort[] = responseJSON.items;
+		const responseJSON = await response.json();
 
-			setFDSSorts(
-				sortItems(
-					storedFDSSorts,
+		const storedFDSSorts: IFDSSort[] = responseJSON.items;
 
-					// @ts-ignore
+		setFDSSorts(
+			sortItems(
+				storedFDSSorts,
 
-					storedFDSSorts?.[0]?.[OBJECT_RELATIONSHIP.DATA_SET_SORT]
-						?.fdsSortsOrder as string
-				) as IFDSSort[]
-			);
+				// @ts-ignore
 
-			setLoading(false);
-		};
+				storedFDSSorts?.[0]?.[OBJECT_RELATIONSHIP.DATA_SET_SORT]
+					?.fdsSortsOrder as string
+			) as IFDSSort[]
+		);
 
-		getFDSSort();
+		setLoading(false);
 	}, [dataSet]);
+
+	useEffect(() => {
+		fetchFDSSorts();
+	}, [fetchFDSSorts]);
 
 	const handleCreation = () =>
 		openModal({
@@ -482,7 +526,10 @@ const Sorting = ({
 					dataSet={dataSet}
 					fields={fields}
 					namespace={namespace}
-					onSave={(newSort) => setFDSSorts([...fdsSorts, newSort])}
+					onSave={() => {
+						fetchFDSSorts();
+					}}
+					saveFDSSortURL={saveFDSSortURL}
 				/>
 			),
 		});
@@ -532,7 +579,7 @@ const Sorting = ({
 				},
 			],
 			status: 'warning',
-			title: Liferay.Language.get('delete-filter'),
+			title: Liferay.Language.get('delete-sorting'),
 		});
 	};
 
@@ -541,20 +588,14 @@ const Sorting = ({
 			contentComponent: ({closeModal}: {closeModal: Function}) => (
 				<EditFDSSortModalContent
 					closeModal={closeModal}
+					dataSet={dataSet}
 					fdsSort={item}
 					fields={fields}
 					namespace={namespace}
-					onSave={({editedFDSSort}: {editedFDSSort: IFDSSort}) => {
-						setFDSSorts(
-							fdsSorts?.map((fdsSort) => {
-								if (fdsSort.id === editedFDSSort.id) {
-									return editedFDSSort;
-								}
-
-								return fdsSort;
-							}) || []
-						);
+					onSave={() => {
+						fetchFDSSorts();
 					}}
+					saveFDSSortURL={saveFDSSortURL}
 				/>
 			),
 		});
@@ -636,7 +677,10 @@ const Sorting = ({
 						]}
 						fields={[
 							{
-								headingTitle: true,
+								contentRenderer: {
+									component: LabelComponent,
+									textMatch: labelTextMatch,
+								},
 								label: Liferay.Language.get('label'),
 								name: 'label',
 							},

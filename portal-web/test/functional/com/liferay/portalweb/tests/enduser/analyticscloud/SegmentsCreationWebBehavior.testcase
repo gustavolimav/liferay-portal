@@ -35,63 +35,6 @@ definition {
 		ACUtils.tearDownAC();
 	}
 
-	@description = "Feature ID: Legacy | Automation ID: LRAC-9220 | Test Summary: Create a segment with behavior of commenting on a blog"
-	@priority = 4
-	test CanCreateWebBehaviorSegmentCommentingBlog {
-		ACUtils.createBlogsAndAddToPage();
-
-		JSONUser.addUser(
-			userEmailAddress = "ac@liferay.com",
-			userFirstName = "ac",
-			userLastName = "ac",
-			userScreenName = "ac");
-
-		JSONUser.setFirstPassword(
-			agreeToTermsAndAnswerReminderQuery = "true",
-			requireReset = "false",
-			userEmailAddress = "ac@liferay.com");
-
-		ACDXPSettings.connectDXPtoAnalyticsCloud(siteName = "Site Name");
-
-		ACUtils.navigateToSitePageWithUser(
-			actionType = "Comment Blog",
-			commentText = "Blogs Entry Comment",
-			documentTitleList = "Blogs AC Title,Blogs AC Title,Blogs AC Title,Blogs AC Title,Blogs AC Title",
-			emailList = "ac@liferay.com",
-			pageName = "AC Page",
-			siteName = "Site Name");
-
-		ACUtils.closeAllSessionsAndWait();
-
-		ACUtils.launchAC();
-
-		ACProperties.switchProperty(propertyName = ${assignedPropertyName});
-
-		ACNavigation.goToSegments();
-
-		ACSegments.createDynamicSegment();
-
-		ACUtils.setItemName(itemName = "Dynamic Segment Test");
-
-		ACSegments.addSegmentField(segmentField = "Commented on Blog");
-
-		ACSegments.editWebBehaviorCriterion(
-			indexField = 1,
-			searchTerm = "Blogs AC Title");
-
-		ACSegments.previewSegmentMembership();
-
-		ACUtils.viewNameList(nameList = "ac ac");
-
-		ACUtils.closeModal();
-
-		ACSegments.saveSegment();
-
-		ACNavigation.goToSegments();
-
-		ACUtils.viewNameList(nameList = "Dynamic Segment Test");
-	}
-
 	@description = "Feature ID: Legacy | Automation ID: LRAC-9221 | Test Summary: Create a Web Behavior criteria at least/at most times"
 	@priority = 4
 	test CanCreateWebBehaviorSegmentCriteriaLeastMostTimes {
@@ -1277,62 +1220,6 @@ definition {
 		ACNavigation.goToSegments();
 
 		ACUtils.viewNameList(nameList = "Dynamic Segment Test");
-	}
-
-	@description = "Bug: LRAC-8233 | Automation ID: LRAC-11537 | Test Summary: Check web behavior shows which data source data came from"
-	@priority = 3
-	test CheckWebBehaviorSegmentShowsWhichDataSourceDataCameFrom {
-		task ("Create a blog page and view page") {
-			ACUtils.createBlogsAndAddToPage();
-
-			ACDXPSettings.connectDXPtoAnalyticsCloud(siteName = "Site Name");
-
-			JSONUser.addUser(
-				userEmailAddress = "ac@liferay.com",
-				userFirstName = "ac",
-				userLastName = "ac",
-				userScreenName = "ac");
-
-			ACDXPSettings.syncNewContactData();
-
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "ac@liferay.com",
-				userLoginFullName = "ac ac");
-
-			ACUtils.navigateToSitePage(
-				actionType = "View Blog",
-				documentTitleList = "Blogs AC Title",
-				pageName = "AC Page",
-				siteName = "Site Name");
-
-			ACUtils.closeAllSessionsAndWait();
-		}
-
-		task ("Go to AC") {
-			ACUtils.launchAC();
-
-			ACProperties.switchProperty(propertyName = ${assignedPropertyName});
-		}
-
-		task ("Create new Dynamic Segment") {
-			ACNavigation.goToSegments();
-
-			ACSegments.createDynamicSegment();
-
-			ACUtils.setItemName(itemName = "Dynamic Segment Test");
-
-			ACSegments.addSegmentField(segmentField = "Viewed Page");
-		}
-
-		task ("Check for data source origin") {
-			var key_indexField = 1;
-
-			Click(locator1 = "ACSegments#SELECT_BUTTON");
-
-			ACSegments.searchSegment(findSegment = "Blogs AC Title - Site Name");
-
-			ACUtils.viewGenericText(textValueList = ${assignedPropertyName});
-		}
 	}
 
 }

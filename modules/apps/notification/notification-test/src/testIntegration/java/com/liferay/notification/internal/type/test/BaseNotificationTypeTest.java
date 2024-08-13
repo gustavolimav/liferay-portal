@@ -11,7 +11,6 @@ import com.liferay.list.type.model.ListTypeEntry;
 import com.liferay.list.type.service.ListTypeDefinitionLocalService;
 import com.liferay.list.type.service.ListTypeEntryLocalService;
 import com.liferay.notification.model.NotificationQueueEntry;
-import com.liferay.notification.model.NotificationRecipientSetting;
 import com.liferay.notification.model.NotificationTemplate;
 import com.liferay.notification.service.NotificationQueueEntryLocalService;
 import com.liferay.notification.service.NotificationRecipientLocalService;
@@ -93,7 +92,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 import org.junit.Assert;
@@ -532,57 +530,16 @@ public class BaseNotificationTypeTest {
 	}
 
 	protected void assertTermValues(
-		List<Object> expectedTermValues, List<String> actualTermValues) {
+		List<String> expectedTermValues, List<String> actualTermValues) {
 
 		Assert.assertEquals(
 			expectedTermValues.toString(), expectedTermValues.size(),
 			actualTermValues.size());
 
 		for (int i = 0; i < actualTermValues.size(); i++) {
-			Object expectedTermValue = expectedTermValues.get(i);
-			Object actualTermValue = actualTermValues.get(i);
-
-			if (expectedTermValue instanceof List) {
-				List<ListEntry> listTypeEntries =
-					(List<ListEntry>)expectedTermValue;
-
-				Assert.assertEquals(
-					StringUtil.merge(
-						TransformUtil.transform(
-							listTypeEntries, ListEntry::getName),
-						StringPool.COMMA_AND_SPACE),
-					actualTermValue);
-			}
-			else if (expectedTermValue instanceof ListEntry) {
-				ListEntry listEntry = (ListEntry)expectedTermValue;
-
-				Assert.assertEquals(listEntry.getName(), actualTermValue);
-			}
-			else {
-				Assert.assertEquals(
-					String.valueOf(expectedTermValue), actualTermValue);
-			}
+			Assert.assertEquals(
+				expectedTermValues.get(i), actualTermValues.get(i));
 		}
-	}
-
-	protected NotificationRecipientSetting createNotificationRecipientSetting(
-		String name, Object value) {
-
-		NotificationRecipientSetting notificationRecipientSetting =
-			_notificationRecipientSettingLocalService.
-				createNotificationRecipientSetting(0L);
-
-		notificationRecipientSetting.setName(name);
-
-		if (value instanceof String) {
-			notificationRecipientSetting.setValue(String.valueOf(value));
-		}
-		else {
-			notificationRecipientSetting.setValueMap(
-				(Map<Locale, String>)value);
-		}
-
-		return notificationRecipientSetting;
 	}
 
 	protected void executeNotificationObjectAction(
@@ -682,13 +639,32 @@ public class BaseNotificationTypeTest {
 				getTermName(true, "textObjectField")));
 	}
 
-	protected List<Object> getTermValues() {
-		return ListUtil.concat(
-			ListUtil.fromMapValues(_childAuthorTermValues),
-			ListUtil.fromMapValues(_generalTermValues),
-			ListUtil.fromMapValues(_parentAuthorTermValues),
-			ListUtil.fromMapValues(childObjectEntryValues),
-			ListUtil.fromMapValues(parentObjectEntryValues));
+	protected List<String> getTermValues() {
+		return TransformUtil.transform(
+			ListUtil.concat(
+				ListUtil.fromMapValues(_childAuthorTermValues),
+				ListUtil.fromMapValues(_generalTermValues),
+				ListUtil.fromMapValues(_parentAuthorTermValues),
+				ListUtil.fromMapValues(childObjectEntryValues),
+				ListUtil.fromMapValues(parentObjectEntryValues)),
+			this::parseTermValueToString);
+	}
+
+	protected String parseTermValueToString(Object termValue) {
+		if (termValue instanceof List) {
+			List<ListEntry> listTypeEntries = (List<ListEntry>)termValue;
+
+			return StringUtil.merge(
+				TransformUtil.transform(listTypeEntries, ListEntry::getName),
+				StringPool.COMMA_AND_SPACE);
+		}
+		else if (termValue instanceof ListEntry) {
+			ListEntry listEntry = (ListEntry)termValue;
+
+			return listEntry.getName();
+		}
+
+		return String.valueOf(termValue);
 	}
 
 	@DeleteAfterTestRun

@@ -49,6 +49,15 @@ export default function ({
 		});
 	};
 
+	const onBlurHandler = delegate(
+		document.getElementById(`${namespace}entriesContainer`)!,
+		'blur',
+		'tbody tr',
+		(event: DelegatedEvent<any>) => {
+			event.target.classList.remove('table-focus');
+		}
+	);
+
 	const onClickHandler = delegate(
 		document.getElementById(`${namespace}entriesContainer`)!,
 		'click',
@@ -56,6 +65,15 @@ export default function ({
 		(event: DelegatedEvent<MouseEvent>) => {
 			updateSelectedCard(event);
 			dispatchSelectEvent(event);
+		}
+	);
+
+	const onFocusHandler = delegate(
+		document.getElementById(`${namespace}entriesContainer`)!,
+		'focus',
+		'tbody tr',
+		(event: DelegatedEvent<any>) => {
+			event.target.classList.add('table-focus');
 		}
 	);
 
@@ -73,7 +91,9 @@ export default function ({
 
 	return {
 		dispose() {
+			onBlurHandler.dispose();
 			onClickHandler.dispose();
+			onFocusHandler.dispose();
 			onKeydownHandler.dispose();
 		},
 	};

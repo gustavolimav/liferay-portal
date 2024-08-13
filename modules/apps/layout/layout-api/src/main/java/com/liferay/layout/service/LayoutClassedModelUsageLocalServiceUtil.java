@@ -243,12 +243,12 @@ public class LayoutClassedModelUsageLocalServiceUtil {
 	}
 
 	public static LayoutClassedModelUsage fetchLayoutClassedModelUsage(
-		long classNameId, long classPK,
+		long groupId, long classNameId, long classPK,
 		String classedModelExternalReferenceCode, String containerKey,
 		long containerType, long plid) {
 
 		return getService().fetchLayoutClassedModelUsage(
-			classNameId, classPK, classedModelExternalReferenceCode,
+			groupId, classNameId, classPK, classedModelExternalReferenceCode,
 			containerKey, containerType, plid);
 	}
 
@@ -462,6 +462,16 @@ public class LayoutClassedModelUsageLocalServiceUtil {
 
 		return getService().updateLayoutClassedModelUsage(
 			layoutClassedModelUsage);
+	}
+
+	public static LayoutClassedModelUsage updateLayoutClassedModelUsage(
+			long classNameId, long classPK, String containerKey,
+			long containerType, long layoutClassedModelUsageId, long plid)
+		throws PortalException {
+
+		return getService().updateLayoutClassedModelUsage(
+			classNameId, classPK, containerKey, containerType,
+			layoutClassedModelUsageId, plid);
 	}
 
 	public static LayoutClassedModelUsageLocalService getService() {

@@ -481,6 +481,64 @@ module.framework.properties.osgi.console=11312</echo>
 		</sequential>
 	</macrodef>
 
+	<macrodef name="download-gradle-wrapper-binary">
+		<attribute name="workspace.dir" />
+		<sequential>
+			<if>
+				<available file="@{workspace.dir}/gradle/wrapper/gradle-wrapper.properties" />
+				<then>
+					<local name="gradle.wrapper.bin.file.name" />
+					<local name="gradle.wrapper.bin.file.url" />
+
+					<beanshell>
+						<![CDATA[
+							import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
+
+							File gradleWrapperPropertiesFile = new File("@{workspace.dir}" + "/gradle/wrapper/gradle-wrapper.properties");
+
+							Properties gradleWrapperProperties = JenkinsResultsParserUtil.getProperties(new File[] {gradleWrapperPropertiesFile});
+
+							String distributionURL = gradleWrapperProperties.getProperty("distributionUrl");
+
+							project.setProperty("gradle.wrapper.bin.file.name", distributionURL.replaceAll(".*/([^/]+)", "$1"));
+
+							project.setProperty("gradle.wrapper.bin.file.url", distributionURL);
+						]]>
+					</beanshell>
+
+					<if>
+						<matches pattern="https?://" string="${gradle.wrapper.bin.file.url}" />
+						<then>
+							<mirrors-get
+								dest="@{workspace.dir}/gradle/wrapper/${gradle.wrapper.bin.file.name}"
+								src="${gradle.wrapper.bin.file.url}"
+							/>
+						</then>
+						<else>
+							<execute>
+								cp @{workspace.dir}/gradle/wrapper/${gradle.wrapper.bin.file.url} @{workspace.dir}/gradle/wrapper/${gradle.wrapper.bin.file.name}
+							</execute>
+						</else>
+					</if>
+
+					<beanshell>
+						<![CDATA[
+							import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
+
+							File gradleWrapperPropertiesFile = new File("@{workspace.dir}" + "/gradle/wrapper/gradle-wrapper.properties");
+
+							Properties gradleWrapperProperties = JenkinsResultsParserUtil.getProperties(new File[] {gradleWrapperPropertiesFile});
+
+							gradleWrapperProperties.setProperty("distributionUrl", "./" + project.getProperty("gradle.wrapper.bin.file.name"));
+
+							JenkinsResultsParserUtil.writePropertiesFile(gradleWrapperPropertiesFile, gradleWrapperProperties, true);
+						]]>
+					</beanshell>
+				</then>
+			</if>
+		</sequential>
+	</macrodef>
+
 	<macrodef name="export-database-mysql-compact">
 		<attribute default="mysql" name="database.file.prefix" />
 		<attribute default="lportal" name="database.schema.name" />
@@ -5215,16 +5273,6 @@ company.default.web.id=www.able.com</echo>
 				</then>
 			</if>
 
-			<get-testcase-property property.name="upgrade.reports.enabled" />
-
-			<if>
-				<equals arg1="${upgrade.reports.enabled}" arg2="true" />
-				<then>
-					<echo append="true" file="${liferay.home}/tools/portal-tools-db-upgrade-client/portal-upgrade-ext.properties">
-upgrade.report.enabled=true</echo>
-				</then>
-			</if>
-
 			<get-testcase-property property.name="custom.upgrade.properties" />
 
 			<if>
@@ -6918,7 +6966,7 @@ go</echo>
 					</then>
 				</elseif>
 				<else>
-					<var name="app.server.tomcat.version" value="9.0.87" />
+					<var name="app.server.tomcat.version" value="9.0.90" />
 				</else>
 			</if>
 
@@ -7866,8 +7914,8 @@ ${docker.start.error}</fail>
 
 			<local name="env.portal.url.arg" />
 
-			<condition else="" property="env.portal.url.arg" value="--env=PORTAL_URL=http://${env.HOSTNAME}:8080">
-				<isset property="env.HOSTNAME" />
+			<condition else="" property="env.portal.url.arg" value="--env=PORTAL_URL=http://${env.NODE_NAME}:8080">
+				<isset property="env.NODE_NAME" />
 			</condition>
 
 			<local name="env.testray.cloud.storage.base.url" />
@@ -9636,18 +9684,21 @@ go</echo>
 	</target>
 
 	<target name="cluster-session-replication">
-		<replace
-			failOnNoReplacements="true"
-			file="${app.server.tomcat.dir}/conf/context.xml"
-		>
-			<replacetoken><![CDATA[<Context>]]></replacetoken>
-			<replacevalue><![CDATA[<Context>
-
-		<Manager
-			className="org.apache.catalina.ha.session.DeltaManager"
-			expireSessionsOnShutdown="false"
-			notifyListenersOnReplication="true"/>]]></replacevalue>
-		</replace>
+		<if>
+			<not>
+				<resourcecontains
+					resource="${app.server.tomcat.dir}/webapps/ROOT/WEB-INF/classes/logging.properties"
+					substring="org.apache.catalina.ha.session.handlers"
+				/>
+			</not>
+			<then>
+				<echo append="true" file="${app.server.tomcat.dir}/webapps/ROOT/WEB-INF/classes/logging.properties">
+			<![CDATA[
+org.apache.catalina.ha.session.handlers=java.util.logging.ConsoleHandler
+org.apache.catalina.ha.session.level=INFO]]>
+				</echo>
+			</then>
+		</if>
 
 		<replace
 			failOnNoReplacements="true"
@@ -9692,7 +9743,14 @@ org.apache.catalina.tribes.level = FINE]]>
 			<replacetoken><![CDATA[<Engine name="Catalina" defaultHost="localhost">]]></replacetoken>
 			<replacevalue><![CDATA[<Engine defaultHost="localhost" name="Catalina">
 
-    	<Cluster className="org.apache.catalina.ha.tcp.SimpleTcpCluster"/>]]></replacevalue>
+	<Cluster className="org.apache.catalina.ha.tcp.SimpleTcpCluster">
+		<Manager className="com.liferay.support.tomcat.session.LiferayDeltaManager" />
+		<Channel className="org.apache.catalina.tribes.group.GroupChannel">
+			<Sender className="org.apache.catalina.tribes.transport.ReplicationTransmitter">
+				<Transport className="org.apache.catalina.tribes.transport.nio.PooledParallelSender" timeout="300000" />
+			</Sender>
+		</Channel>
+	</Cluster>]]></replacevalue>
 		</replace>
 	</target>
 
@@ -10439,7 +10497,7 @@ org.apache.catalina.tribes.level = FINE]]>
 								<if>
 									<isset property="env.TEST_PORTAL_RELEASE_VERSION" />
 									<then>
-										<fail message="This release test is attempting to build Marketplace applications from source instead of deploying the latest released version from Marketplace." />
+										<fail message="This release test is attempting to build ${Liferay-Releng-App-Title}.lpkg from source instead of deploying the latest released version from Marketplace." />
 									</then>
 								</if>
 
@@ -12094,16 +12152,6 @@ cluster.link.channel.properties.transport.0=${project.dir}/portal-web/test/funct
 				<echo append="true" file="portal-impl/src/portal-ext.properties">
 
 upgrade.database.auto.run=true</echo>
-			</then>
-		</if>
-
-		<get-testcase-property property.name="upgrade.reports.enabled" />
-
-		<if>
-			<equals arg1="${upgrade.reports.enabled}" arg2="true" />
-			<then>
-				<echo append="true" file="portal-impl/src/portal-ext.properties">
-upgrade.report.enabled=true</echo>
 			</then>
 		</if>
 

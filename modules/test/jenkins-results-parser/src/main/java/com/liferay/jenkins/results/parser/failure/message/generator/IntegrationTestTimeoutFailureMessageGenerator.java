@@ -19,10 +19,28 @@ public class IntegrationTestTimeoutFailureMessageGenerator
 	extends BaseFailureMessageGenerator {
 
 	@Override
-	public Element getMessageElement(String consoleText) {
+	public String getMessage(String consoleText) {
 		Matcher matcher = _pattern.matcher(consoleText);
 
 		if (!matcher.find()) {
+			return null;
+		}
+
+		StringBuilder sb = new StringBuilder();
+
+		sb.append(matcher.group("testName"));
+		sb.append(" was aborted because it exceeded the timeout period");
+
+		return sb.toString();
+	}
+
+	@Override
+	public Element getMessageElement(String consoleText) {
+		Matcher matcher = _pattern.matcher(consoleText);
+
+		String errorMessage = getMessage(consoleText);
+
+		if (!matcher.find() || (errorMessage == null)) {
 			return null;
 		}
 
@@ -30,9 +48,7 @@ public class IntegrationTestTimeoutFailureMessageGenerator
 			"div", null,
 			Dom4JUtil.getNewElement(
 				"p", null,
-				Dom4JUtil.getNewElement(
-					"strong", null, matcher.group("testName")),
-				" was aborted because it exceeded the timeout period."));
+				Dom4JUtil.getNewElement("strong", null, errorMessage)));
 
 		String snippet = matcher.group(0);
 

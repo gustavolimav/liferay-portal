@@ -1,5 +1,5 @@
 {
-	"@generated": "cd69ac3f93c1984c00becc90206143f58b1360cc",
+	"@generated": "fd111e5b70daba0233d34b9cda3fe1c0ef03d2f8",
 	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
@@ -17,9 +17,10 @@
 			]
 		},
 		"rootDir": "../../../../../../../..",
+		"skipLibCheck": true,
 		"sourceMap": false,
 		"strict": true,
-		"target": "es2020",
+		"target": "esnext",
 		"tsBuildInfoFile": "../../../../../../../../.tsc/buildinfo/@liferay/product-navigation-user-personal-bar-web.tsbuildinfo",
 		"typeRoots": [
 			"../../../../../../../../node_modules/@types"

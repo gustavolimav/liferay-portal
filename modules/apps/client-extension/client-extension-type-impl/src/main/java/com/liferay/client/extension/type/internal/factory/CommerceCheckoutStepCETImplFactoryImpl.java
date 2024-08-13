@@ -65,6 +65,9 @@ public class CommerceCheckoutStepCETImplFactoryImpl
 		).put(
 			"order", ParamUtil.getBoolean(portletRequest, "order")
 		).put(
+			"paymentMethodKey",
+			ParamUtil.getBoolean(portletRequest, "paymentMethodKey")
+		).put(
 			"sennaDisabled",
 			ParamUtil.getBoolean(portletRequest, "sennaDisabled")
 		).put(

@@ -149,11 +149,7 @@ autoSaveAsDraftTest(
 			structureName,
 		});
 
-		await fillAndClickOutside(
-			page,
-			page.getByPlaceholder('Untitled ' + structureName),
-			title
-		);
+		await journalEditArticlePage.fillTitle(title);
 
 		const localizableField = page.getByRole('textbox', {
 			name: localizableFieldName,
@@ -161,11 +157,9 @@ autoSaveAsDraftTest(
 
 		await fillAndClickOutside(page, localizableField, content);
 
-		const changesSavedIndicator = await page.locator(
-			'#_com_liferay_journal_web_portlet_JournalPortlet_changesSavedIndicator'
-		);
-
-		await expect(changesSavedIndicator).toBeVisible();
+		await expect(
+			journalEditArticlePage.changesSavedIndicator
+		).toBeVisible();
 
 		await page.getByTitle('Go to Web Content').click();
 
@@ -189,42 +183,84 @@ autoSaveAsDraftTest(
 		);
 	}
 );
+autoSaveAsDraftTest(
+	'LPD-31072: Translation is removed when using Undo and restored when using Redo',
+	async ({journalEditArticlePage, page, site}) => {
+		await journalEditArticlePage.goto({siteUrl: site.friendlyUrlPath});
 
+		await journalEditArticlePage.fillTitle(getRandomString());
+
+		const translationButton = page.locator(
+			'[id="_com_liferay_journal_web_portlet_JournalPortlet__com_liferay_journal_web_portlet_JournalPortlet_titleMapAsXMLMenu"]'
+		);
+
+		await clickAndExpectToBeVisible({
+			autoClick: true,
+			target: page.getByRole('menuitem', {
+				name: 'Not translated into Catalan.',
+			}),
+			trigger: translationButton,
+		});
+
+		await journalEditArticlePage.fillTitle(getRandomString());
+
+		await clickAndExpectToBeVisible({
+			autoClick: false,
+			target: page.getByRole('menuitem', {
+				name: 'Translated into Catalan.',
+			}),
+			trigger: translationButton,
+		});
+
+		await journalEditArticlePage.undoButton.click();
+
+		await clickAndExpectToBeVisible({
+			autoClick: false,
+			target: page.getByRole('menuitem', {
+				name: 'Not translated into Catalan.',
+			}),
+			trigger: translationButton,
+		});
+
+		await journalEditArticlePage.redoButton.click();
+
+		await clickAndExpectToBeVisible({
+			autoClick: false,
+			target: page.getByRole('menuitem', {
+				name: 'Translated into Catalan.',
+			}),
+			trigger: translationButton,
+		});
+	}
+);
 autoSaveAsDraftTest(
 	'LPD-26863: Undo/Redo buttons work with metadata fields',
-	async ({journalEditArticlePage, page, site}) => {
-		const changesSavedIndicator = await page.locator(
-			'#_com_liferay_journal_web_portlet_JournalPortlet_changesSavedIndicator'
-		);
-		const redoButton = page.getByTitle('Redo', {exact: true});
+	async ({journalEditArticlePage, site}) => {
 		const title = getRandomString();
-		const undobutton = page.getByTitle('Undo', {exact: true});
 
 		await journalEditArticlePage.goto({siteUrl: site.friendlyUrlPath});
 
-		await journalEditArticlePage.titlePlaceholder.click();
+		await expect(async () => {
+			await journalEditArticlePage.fillTitle(title);
 
-		await page.waitForTimeout(200);
+			await expect(journalEditArticlePage.undoButton).toBeEnabled();
+		}).toPass();
 
-		await journalEditArticlePage.titlePlaceholder.fill(title);
+		await expect(
+			journalEditArticlePage.changesSavedIndicator
+		).toBeVisible();
 
-		await expect(changesSavedIndicator).toBeVisible();
+		await journalEditArticlePage.undoButton.click();
 
-		await page.locator('body').click();
+		await expect(journalEditArticlePage.undoButton).toBeDisabled();
 
-		await undobutton.click();
+		await expect(journalEditArticlePage.titleInput).toHaveValue('');
 
-		await expect(undobutton).toBeDisabled();
+		await journalEditArticlePage.redoButton.click();
 
-		await expect(journalEditArticlePage.titlePlaceholder).toHaveValue('');
+		await expect(journalEditArticlePage.redoButton).toBeDisabled();
 
-		await redoButton.click();
-
-		await expect(redoButton).toBeDisabled();
-
-		await expect(journalEditArticlePage.titlePlaceholder).toHaveValue(
-			title
-		);
+		await expect(journalEditArticlePage.titleInput).toHaveValue(title);
 	}
 );
 
@@ -247,43 +283,128 @@ autoSaveAsDraftTest(
 			structureName,
 		});
 
-		const changesSavedIndicator = await page.locator(
-			'#_com_liferay_journal_web_portlet_JournalPortlet_changesSavedIndicator'
-		);
-		const redoButton = await page.getByTitle('Redo', {exact: true});
 		const title = getRandomString();
-		const undoButton = await page.getByTitle('Undo', {exact: true});
 
 		const localizableField = await page.getByRole('textbox', {
 			name: localizableFieldName,
 		});
-		const titlePlaceholder = await page.getByPlaceholder(
-			'Untitled ' + structureName
-		);
 
-		await titlePlaceholder.click();
+		await expect(async () => {
+			await journalEditArticlePage.fillTitle(title);
 
-		await page.waitForTimeout(200);
+			await expect(journalEditArticlePage.undoButton).toBeEnabled();
+		}).toPass();
 
-		await titlePlaceholder.fill(title);
-
-		await expect(changesSavedIndicator).toBeVisible();
-
-		await page.locator('body').click();
+		await expect(
+			journalEditArticlePage.changesSavedIndicator
+		).toBeVisible();
 
 		await fillAndClickOutside(page, localizableField, title);
 
-		await expect(changesSavedIndicator).toBeVisible();
+		await expect(
+			journalEditArticlePage.changesSavedIndicator
+		).toBeVisible();
 
-		await undoButton.click();
+		await journalEditArticlePage.undoButton.click();
 
 		await expect(localizableField).toHaveValue('');
 
-		await redoButton.click();
+		await journalEditArticlePage.redoButton.click();
 
-		await expect(redoButton).toBeDisabled();
+		await expect(journalEditArticlePage.redoButton).toBeDisabled();
 
 		await expect(localizableField).toHaveValue(title);
+	}
+);
+
+baseTest(
+	'Check alert message of duplicated friendly URL in french',
+	{
+		tag: '@LPD-32185',
+	},
+	async ({journalEditArticlePage, page, site}) => {
+		await page.goto(`/fr/`);
+		await journalEditArticlePage.createBasicArticleWithFriendlyURL(
+			site,
+			page,
+			'Contenu web basique'
+		);
+		await journalEditArticlePage.createBasicArticleWithFriendlyURL(
+			site,
+			page,
+			'Contenu web basique'
+		);
+
+		await expect(
+			page
+				.locator('#ToastAlertContainer')
+				.getByText('test', {exact: true})
+		).toBeVisible();
+	}
+);
+
+baseTest(
+	'LPD-31427: Select web content display template with the Preview feature',
+	async ({journalEditArticlePage, page, site}) => {
+		page.on('dialog', (dialog) => dialog.accept());
+
+		await journalEditArticlePage.goto({siteUrl: site.friendlyUrlPath});
+
+		const title = getRandomString();
+
+		await page.getByText('Content', {exact: true}).waitFor();
+
+		await journalEditArticlePage.fillTitle(title);
+
+		await page.getByRole('button', {name: 'Publish'}).click();
+
+		await journalEditArticlePage.editArticle(title);
+
+		await page.getByText('Content', {exact: true}).waitFor();
+
+		await page.getByRole('link', {name: 'Default Template'}).click();
+
+		await page.getByRole('button', {name: 'Clear'}).waitFor();
+
+		await page.getByRole('button', {name: 'Clear'}).click();
+
+		await page.getByText('Content', {exact: true}).waitFor();
+
+		let templateName = page.getByLabel('Template Name');
+
+		await expect(templateName).toHaveValue('No Template');
+
+		await page.getByRole('link', {name: 'Default Template'}).click();
+
+		await page
+			.locator(
+				'[id="_com_liferay_journal_web_portlet_JournalPortlet_previewWithTemplate"]'
+			)
+			.waitFor();
+
+		await page
+			.locator(
+				'[id="_com_liferay_journal_web_portlet_JournalPortlet_previewWithTemplate"]'
+			)
+			.click();
+
+		const dialog = page.getByRole('dialog');
+
+		await expect(dialog.getByRole('heading')).toHaveText('Title');
+
+		const dialogIFrame = page.frameLocator('iframe[title="Title"]');
+
+		await dialogIFrame
+			.getByTitle('ddm-template-id')
+			.selectOption('Basic Web Content');
+
+		await dialogIFrame.getByRole('button', {name: 'Apply'}).click();
+
+		await page.getByText('Content', {exact: true}).waitFor();
+
+		templateName = page.getByLabel('Template Name');
+
+		await expect(templateName).toHaveValue('Basic Web Content');
 	}
 );
 
@@ -374,6 +495,44 @@ baseTest(
 
 		await expect(
 			page.getByText('6 web content instances are ready to be moved.')
+		).toBeVisible();
+	}
+);
+
+baseTest(
+	'LPD-31655: Ensure article action menu functions when viewing history in card view',
+	async ({apiHelpers, journalPage, page, site}) => {
+		const basicWebContentStructureId =
+			await getBasicWebContentStructureId(apiHelpers);
+
+		const title = getRandomString();
+
+		await apiHelpers.jsonWebServicesJournal.addWebContent({
+			ddmStructureId: basicWebContentStructureId,
+			groupId: site.id,
+			titleMap: {en_US: title},
+		});
+
+		await journalPage.goto(site.friendlyUrlPath);
+
+		await journalPage.changeView('list');
+
+		await clickAndExpectToBeVisible({
+			autoClick: true,
+			target: page.getByRole('menuitem', {name: 'View History'}),
+			trigger: page.getByLabel(`Actions for ${title}`),
+		});
+
+		await journalPage.changeView('cards');
+
+		await clickAndExpectToBeVisible({
+			autoClick: true,
+			target: page.getByRole('menuitem', {name: 'Compare to...'}),
+			trigger: page.getByLabel(`More Actions`),
+		});
+
+		await expect(
+			page.getByRole('heading', {name: 'Compare Versions'})
 		).toBeVisible();
 	}
 );
@@ -514,7 +673,7 @@ prefixUrlTest(
 
 		const displayPageTemplateName = getRandomString();
 
-		await displayPageTemplatesPage.publishNewTemplate({
+		await displayPageTemplatesPage.createTemplate({
 			contentSubtype: 'Basic Web Content',
 			contentType: 'Web Content Article',
 			name: displayPageTemplateName,
@@ -527,7 +686,7 @@ prefixUrlTest(
 		const urlSeparator = 'content';
 
 		await friendlyUrlInstanceSettingsPage.modifySeparator(
-			'_com_liferay_configuration_admin_web_portlet_InstanceSettingsPortlet_com.liferay.journal.model.JournalArticle',
+			'Web Content URL Separator',
 			urlSeparator
 		);
 
@@ -545,7 +704,7 @@ prefixUrlTest(
 		await friendlyUrlInstanceSettingsPage.goto();
 
 		await friendlyUrlInstanceSettingsPage.resetSeparator(
-			'_com_liferay_configuration_admin_web_portlet_InstanceSettingsPortlet_com.liferay.journal.model.JournalArticle-reset-to-default-value'
+			'Web Content URL Separator'
 		);
 
 		expect(
@@ -553,6 +712,87 @@ prefixUrlTest(
 				'/group' + site.friendlyUrlPath + '/w/' + articleTitle
 			)
 		).toBeSuccessful();
+	}
+);
+
+baseTest(
+	'LPD-30412: This is a test for deleting multiple translations from a web content',
+	async ({journalEditArticlePage, journalPage, page, site}) => {
+		await journalPage.goto(site.friendlyUrlPath);
+
+		const title = getRandomString();
+
+		await journalEditArticlePage.goto({siteUrl: site.friendlyUrlPath});
+
+		await journalEditArticlePage.fillTitle(title);
+
+		const translationButton = page.locator(
+			'[id="_com_liferay_journal_web_portlet_JournalPortlet__com_liferay_journal_web_portlet_JournalPortlet_titleMapAsXMLMenu"]'
+		);
+
+		for (const language of ['Finnish', 'French', 'German']) {
+			await clickAndExpectToBeVisible({
+				autoClick: true,
+				target: page.getByRole('menuitem', {
+					name:
+						'Not translated into ' +
+						language +
+						'. Press enter to edit ' +
+						language +
+						' translation.',
+				}),
+				trigger: translationButton,
+			});
+
+			await expect(async () => {
+				await fillAndClickOutside(
+					page,
+					journalEditArticlePage.titleInput
+				);
+
+				await translationButton.click();
+
+				await expect(
+					page.getByRole('menuitem', {
+						exact: true,
+						name:
+							'Translated into ' +
+							language +
+							'. Press enter to edit ' +
+							language +
+							' translation.',
+					})
+				).toBeVisible();
+			}).toPass();
+		}
+
+		await journalEditArticlePage.publishButton.click();
+
+		await waitForSuccessAlert(
+			page,
+			`Success:${title} was created successfully.`
+		);
+
+		await journalPage.goToJournalArticleAction(
+			'Delete Translations',
+			title
+		);
+
+		await page
+			.frameLocator('iframe[title="Delete Translations"]')
+			.getByLabel('français')
+			.check();
+
+		await page
+			.frameLocator('iframe[title="Delete Translations"]')
+			.getByLabel('Deutsch')
+			.check();
+
+		page.on('dialog', (dialog) => dialog.accept());
+
+		await page.getByRole('button', {name: 'Delete'}).click();
+
+		await waitForSuccessAlert(page);
 	}
 );
 
@@ -1011,8 +1251,114 @@ translationTest(
 	}
 );
 
-scheduleTest(
+baseTest(
+	'LPD-29527 - Can delete translation of a web content created from a structure with at least one required and non-localizable field',
+	async ({apiHelpers, journalEditArticlePage, journalPage, page, site}) => {
+		const basicTextFieldName = 'Text1234';
+		const content = getRandomString();
+		const nonLocalizableFieldName = 'TextNonLocalizable';
+		const structureName = 'Structure 1';
+		const title = getRandomString();
+
+		const dataDefinition = getDataStructureDefinition({
+			defaultLanguageId: 'en_US',
+			fields: [
+				{name: basicTextFieldName},
+				{
+					localizable: false,
+					name: nonLocalizableFieldName,
+					required: true,
+				},
+			],
+			name: structureName,
+		});
+
+		await apiHelpers.dataEngine.createStructure(site.id, dataDefinition);
+
+		await journalEditArticlePage.goto({
+			siteUrl: site.friendlyUrlPath,
+			structureName,
+		});
+
+		await journalEditArticlePage.fillTitle(title);
+
+		await fillAndClickOutside(
+			page,
+			page.getByLabel(basicTextFieldName),
+			content
+		);
+
+		await fillAndClickOutside(
+			page,
+			page.getByLabel(nonLocalizableFieldName),
+			content
+		);
+
+		const translationButton = page.locator(
+			'[id="_com_liferay_journal_web_portlet_JournalPortlet__com_liferay_journal_web_portlet_JournalPortlet_titleMapAsXMLMenu"]'
+		);
+
+		await clickAndExpectToBeVisible({
+			autoClick: true,
+			target: page.getByRole('menuitem', {
+				name: 'Not translated into Catalan. Press enter to edit Catalan translation.',
+			}),
+			trigger: translationButton,
+		});
+
+		await expect(async () => {
+			await journalEditArticlePage.fillTitle(title);
+
+			await translationButton.click();
+
+			await expect(
+				page.getByRole('menuitem', {
+					exact: true,
+					name: 'Translated into Catalan. Press enter to edit Catalan translation.',
+				})
+			).toBeVisible();
+		}).toPass();
+
+		await journalEditArticlePage.publishButton.click();
+
+		await waitForSuccessAlert(
+			page,
+			`Success:${title} was created successfully.`
+		);
+
+		await page.getByLabel('Close', {exact: true});
+
+		await journalPage.goToJournalArticleAction(
+			'Delete Translations',
+			title
+		);
+
+		await page
+			.frameLocator('iframe[title="Delete Translations"]')
+			.getByLabel('català')
+			.check();
+
+		page.on('dialog', (dialog) => dialog.accept());
+
+		await page.getByRole('button', {name: 'Delete'}).click();
+
+		await journalEditArticlePage.editArticle(title);
+
+		await clickAndExpectToBeVisible({
+			autoClick: true,
+			target: page.getByRole('menuitem', {
+				name: 'Not translated into Catalan. Press enter to edit Catalan translation.',
+			}),
+			trigger: translationButton,
+		});
+	}
+);
+
+autoSaveAsDraftTest(
 	'Create a web content selecting permissions in the modal',
+	{
+		tag: '@LPD-32949',
+	},
 	async ({journalEditArticlePage, journalPage, page, site}) => {
 		await journalEditArticlePage.goto({siteUrl: site.friendlyUrlPath});
 
@@ -1034,7 +1380,11 @@ scheduleTest(
 
 		const title = getRandomString();
 
-		await journalEditArticlePage.titlePlaceholder.fill(title);
+		await journalEditArticlePage.fillTitle(title);
+
+		await expect(
+			journalEditArticlePage.changesSavedIndicator
+		).toBeVisible();
 
 		await clickAndExpectToBeVisible({
 			autoClick: true,

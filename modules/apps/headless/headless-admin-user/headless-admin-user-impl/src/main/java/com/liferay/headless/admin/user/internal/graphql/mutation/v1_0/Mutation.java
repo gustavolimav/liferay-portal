@@ -166,6 +166,28 @@ public class Mutation {
 	}
 
 	@GraphQLField
+	public Response createAccountGroupAccountsPageExportBatch(
+			@GraphQLName("accountGroupId") Long accountGroupId,
+			@GraphQLName("search") String search,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("sort") String sortsString,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_accountResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			accountResource ->
+				accountResource.postAccountGroupAccountsPageExportBatch(
+					accountGroupId, search,
+					_filterBiFunction.apply(accountResource, filterString),
+					_sortsBiFunction.apply(accountResource, sortsString),
+					callbackURL, contentType, fieldNames));
+	}
+
+	@GraphQLField
 	public Response createAccountsPageExportBatch(
 			@GraphQLName("search") String search,
 			@GraphQLName("filter") String filterString,
@@ -1340,6 +1362,56 @@ public class Mutation {
 						organizationId, callbackURL, contentType, fieldNames));
 	}
 
+	@GraphQLField(
+		description = "Deletes the postal address using external reference code."
+	)
+	public boolean deletePostalAddressByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_postalAddressResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			postalAddressResource ->
+				postalAddressResource.
+					deletePostalAddressByExternalReferenceCode(
+						externalReferenceCode));
+
+		return true;
+	}
+
+	@GraphQLField(
+		description = "Updates the postal address using external reference code."
+	)
+	public PostalAddress patchPostalAddressByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode,
+			@GraphQLName("postalAddress") PostalAddress postalAddress)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_postalAddressResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			postalAddressResource ->
+				postalAddressResource.patchPostalAddressByExternalReferenceCode(
+					externalReferenceCode, postalAddress));
+	}
+
+	@GraphQLField(
+		description = "Updates the postal address using external reference code."
+	)
+	public PostalAddress updatePostalAddressByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode,
+			@GraphQLName("postalAddress") PostalAddress postalAddress)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_postalAddressResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			postalAddressResource ->
+				postalAddressResource.putPostalAddressByExternalReferenceCode(
+					externalReferenceCode, postalAddress));
+	}
+
 	@GraphQLField(description = "Deletes the postal address")
 	public boolean deletePostalAddress(
 			@GraphQLName("postalAddressId") Long postalAddressId)
@@ -1462,6 +1534,19 @@ public class Mutation {
 	}
 
 	@GraphQLField(description = "update the given Role")
+	public Role patchRoleByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode,
+			@GraphQLName("role") Role role)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_roleResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			roleResource -> roleResource.patchRoleByExternalReferenceCode(
+				externalReferenceCode, role));
+	}
+
+	@GraphQLField(description = "update the given Role")
 	public Role updateRoleByExternalReferenceCode(
 			@GraphQLName("externalReferenceCode") String externalReferenceCode,
 			@GraphQLName("role") Role role)
@@ -1508,6 +1593,92 @@ public class Mutation {
 				roleResource.
 					postRoleByExternalReferenceCodeUserAccountAssociation(
 						externalReferenceCode, userAccountId));
+
+		return true;
+	}
+
+	@GraphQLField(
+		description = "Unassociates an organization role by external reference code with a user account"
+	)
+	public boolean
+			deleteOrganizationRoleByExternalReferenceCodeUserAccountAssociation(
+				@GraphQLName("externalReferenceCode") String
+					externalReferenceCode,
+				@GraphQLName("userAccountId") Long userAccountId,
+				@GraphQLName("organizationId") Long organizationId)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_roleResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			roleResource ->
+				roleResource.
+					deleteOrganizationRoleByExternalReferenceCodeUserAccountAssociation(
+						externalReferenceCode, userAccountId, organizationId));
+
+		return true;
+	}
+
+	@GraphQLField(
+		description = "Associates a organization role by external reference code with a user account"
+	)
+	public boolean
+			createOrganizationRoleByExternalReferenceCodeUserAccountAssociation(
+				@GraphQLName("externalReferenceCode") String
+					externalReferenceCode,
+				@GraphQLName("userAccountId") Long userAccountId,
+				@GraphQLName("organizationId") Long organizationId)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_roleResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			roleResource ->
+				roleResource.
+					postOrganizationRoleByExternalReferenceCodeUserAccountAssociation(
+						externalReferenceCode, userAccountId, organizationId));
+
+		return true;
+	}
+
+	@GraphQLField(
+		description = "Unassociates a site role by external reference code with a user account"
+	)
+	public boolean deleteSiteRoleByExternalReferenceCodeUserAccountAssociation(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode,
+			@GraphQLName("userAccountId") Long userAccountId,
+			@GraphQLName("siteKey") @NotEmpty String siteKey)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_roleResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			roleResource ->
+				roleResource.
+					deleteSiteRoleByExternalReferenceCodeUserAccountAssociation(
+						externalReferenceCode, userAccountId,
+						Long.valueOf(siteKey)));
+
+		return true;
+	}
+
+	@GraphQLField(
+		description = "Associates a site role by external reference code with a user account"
+	)
+	public boolean createSiteRoleByExternalReferenceCodeUserAccountAssociation(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode,
+			@GraphQLName("userAccountId") Long userAccountId,
+			@GraphQLName("siteKey") @NotEmpty String siteKey)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_roleResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			roleResource ->
+				roleResource.
+					postSiteRoleByExternalReferenceCodeUserAccountAssociation(
+						externalReferenceCode, userAccountId,
+						Long.valueOf(siteKey)));
 
 		return true;
 	}

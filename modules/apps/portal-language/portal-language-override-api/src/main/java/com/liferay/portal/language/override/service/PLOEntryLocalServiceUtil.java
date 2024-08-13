@@ -306,6 +306,15 @@ public class PLOEntryLocalServiceUtil {
 		return getService().getPLOEntry(ploEntryId);
 	}
 
+	public static void importPLOEntries(
+			long companyId, long userId, String languageId,
+			java.util.Properties properties)
+		throws PortalException {
+
+		getService().importPLOEntries(
+			companyId, userId, languageId, properties);
+	}
+
 	public static void setPLOEntries(
 			long companyId, long userId, String key,
 			Map<java.util.Locale, String> localizationMap)

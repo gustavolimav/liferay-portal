@@ -1,5 +1,5 @@
 {
-	"@generated": "4310167a4f5645ab5fddfb3eaf967b48dd638d83",
+	"@generated": "1e01e4e69c28d1a9475e1e046bd943941953f833",
 	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
@@ -17,9 +17,10 @@
 			]
 		},
 		"rootDir": "../../../../../../../..",
+		"skipLibCheck": true,
 		"sourceMap": false,
 		"strict": true,
-		"target": "es2020",
+		"target": "esnext",
 		"tsBuildInfoFile": "../../../../../../../../.tsc/buildinfo/@liferay/fragment-collection-filter-date.tsbuildinfo",
 		"typeRoots": [
 			"../../../../../../../../node_modules/@types"

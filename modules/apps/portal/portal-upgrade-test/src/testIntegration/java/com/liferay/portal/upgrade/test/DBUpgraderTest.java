@@ -86,13 +86,16 @@ public class DBUpgraderTest {
 
 		db.runSQL("create index IX_TEST on Lock_ (createDate)");
 
+		Boolean newRelease = ReflectionTestUtil.getAndSetFieldValue(
+			StartupHelperUtil.class, "_newRelease", false);
+
 		String upgradeDatabaseAutoRun = PropsUtil.get(
 			PropsKeys.UPGRADE_DATABASE_AUTO_RUN);
 
 		try {
 			PropsUtil.set(PropsKeys.UPGRADE_DATABASE_AUTO_RUN, "false");
 
-			DBUpgrader.upgradeModules(false);
+			DBUpgrader.upgradeModules();
 
 			DBInspector dbInspector = new DBInspector(_connection);
 
@@ -100,13 +103,23 @@ public class DBUpgraderTest {
 
 			PropsUtil.set(PropsKeys.UPGRADE_DATABASE_AUTO_RUN, "true");
 
-			DBUpgrader.upgradeModules(false);
+			DBUpgrader.upgradeModules();
+
+			Assert.assertTrue(dbInspector.hasIndex("Lock_", "IX_TEST"));
+
+			ReflectionTestUtil.setFieldValue(
+				StartupHelperUtil.class, "_newRelease", true);
+
+			DBUpgrader.upgradeModules();
 
 			Assert.assertFalse(dbInspector.hasIndex("Lock_", "IX_TEST"));
 		}
 		finally {
 			PropsUtil.set(
 				PropsKeys.UPGRADE_DATABASE_AUTO_RUN, upgradeDatabaseAutoRun);
+
+			ReflectionTestUtil.setFieldValue(
+				StartupHelperUtil.class, "_newRelease", newRelease);
 		}
 	}
 

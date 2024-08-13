@@ -14,25 +14,15 @@ export interface Marketplace {
 	marketplace: Site;
 }
 
-const SITE_EXTERNAL_REFERENCE_CODE = 'marketplace-site-initializer';
+const SITE_EXTERNAL_REFERENCE_CODE = 'LIFERAY_MARKETPLACE';
 const SITE_NAME = 'Marketplace';
 
 export const marketplaceSiteFixture = test.extend<Marketplace>({
 	marketplace: [
 		async ({apiHelpers, page}, use) => {
-			let site = await apiHelpers.headlessSite.getSiteByERC(
+			const site = await apiHelpers.headlessSite.getSiteByERC(
 				SITE_EXTERNAL_REFERENCE_CODE
 			);
-
-			if ((site as any).status === 'NOT_FOUND') {
-				site = await apiHelpers.headlessSite.createSite({
-					externalReferenceCode: SITE_EXTERNAL_REFERENCE_CODE,
-					name: SITE_NAME,
-					templateKey:
-						'com.liferay.site.initializer.liferay.marketplace',
-					templateType: 'site-initializer',
-				});
-			}
 
 			expect(site.name).toBe(SITE_NAME);
 			expect(site.id).toBeGreaterThan(0);

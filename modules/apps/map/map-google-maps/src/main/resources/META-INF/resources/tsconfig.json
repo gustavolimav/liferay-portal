@@ -1,5 +1,5 @@
 {
-	"@generated": "0b3d96621c40f41312fe192eb10f30a6ee8ed757",
+	"@generated": "1d19ba421c828e3b8e0a4250750850279e0dc5c6",
 	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
@@ -20,9 +20,10 @@
 			]
 		},
 		"rootDir": "../../../../../../../..",
+		"skipLibCheck": true,
 		"sourceMap": false,
 		"strict": true,
-		"target": "es2020",
+		"target": "esnext",
 		"tsBuildInfoFile": "../../../../../../../../.tsc/buildinfo/@liferay/map-google-maps.tsbuildinfo",
 		"typeRoots": [
 			"../../../../../../../../node_modules/@types"

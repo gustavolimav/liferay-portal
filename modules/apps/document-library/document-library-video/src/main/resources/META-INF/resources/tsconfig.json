@@ -1,5 +1,5 @@
 {
-	"@generated": "40f3dc13a14c94e826905dfdd1a2feb9776544ce",
+	"@generated": "a1a0e33efafabd4b0c08f239166f1fd39635f7bd",
 	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
@@ -20,9 +20,10 @@
 			]
 		},
 		"rootDir": "../../../../../../../..",
+		"skipLibCheck": true,
 		"sourceMap": false,
 		"strict": true,
-		"target": "es2020",
+		"target": "esnext",
 		"tsBuildInfoFile": "../../../../../../../../.tsc/buildinfo/document-library-video.tsbuildinfo",
 		"typeRoots": [
 			"../../../../../../../../node_modules/@types"

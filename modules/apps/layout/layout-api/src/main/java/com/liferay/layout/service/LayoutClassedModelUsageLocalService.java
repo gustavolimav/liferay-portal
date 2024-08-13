@@ -219,7 +219,7 @@ public interface LayoutClassedModelUsageLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public LayoutClassedModelUsage fetchLayoutClassedModelUsage(
-		long classNameId, long classPK,
+		long groupId, long classNameId, long classPK,
 		String classedModelExternalReferenceCode, String containerKey,
 		long containerType, long plid);
 
@@ -377,6 +377,11 @@ public interface LayoutClassedModelUsageLocalService
 	@Indexable(type = IndexableType.REINDEX)
 	public LayoutClassedModelUsage updateLayoutClassedModelUsage(
 		LayoutClassedModelUsage layoutClassedModelUsage);
+
+	public LayoutClassedModelUsage updateLayoutClassedModelUsage(
+			long classNameId, long classPK, String containerKey,
+			long containerType, long layoutClassedModelUsageId, long plid)
+		throws PortalException;
 
 	@Override
 	@Transactional(enabled = false)

@@ -101,7 +101,6 @@ import java.io.InputStream;
 import java.sql.Connection;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
@@ -384,7 +383,7 @@ public class MainServlet extends HttpServlet {
 		}
 
 		if (DBUpgrader.isUpgradeDatabaseAutoRunEnabled()) {
-			DBUpgrader.upgradeModules(true);
+			DBUpgrader.upgradeModules();
 
 			StartupHelperUtil.setUpgrading(false);
 		}
@@ -601,43 +600,36 @@ public class MainServlet extends HttpServlet {
 	private void _checkBuildDate() {
 		ReleaseManager releaseManager = _serviceTracker.getService();
 
-		if (releaseManager == null) {
+		if ((releaseManager == null) || !StartupHelperUtil.isNewRelease()) {
+			return;
+		}
+
+		if (_log.isWarnEnabled()) {
+			String message = releaseManager.getShortStatusMessage(true);
+
+			if (Validator.isNotNull(message)) {
+				_log.warn(message);
+
+				return;
+			}
+		}
+
+		String message = releaseManager.getShortStatusMessage(false);
+
+		if (Validator.isNotNull(message)) {
+			if (_log.isInfoEnabled()) {
+				_log.info(message);
+			}
+
 			return;
 		}
 
 		try (Connection connection = DataAccess.getConnection()) {
-			Date currentBuildDate = PortalUpgradeProcess.getCurrentBuildDate(
-				connection);
-
-			if (!currentBuildDate.before(ReleaseInfo.getBuildDate())) {
-				return;
-			}
-
-			if (_log.isWarnEnabled()) {
-				String message = releaseManager.getShortStatusMessage(true);
-
-				if (Validator.isNotNull(message)) {
-					_log.warn(message);
-
-					return;
-				}
-			}
-
-			String message = releaseManager.getShortStatusMessage(false);
-
-			if (Validator.isNotNull(message)) {
-				if (_log.isInfoEnabled()) {
-					_log.info(message);
-				}
-
-				return;
-			}
-
 			PortalUpgradeProcess.updateBuildInfo(connection);
 		}
 		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn("Unable to check build date", exception);
+				_log.warn("Unable to update build information", exception);
 			}
 		}
 	}
@@ -1017,7 +1009,7 @@ public class MainServlet extends HttpServlet {
 				(user.getLastLoginDate() == null)) {
 
 				user = UserLocalServiceUtil.updateLastLogin(
-					userId, httpServletRequest.getRemoteAddr());
+					user, httpServletRequest.getRemoteAddr());
 			}
 		}
 

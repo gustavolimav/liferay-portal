@@ -50,27 +50,25 @@ public class DDMDataProviderInstanceUpgradeProcess extends UpgradeProcess {
 	@Override
 	protected void doUpgrade() throws Exception {
 		try (PreparedStatement preparedStatement1 = connection.prepareStatement(
-				"select dataProviderInstanceId, definition, type_ from " +
-					"DDMDataProviderInstance");
+				"select ctCollectionId, dataProviderInstanceId, definition, " +
+					"type_ from DDMDataProviderInstance");
 			PreparedStatement preparedStatement2 =
 				AutoBatchPreparedStatementUtil.concurrentAutoBatch(
 					connection,
 					"update DDMDataProviderInstance set definition = ? where " +
-						"dataProviderInstanceId = ?");
+						"ctCollectionId = ? and dataProviderInstanceId = ?");
 			ResultSet resultSet = preparedStatement1.executeQuery()) {
 
 			while (resultSet.next()) {
-				String dataProviderInstanceDefinition = resultSet.getString(2);
-				String type = resultSet.getString(3);
-
 				preparedStatement2.setString(
 					1,
 					_upgradeDataProviderInstanceDefinition(
-						dataProviderInstanceDefinition, type));
-
-				long dataProviderInstanceId = resultSet.getLong(1);
-
-				preparedStatement2.setLong(2, dataProviderInstanceId);
+						resultSet.getString("definition"),
+						resultSet.getString("type_")));
+				preparedStatement2.setLong(
+					2, resultSet.getLong("ctCollectionId"));
+				preparedStatement2.setLong(
+					3, resultSet.getLong("dataProviderInstanceId"));
 
 				preparedStatement2.addBatch();
 			}

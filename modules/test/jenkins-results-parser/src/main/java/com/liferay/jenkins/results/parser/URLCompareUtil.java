@@ -7,6 +7,7 @@ package com.liferay.jenkins.results.parser;
 
 import java.net.URL;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -46,11 +47,11 @@ public class URLCompareUtil {
 	private static Map<String, String> _getQueryMap(URL url) {
 		String query = url.getQuery();
 
-		Map<String, String> queryMap = new HashMap<>();
-
 		if (query == null) {
-			return queryMap;
+			return Collections.emptyMap();
 		}
+
+		Map<String, String> queryMap = new HashMap<>();
 
 		Matcher matcher = _queryPattern.matcher(query);
 

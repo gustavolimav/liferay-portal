@@ -18,6 +18,7 @@ import com.liferay.headless.commerce.admin.order.dto.v1_0.ShippingAddress;
 import com.liferay.headless.commerce.admin.order.internal.util.v1_0.ShippingAddressUtil;
 import com.liferay.headless.commerce.admin.order.resource.v1_0.ShippingAddressResource;
 import com.liferay.headless.commerce.core.util.ServiceContextHelper;
+import com.liferay.portal.kernel.service.CountryService;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.fields.NestedField;
@@ -118,8 +119,9 @@ public class ShippingAddressResourceImpl
 		}
 
 		ShippingAddressUtil.addOrUpdateShippingAddress(
-			_commerceAddressService, _commerceOrderService, commerceOrder,
-			shippingAddress, _serviceContextHelper.getServiceContext());
+			_commerceAddressService, commerceOrder, _commerceOrderService,
+			_countryService, shippingAddress,
+			_serviceContextHelper.getServiceContext());
 
 		Response.ResponseBuilder responseBuilder = Response.noContent();
 
@@ -132,8 +134,8 @@ public class ShippingAddressResourceImpl
 		throws Exception {
 
 		ShippingAddressUtil.addOrUpdateShippingAddress(
-			_commerceAddressService, _commerceOrderService,
-			_commerceOrderService.getCommerceOrder(id), shippingAddress,
+			_commerceAddressService, _commerceOrderService.getCommerceOrder(id),
+			_commerceOrderService, _countryService, shippingAddress,
 			_serviceContextHelper.getServiceContext());
 
 		Response.ResponseBuilder responseBuilder = Response.noContent();
@@ -149,6 +151,9 @@ public class ShippingAddressResourceImpl
 
 	@Reference
 	private CommerceOrderService _commerceOrderService;
+
+	@Reference
+	private CountryService _countryService;
 
 	@Reference
 	private ServiceContextHelper _serviceContextHelper;

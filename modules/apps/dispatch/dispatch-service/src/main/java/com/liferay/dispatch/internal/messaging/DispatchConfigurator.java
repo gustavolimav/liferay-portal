@@ -78,33 +78,16 @@ public class DispatchConfigurator {
 		_serviceRegistration = bundleContext.registerService(
 			Destination.class, destination, properties);
 
-		_scheduleJobs(DispatchTaskClusterMode.ALL_NODES);
-
-		if (_clusterMasterExecutor.isMaster()) {
-			_scheduleJobs(DispatchTaskClusterMode.SINGLE_NODE_MEMORY_CLUSTERED);
-			_scheduleJobs(DispatchTaskClusterMode.SINGLE_NODE_PERSISTED);
-		}
-	}
-
-	@Deactivate
-	protected void deactivate() {
-		_unscheduleJobs(DispatchTaskClusterMode.ALL_NODES);
-
-		if (_clusterMasterExecutor.isMaster()) {
-			_unscheduleJobs(
-				DispatchTaskClusterMode.SINGLE_NODE_MEMORY_CLUSTERED);
-			_unscheduleJobs(DispatchTaskClusterMode.SINGLE_NODE_PERSISTED);
-		}
-
-		_serviceRegistration.unregister();
-	}
-
-	private void _scheduleJobs(
-		DispatchTaskClusterMode dispatchTaskClusterMode) {
-
 		for (DispatchTrigger dispatchTrigger :
-				_dispatchTriggerLocalService.getDispatchTriggers(
-					true, dispatchTaskClusterMode)) {
+				_dispatchTriggerLocalService.getDispatchTriggers(true)) {
+
+			DispatchTaskClusterMode dispatchTaskClusterMode =
+				DispatchTaskClusterMode.valueOf(
+					dispatchTrigger.getDispatchTaskClusterMode());
+
+			if (!_isSchedulable(dispatchTaskClusterMode)) {
+				continue;
+			}
 
 			try {
 				_dispatchTriggerHelper.addSchedulerJob(
@@ -119,16 +102,40 @@ public class DispatchConfigurator {
 		}
 	}
 
-	private void _unscheduleJobs(
-		DispatchTaskClusterMode dispatchTaskClusterMode) {
-
+	@Deactivate
+	protected void deactivate() {
 		for (DispatchTrigger dispatchTrigger :
-				_dispatchTriggerLocalService.getDispatchTriggers(
-					true, dispatchTaskClusterMode)) {
+				_dispatchTriggerLocalService.getDispatchTriggers(true)) {
+
+			DispatchTaskClusterMode dispatchTaskClusterMode =
+				DispatchTaskClusterMode.valueOf(
+					dispatchTrigger.getDispatchTaskClusterMode());
+
+			if (!_isSchedulable(dispatchTaskClusterMode)) {
+				continue;
+			}
 
 			_dispatchTriggerHelper.deleteSchedulerJob(
 				dispatchTrigger, dispatchTaskClusterMode.getStorageType());
 		}
+
+		_serviceRegistration.unregister();
+	}
+
+	private boolean _isSchedulable(
+		DispatchTaskClusterMode dispatchTaskClusterMode) {
+
+		if ((dispatchTaskClusterMode == DispatchTaskClusterMode.ALL_NODES) ||
+			(_clusterMasterExecutor.isMaster() &&
+			 ((dispatchTaskClusterMode ==
+				 DispatchTaskClusterMode.SINGLE_NODE_MEMORY_CLUSTERED) ||
+			  (dispatchTaskClusterMode ==
+				  DispatchTaskClusterMode.SINGLE_NODE_PERSISTED)))) {
+
+			return true;
+		}
+
+		return false;
 	}
 
 	private static final int _MAXIMUM_QUEUE_SIZE = 100;

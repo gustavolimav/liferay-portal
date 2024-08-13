@@ -1,5 +1,5 @@
 {
-	"@generated": "2d597f46246de376c9d0b0d78437e6d359549fff",
+	"@generated": "5a203f8670d97b05365062f913eb70a04616178e",
 	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
@@ -41,9 +41,10 @@
 			]
 		},
 		"rootDir": "../../../../../../../..",
+		"skipLibCheck": true,
 		"sourceMap": false,
 		"strict": true,
-		"target": "es2020",
+		"target": "esnext",
 		"tsBuildInfoFile": "../../../../../../../../.tsc/buildinfo/@liferay/layout-content-page-editor-web.tsbuildinfo",
 		"typeRoots": [
 			"../../../../../../../../node_modules/@types"

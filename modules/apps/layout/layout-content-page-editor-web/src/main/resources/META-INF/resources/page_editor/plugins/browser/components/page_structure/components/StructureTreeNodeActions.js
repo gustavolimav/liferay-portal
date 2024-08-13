@@ -19,6 +19,7 @@ import {ITEM_ACTIVATION_ORIGINS} from '../../../../../app/config/constants/itemA
 import {LAYOUT_DATA_ITEM_TYPES} from '../../../../../app/config/constants/layoutDataItemTypes';
 import {useSelectItem} from '../../../../../app/contexts/ControlsContext';
 import {useSetMovementText} from '../../../../../app/contexts/KeyboardMovementContext';
+import {useSetEditedNodeId} from '../../../../../app/contexts/ShortcutContext';
 import {
 	useDispatch,
 	useSelector,
@@ -36,11 +37,7 @@ import {
 import updateItemStyle from '../../../../../app/utils/updateItemStyle';
 import useHasRequiredChild from '../../../../../app/utils/useHasRequiredChild';
 
-export default function StructureTreeNodeActions({
-	item,
-	setEditingNodeId,
-	visible,
-}) {
+export default function StructureTreeNodeActions({disabled, item, visible}) {
 	const [active, setActive] = useState(false);
 
 	const [openSaveModal, setOpenSaveModal] = useState(false);
@@ -74,6 +71,7 @@ export default function StructureTreeNodeActions({
 							visible,
 					}
 				)}
+				disabled={disabled}
 				displayType="unstyled"
 				onClick={(event) => {
 					event.stopPropagation();
@@ -104,7 +102,6 @@ export default function StructureTreeNodeActions({
 					<ActionList
 						item={item}
 						setActive={updateActive}
-						setEditingNodeId={setEditingNodeId}
 						setOpenSaveModal={setOpenSaveModal}
 					/>
 				)}
@@ -120,10 +117,11 @@ export default function StructureTreeNodeActions({
 	);
 }
 
-const ActionList = ({item, setActive, setEditingNodeId, setOpenSaveModal}) => {
+const ActionList = ({item, setActive, setOpenSaveModal}) => {
 	const dispatch = useDispatch();
 	const hasRequiredChild = useHasRequiredChild(item.id);
 	const selectItem = useSelectItem();
+	const setEditedNodeId = useSetEditedNodeId();
 	const setText = useSetMovementText();
 	const widgets = useSelector((state) => state.widgets);
 
@@ -218,7 +216,7 @@ const ActionList = ({item, setActive, setEditingNodeId, setOpenSaveModal}) => {
 		if (canBeRenamed(item)) {
 			items.push({
 				action: () => {
-					setEditingNodeId(item.id);
+					setEditedNodeId(item.id);
 				},
 				label: Liferay.Language.get('rename'),
 			});
@@ -256,10 +254,10 @@ const ActionList = ({item, setActive, setEditingNodeId, setOpenSaveModal}) => {
 		selectedViewportSize,
 		selectItem,
 		widgets,
+		setEditedNodeId,
 		setOpenSaveModal,
 		setText,
 		isHidden,
-		setEditingNodeId,
 	]);
 
 	return (

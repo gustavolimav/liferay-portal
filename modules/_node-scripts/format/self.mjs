@@ -3,12 +3,11 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import crypto from 'crypto';
 import fs from 'fs/promises';
 import path from 'path';
-import url from 'url';
 
-import expandGlobs from '../util/expandGlobs.mjs';
+import {NODE_SCRIPTS_PATH} from '../util/constants.mjs';
+import digestNodeScripts from '../util/digestNodeScripts.mjs';
 import getNamedArguments from '../util/getNamedArguments.mjs';
 import objectSF from '../util/objectSF.mjs';
 import mainBase from './index.mjs';
@@ -22,63 +21,37 @@ export default async function main() {
 		check: '--check',
 	});
 
+	// Invoke base SF
+
 	await mainBase();
 
-	const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
-	const nodeScriptsPath = path.resolve(__dirname, '..');
-	const packageJSONPath = path.join(nodeScriptsPath, 'package.json');
+	// Check node-scripts hash
+
+	const expectedHash = await digestNodeScripts();
+
+	const packageJSONPath = path.join(NODE_SCRIPTS_PATH, 'package.json');
 
 	const packageJSON = JSON.parse(await fs.readFile(packageJSONPath, 'utf-8'));
 
-	const expectedHash = await digestNodeScripts(nodeScriptsPath);
-
-	if (packageJSON['com.liferay']['sha256'] === expectedHash) {
-		return;
-	}
-
-	if (check) {
-		console.log(
-			`❌ Expected hash for node-scripts and 'com.liferay/sha256' field in package.json file differ
+	if (packageJSON['com.liferay']['sha256'] !== expectedHash) {
+		if (check) {
+			console.log(
+				`❌ Expected hash for node-scripts and 'com.liferay/sha256' field in package.json file differ
 
 Expected SHA-256 hash is: ${expectedHash}
 
 Please update the hash field of the package.json file.
 `
-		);
+			);
 
-		process.exit(1);
-	}
-	else {
-		packageJSON['com.liferay']['sha256'] = expectedHash;
-
-		await fs.writeFile(packageJSONPath, objectSF(packageJSON), 'utf-8');
-	}
-}
-
-async function digestNodeScripts(nodeScriptsPath) {
-	const sha256 = crypto.createHash('sha256');
-
-	let files = await expandGlobs(
-		['**/*.mjs', '**/*.js'],
-		['bundle/sass/binary/**', 'node_modules/**'],
-		{
-			baseDir: nodeScriptsPath,
+			process.exit(1);
 		}
-	);
+		else {
+			packageJSON['com.liferay']['sha256'] = expectedHash;
 
-	files = files.filter((file) => !path.basename(file).startsWith('.'));
+			await fs.writeFile(packageJSONPath, objectSF(packageJSON), 'utf-8');
 
-	files.sort();
-
-	const fileContents = await Promise.all(
-		files.map(async (file) => {
-			return await fs.readFile(file, 'utf-8');
-		})
-	);
-
-	for (const fileContent of fileContents) {
-		sha256.update(fileContent);
+			console.log('🔐 Updated sha256 field of package.json');
+		}
 	}
-
-	return sha256.digest('hex');
 }

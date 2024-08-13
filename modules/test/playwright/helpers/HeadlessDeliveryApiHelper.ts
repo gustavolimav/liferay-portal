@@ -96,6 +96,12 @@ export class HeadlessDeliveryApiHelper {
 		);
 	}
 
+	async getSitePages(siteId: string) {
+		return this.apiHelpers.get(
+			`${this.apiHelpers.baseUrl}${this.basePath}/sites/${siteId}/site-pages`
+		);
+	}
+
 	async postBlog(
 		siteId: number | string,
 		blog?: {
@@ -269,6 +275,28 @@ export class HeadlessDeliveryApiHelper {
 					document: JSON.stringify(document),
 					file,
 				},
+			}
+		);
+	}
+
+	async putBlog(
+		blogPostingId: number | string,
+		blog?: {
+			articleBody?: string;
+			headline?: string;
+		}
+	): Promise<any> {
+		blog = {
+			articleBody: getRandomString(),
+			headline: getRandomString(),
+			...(blog || {}),
+		};
+
+		return this.apiHelpers.put(
+			`${this.apiHelpers.baseUrl}${this.basePath}/blog-postings/${blogPostingId}`,
+			{
+				data: blog,
+				failOnStatusCode: true,
 			}
 		);
 	}

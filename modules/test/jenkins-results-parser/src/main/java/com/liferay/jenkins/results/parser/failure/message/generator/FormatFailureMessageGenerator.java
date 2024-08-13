@@ -5,15 +5,13 @@
 
 package com.liferay.jenkins.results.parser.failure.message.generator;
 
-import org.dom4j.Element;
-
 /**
  * @author Brittney Nguyen
  */
 public class FormatFailureMessageGenerator extends BaseFailureMessageGenerator {
 
 	@Override
-	public Element getMessageElement(String consoleText) {
+	public String getMessage(String consoleText) {
 		if (!consoleText.contains(_TOKEN_UNABLE_TO_FORMAT)) {
 			return null;
 		}
@@ -26,7 +24,7 @@ public class FormatFailureMessageGenerator extends BaseFailureMessageGenerator {
 
 		end = consoleText.lastIndexOf("\n", end);
 
-		return getConsoleTextSnippetElement(consoleText, false, start, end);
+		return getConsoleTextSnippet(consoleText, false, start, end);
 	}
 
 	private static final String _TOKEN_UNABLE_TO_FORMAT = "Unable to format";

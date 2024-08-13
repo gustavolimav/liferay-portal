@@ -6,37 +6,50 @@
 import {useRef} from 'react';
 import {useNavigate} from 'react-router-dom';
 import useAutofillBuild from '~/hooks/useAutofillBuild';
+import usePermission from '~/hooks/usePermission';
 import {Liferay} from '~/services/liferay';
+import {TestrayRole} from '~/util/constants';
 
 import useFormModal from '../../../../hooks/useFormModal';
 import useMutate from '../../../../hooks/useMutate';
 import i18n from '../../../../i18n';
-import {TestrayBuild, testrayBuildImpl} from '../../../../services/rest';
+import {
+	TestrayBuild,
+	testrayBuildImpl,
+	testrayCaseResultImpl,
+} from '../../../../services/rest';
 import {Action, ActionsHookParameter} from '../../../../types';
 
 const useBuildActions = ({isHeaderActions}: ActionsHookParameter = {}) => {
-	const formModal = useFormModal();
 	const {removeItemFromList} = useMutate();
 	const {setBuildA, setBuildB} = useAutofillBuild();
+	const formModal = useFormModal();
+	const hasPermission = usePermission([
+		TestrayRole.TESTRAY_ADMINISTRATOR,
+		TestrayRole.TESTRAY_LEAD,
+	]);
 	const navigate = useNavigate();
 
 	const modal = formModal.modal;
 
 	const actionsRef = useRef([
 		{
-			action: () => alert('Archive'),
+			action: (build) =>
+				testrayCaseResultImpl.exportCaseResults(
+					build.id ? build.id : Number(build?.testrayBuildId)
+				),
 			icon: 'download',
 			name: i18n.translate('export-csv'),
 		},
 		{
 			action: (build, mutate) => {
-				const buildId = build.id
-					? build.id
-					: (build.testrayBuildId as number);
+				const buildId = build?.id
+					? build?.id
+					: (build?.testrayBuildId as number);
 
-				const buildPromoted = build.id
-					? build.promoted
-					: build.testrayBuildPromoted;
+				const buildPromoted = build?.id
+					? build?.promoted
+					: build?.testrayBuildPromoted;
 
 				testrayBuildImpl
 					.update(buildId, {
@@ -48,27 +61,27 @@ const useBuildActions = ({isHeaderActions}: ActionsHookParameter = {}) => {
 			},
 			icon: 'star',
 			name: (build) => {
-				const buildPromoted = build.id
-					? build.promoted
-					: build.testrayBuildPromoted;
+				const buildPromoted = build?.id
+					? build?.promoted
+					: build?.testrayBuildPromoted;
 
 				return i18n.translate(buildPromoted ? 'demote' : 'promote');
 			},
-			permission: 'UPDATE',
+			permission: hasPermission,
 		},
 		{
 			action: (build, mutate) => {
-				const buildId = build.id
-					? build.id
-					: (build.testrayBuildId as number);
+				const buildId = build?.id
+					? build?.id
+					: (build?.testrayBuildId as number);
 
-				const buildPromoted = build.id
-					? build.promoted
-					: build.testrayBuildPromoted;
+				const buildPromoted = build?.id
+					? build?.promoted
+					: build?.testrayBuildPromoted;
 
-				const buildArchived = build.id
-					? build.archived
-					: build.testrayBuildArchived;
+				const buildArchived = build?.id
+					? build?.archived
+					: build?.testrayBuildArchived;
 
 				if (!buildPromoted) {
 					testrayBuildImpl
@@ -78,31 +91,31 @@ const useBuildActions = ({isHeaderActions}: ActionsHookParameter = {}) => {
 				}
 			},
 			disabled: (build) => {
-				const isPromoted = build.id
-					? build.promoted
-					: build.testrayBuildPromoted;
+				const isPromoted = build?.id
+					? build?.promoted
+					: build?.testrayBuildPromoted;
 
-				const hasTasks = build.id
-					? !!build.tasks.length
-					: !!build.testrayBuildTaskStatus;
+				const hasTasks = build?.id
+					? !!build?.tasks.length
+					: !!build?.testrayBuildTaskStatus;
 
 				return isPromoted || hasTasks;
 			},
 			icon: 'archive',
 			name: (build) => {
-				const buildArchived = build.id
-					? build.archived
-					: build.testrayBuildArchived;
+				const buildArchived = build?.id
+					? build?.archived
+					: build?.testrayBuildArchived;
 
 				return i18n.translate(buildArchived ? 'unarchive' : 'archive');
 			},
-			permission: 'UPDATE',
+			permission: hasPermission,
 		},
 		{
 			action: (build, mutate) => {
-				const buildId = build.id
-					? build.id
-					: (build.testrayBuildId as number);
+				const buildId = build?.id
+					? build?.id
+					: (build?.testrayBuildId as number);
 
 				return testrayBuildImpl
 					.removeResource(buildId)
@@ -117,13 +130,13 @@ const useBuildActions = ({isHeaderActions}: ActionsHookParameter = {}) => {
 			},
 			icon: 'trash',
 			name: i18n.translate(isHeaderActions ? 'delete-build' : 'delete'),
-			permission: 'DELETE',
+			permission: hasPermission,
 		},
 		{
 			action: (build) => {
-				const buildId = build.id
-					? build.id
-					: (build.testrayBuildId as number);
+				const buildId = build?.id
+					? build?.id
+					: (build?.testrayBuildId as number);
 
 				setBuildA(buildId);
 
@@ -136,9 +149,9 @@ const useBuildActions = ({isHeaderActions}: ActionsHookParameter = {}) => {
 		},
 		{
 			action: (build) => {
-				const buildId = build.id
-					? build.id
-					: (build.testrayBuildId as number);
+				const buildId = build?.id
+					? build?.id
+					: (build?.testrayBuildId as number);
 
 				setBuildB(buildId);
 

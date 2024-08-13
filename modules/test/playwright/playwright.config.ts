@@ -5,7 +5,6 @@
 
 import {defineConfig, devices} from '@playwright/test';
 
-import {wemSiteSetup, wemSiteTeardown} from './setup/wem-site/config';
 import {config as accountAdminWebConfig} from './tests/account-admin-web/config';
 import {config as analyticsSettingsWebConfig} from './tests/analytics-settings-web/config';
 import {config as analyticsWebConfig} from './tests/analytics-web/config';
@@ -15,6 +14,7 @@ import {config as blogsWebConfig} from './tests/blogs-web/config';
 import {config as changeTrackingWebConfig} from './tests/change-tracking-web/config';
 import {config as clientExtensionWebConfig} from './tests/client-extension-web/config';
 import {config as commerceConfig} from './tests/commerce/config';
+import {config as configurationAdminWebConfig} from './tests/configuration-admin-web/config';
 import {config as contentDashboardWebConfig} from './tests/content-dashboard-web/config';
 import {config as cookiesBannerWebConfig} from './tests/cookies-banner-web/config';
 import {config as dispatchWebConfig} from './tests/dispatch-web/config';
@@ -28,6 +28,7 @@ import {config as frontendJsSpaWebConfig} from './tests/frontend-js-spa-web/conf
 import {config as frontendTaglibClayConfig} from './tests/frontend-taglib-clay/config';
 import {config as headlessBuilderImplConfig} from './tests/headless-builder-impl/config';
 import {config as headlessBuilderWebConfig} from './tests/headless-builder-web/config';
+import {config as itemSelectorTaglibConfig} from './tests/item-selector-taglib/config';
 import {config as journalWebConfig} from './tests/journal-web/config';
 import {config as knowledgeBaseWebConfig} from './tests/knowledge-base-web/config';
 import {config as layoutAdminWebConfig} from './tests/layout-admin-web/config';
@@ -45,24 +46,34 @@ import {config as portalDefaultPermissionsWebConfig} from './tests/portal-defaul
 import {config as portalSearchAdminWebConfig} from './tests/portal-search-admin-web/config';
 import {config as portalSearchWebConfig} from './tests/portal-search-web/config';
 import {config as portalSecurityScriptManagementWebConfig} from './tests/portal-security-script-management-web/config';
+import {config as portalSecurityServiceAccessPolicyService} from './tests/portal-security-service-access-policy-service/config';
 import {config as portalWorkflowKaleoDesignerWebConfig} from './tests/portal-workflow-kaleo-designer-web/config';
+import {config as portalWorkflowTaskWebConfig} from './tests/portal-workflow-task-web/config';
+import {config as portletConfigurationCssWebConfig} from './tests/portlet-configuration-css-web/config';
 import {config as portletConfigurationWebConfig} from './tests/portlet-configuration-web/config';
 import {config as productNavigationProductMenuWeb} from './tests/product-navigation-product-menu-web/config';
 import {config as productNavigationUserPersonalBarWebConfig} from './tests/product-navigation-user-personal-bar-web/config';
 import {config as questionsWebConfig} from './tests/questions-web/config';
 import {config as rolesAdminWebConfig} from './tests/roles-admin-web/config';
+import {config as samlWebConfig} from './tests/saml-web/config';
 import {config as searchExperiencesWebConfig} from './tests/search-experiences-web/config';
+import {
+	pageManagementSiteSetup,
+	pageManagementSiteTeardown,
+} from './tests/setup/page-management-site/config';
 import {config as siteAdminWebConfig} from './tests/site-admin-web/config';
 import {config as siteNavigationAdminWebConfig} from './tests/site-navigation-admin-web/config';
 import {config as stableConfig} from './tests/stable/config';
 import {config as stylebookWebConfig} from './tests/style-book-web/config';
 import {config as usersAdminWebConfig} from './tests/users-admin-web/config';
 import {config as wikiWebConfig} from './tests/wiki-web/config';
+import {config as customerConfig} from './tests/workspaces/liferay-customer-workspace/config';
+import {config as partnerConfig} from './tests/workspaces/liferay-partner-workspace/config';
 import {config as commerceWorkspaceConfig} from './tests/workspaces/liferay-workspace-commerce/config';
 import {config as jethr0Config} from './tests/workspaces/liferay-workspace-jethr0/config';
 import {config as marketplaceConfig} from './tests/workspaces/liferay-workspace-marketplace/config';
 
-const setupProjects = [wemSiteSetup, wemSiteTeardown];
+const setupProjects = [pageManagementSiteSetup, pageManagementSiteTeardown];
 
 export default defineConfig({
 	expect: {
@@ -81,7 +92,9 @@ export default defineConfig({
 		clientExtensionWebConfig,
 		commerceConfig,
 		commerceWorkspaceConfig,
+		configurationAdminWebConfig,
 		contentDashboardWebConfig,
+		customerConfig,
 		dispatchWebConfig,
 		documentLibraryWebConfig,
 		dynamicDataMappingFormWebConfig,
@@ -93,6 +106,7 @@ export default defineConfig({
 		frontendTaglibClayConfig,
 		headlessBuilderImplConfig,
 		headlessBuilderWebConfig,
+		itemSelectorTaglibConfig,
 		jethr0Config,
 		journalWebConfig,
 		knowledgeBaseWebConfig,
@@ -108,16 +122,21 @@ export default defineConfig({
 		objectWebConfig,
 		openIdLinkConfig,
 		osbFaroWebConfig,
+		partnerConfig,
 		portalDefaultPermissionsWebConfig,
 		portalSearchAdminWebConfig,
 		portalSearchWebConfig,
 		portalSecurityScriptManagementWebConfig,
+		portalSecurityServiceAccessPolicyService,
 		portalWorkflowKaleoDesignerWebConfig,
+		portalWorkflowTaskWebConfig,
+		portletConfigurationCssWebConfig,
 		portletConfigurationWebConfig,
 		productNavigationProductMenuWeb,
 		productNavigationUserPersonalBarWebConfig,
 		questionsWebConfig,
 		rolesAdminWebConfig,
+		samlWebConfig,
 		searchExperiencesWebConfig,
 		siteAdminWebConfig,
 		siteNavigationAdminWebConfig,
@@ -153,7 +172,6 @@ export default defineConfig({
 			? process.env.PORTAL_URL
 			: 'http://localhost:8080',
 		screenshot: 'only-on-failure',
-		testIdAttribute: 'data-qa-id',
 		trace: 'retain-on-failure',
 	},
 	workers: 1,

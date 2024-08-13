@@ -108,12 +108,12 @@ public abstract class BaseJob implements Job {
 
 	@Override
 	public List<BatchTestClassGroup> getBatchTestClassGroups() {
-		synchronized (_jobProperties) {
-			if (_batchTestClassGroups != null) {
-				return _batchTestClassGroups;
+		synchronized (jobProperties) {
+			if (batchTestClassGroups != null) {
+				return batchTestClassGroups;
 			}
 
-			_batchTestClassGroups = Collections.synchronizedList(
+			batchTestClassGroups = Collections.synchronizedList(
 				new ArrayList<BatchTestClassGroup>());
 
 			if ((jsonObject != null) && jsonObject.has("batches")) {
@@ -127,39 +127,18 @@ public abstract class BaseJob implements Job {
 						continue;
 					}
 
-					_batchTestClassGroups.add(
+					batchTestClassGroups.add(
 						TestClassGroupFactory.newBatchTestClassGroup(
 							this, batchJSONObject));
 				}
 
-				return _batchTestClassGroups;
+				return batchTestClassGroups;
 			}
 
-			Properties buildProperties;
+			batchTestClassGroups.addAll(
+				getBatchTestClassGroups(getRawBatchNames()));
 
-			try {
-				buildProperties = JenkinsResultsParserUtil.getBuildProperties();
-			}
-			catch (IOException ioException) {
-				throw new RuntimeException(
-					"Unable to get build properties", ioException);
-			}
-
-			boolean relevantEngineEnabled = Boolean.parseBoolean(
-				buildProperties.getProperty("relevant.engine.enabled"));
-
-			if (relevantEngineEnabled &&
-				Objects.equals(getTestSuiteName(), "relevant")) {
-
-				_batchTestClassGroups.addAll(
-					getBatchTestClassGroups(getTestBatches()));
-			}
-			else {
-				_batchTestClassGroups.addAll(
-					getBatchTestClassGroups(getRawBatchNames()));
-			}
-
-			return _batchTestClassGroups;
+			return batchTestClassGroups;
 		}
 	}
 
@@ -242,7 +221,7 @@ public abstract class BaseJob implements Job {
 
 	@Override
 	public List<BatchTestClassGroup> getDependentBatchTestClassGroups() {
-		synchronized (_jobProperties) {
+		synchronized (jobProperties) {
 			if (_dependentBatchTestClassGroups != null) {
 				return _dependentBatchTestClassGroups;
 			}
@@ -447,7 +426,7 @@ public abstract class BaseJob implements Job {
 
 	@Override
 	public JSONObject getJSONObject() {
-		synchronized (_jobProperties) {
+		synchronized (jobProperties) {
 			if (jsonObject != null) {
 				return jsonObject;
 			}
@@ -1323,14 +1302,22 @@ public abstract class BaseJob implements Job {
 		return new ArrayList<>();
 	}
 
+	protected void recordJobProperties(Set<JobProperty> jobProperties) {
+		for (JobProperty jobProperty : jobProperties) {
+			recordJobProperty(jobProperty);
+		}
+	}
+
 	protected void recordJobProperty(JobProperty jobProperty) {
-		if ((jobProperty == null) || _jobProperties.contains(jobProperty)) {
+		if ((jobProperty == null) || jobProperties.contains(jobProperty)) {
 			return;
 		}
 
-		_jobProperties.add(jobProperty);
+		jobProperties.add(jobProperty);
 	}
 
+	protected List<BatchTestClassGroup> batchTestClassGroups;
+	protected final List<JobProperty> jobProperties = new ArrayList<>();
 	protected final List<File> jobPropertiesFiles = new ArrayList<>();
 	protected JSONObject jsonObject;
 
@@ -1367,7 +1354,7 @@ public abstract class BaseJob implements Job {
 	}
 
 	private Map<String, Properties> _getJobPropertiesMap() {
-		synchronized (_jobProperties) {
+		synchronized (jobProperties) {
 			if (!_initializeJobProperties) {
 				getBatchTestClassGroups();
 
@@ -1379,7 +1366,7 @@ public abstract class BaseJob implements Job {
 
 		Map<String, Properties> jobPropertiesMap = new TreeMap<>();
 
-		for (JobProperty jobProperty : _jobProperties) {
+		for (JobProperty jobProperty : jobProperties) {
 			if (jobProperty == null) {
 				continue;
 			}
@@ -1480,7 +1467,6 @@ public abstract class BaseJob implements Job {
 	private static final ExecutorService _executorService =
 		JenkinsResultsParserUtil.getNewThreadPoolExecutor(_THREAD_COUNT, true);
 
-	private List<BatchTestClassGroup> _batchTestClassGroups;
 	private final BuildProfile _buildProfile;
 	private String _companyDefaultLocale;
 	private Document _configDocument;
@@ -1489,7 +1475,6 @@ public abstract class BaseJob implements Job {
 	private boolean _initializeJobProperties;
 	private JobHistory _jobHistory;
 	private final String _jobName;
-	private final List<JobProperty> _jobProperties = new ArrayList<>();
 	private Boolean _jUnitTestFileModifiedOnly;
 	private Boolean _testAnalyticsCloud;
 

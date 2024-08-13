@@ -59,7 +59,7 @@ test('LPD-22572 Picklist on product specifications page', async ({
 
 	await commerceAdminProductPage.gotoProduct(product.name['en_US']);
 
-	await productDetailsPage.addSPecificationToProduct(
+	await productDetailsPage.addSpecificationToProduct(
 		'Add an Existing Specification',
 		specification.title.en_US,
 		'item1'
@@ -76,7 +76,7 @@ test('LPD-22572 Picklist on product specifications page', async ({
 		'item2'
 	);
 
-	await productDetailsPage.changeValueInProductSPecification('Edit', 'item2');
+	await productDetailsPage.changeValueInProductSpecification('Edit', 'item2');
 
 	await expect(productDetailsPage.waitForEditScuccessMessage).toBeVisible();
 

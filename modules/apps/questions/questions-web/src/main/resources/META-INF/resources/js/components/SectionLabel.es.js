@@ -13,11 +13,11 @@ const getSectionTitle = (section) => {
 		return section.title;
 	}
 
-	if (stringToSlug(section.title) === section.friendlyUrlPath) {
+	if (stringToSlug(section.title) === decodeURI(section.friendlyUrlPath)) {
 		return section.title;
 	}
 
-	return `${section.title} (${slugToText(section.friendlyUrlPath)})`;
+	return `${section.title} (${slugToText(decodeURI(section.friendlyUrlPath))})`;
 };
 
 export default function SectionLabel({section}) {

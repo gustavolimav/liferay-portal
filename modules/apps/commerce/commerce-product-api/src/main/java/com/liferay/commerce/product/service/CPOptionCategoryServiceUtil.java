@@ -31,6 +31,7 @@ public class CPOptionCategoryServiceUtil {
 	 * Never modify this class directly. Add custom service methods to <code>com.liferay.commerce.product.service.impl.CPOptionCategoryServiceImpl</code> and rerun ServiceBuilder to regenerate this class.
 	 */
 	public static CPOptionCategory addCPOptionCategory(
+			String externalReferenceCode,
 			Map<java.util.Locale, String> titleMap,
 			Map<java.util.Locale, String> descriptionMap, double priority,
 			String key,
@@ -38,7 +39,21 @@ public class CPOptionCategoryServiceUtil {
 		throws PortalException {
 
 		return getService().addCPOptionCategory(
-			titleMap, descriptionMap, priority, key, serviceContext);
+			externalReferenceCode, titleMap, descriptionMap, priority, key,
+			serviceContext);
+	}
+
+	public static CPOptionCategory addOrUpdateCPOptionCategory(
+			String externalReferenceCode, long cpOptionCategoryId,
+			Map<java.util.Locale, String> titleMap,
+			Map<java.util.Locale, String> descriptionMap, double priority,
+			String key,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws PortalException {
+
+		return getService().addOrUpdateCPOptionCategory(
+			externalReferenceCode, cpOptionCategoryId, titleMap, descriptionMap,
+			priority, key, serviceContext);
 	}
 
 	public static void deleteCPOptionCategory(long cpOptionCategoryId)
@@ -58,6 +73,14 @@ public class CPOptionCategoryServiceUtil {
 		throws PortalException {
 
 		return getService().getCPOptionCategory(cpOptionCategoryId);
+	}
+
+	public static CPOptionCategory getCPOptionCategoryByExternalReferenceCode(
+			String externalReferenceCode, long companyId)
+		throws PortalException {
+
+		return getService().getCPOptionCategoryByExternalReferenceCode(
+			externalReferenceCode, companyId);
 	}
 
 	/**
@@ -80,13 +103,15 @@ public class CPOptionCategoryServiceUtil {
 	}
 
 	public static CPOptionCategory updateCPOptionCategory(
-			long cpOptionCategoryId, Map<java.util.Locale, String> titleMap,
+			String externalReferenceCode, long cpOptionCategoryId,
+			Map<java.util.Locale, String> titleMap,
 			Map<java.util.Locale, String> descriptionMap, double priority,
 			String key)
 		throws PortalException {
 
 		return getService().updateCPOptionCategory(
-			cpOptionCategoryId, titleMap, descriptionMap, priority, key);
+			externalReferenceCode, cpOptionCategoryId, titleMap, descriptionMap,
+			priority, key);
 	}
 
 	public static CPOptionCategoryService getService() {

@@ -1,5 +1,5 @@
 {
-	"@generated": "42612cd27bafa7c72b1884d6a957d350437ce260",
+	"@generated": "d7979c9f87aa56097adb0dc3de122ebb8e601b15",
 	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
@@ -17,9 +17,10 @@
 			]
 		},
 		"rootDir": "../../../../../../../..",
+		"skipLibCheck": true,
 		"sourceMap": false,
 		"strict": true,
-		"target": "es2020",
+		"target": "esnext",
 		"tsBuildInfoFile": "../../../../../../../../.tsc/buildinfo/@liferay/fragment-video-streaming.tsbuildinfo",
 		"typeRoots": [
 			"../../../../../../../../node_modules/@types"

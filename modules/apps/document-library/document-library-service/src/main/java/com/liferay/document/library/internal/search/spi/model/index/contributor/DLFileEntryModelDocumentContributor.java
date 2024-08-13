@@ -16,7 +16,10 @@ import com.liferay.document.library.kernel.store.DLStore;
 import com.liferay.document.library.kernel.store.DLStoreRequest;
 import com.liferay.document.library.security.io.InputStreamSanitizer;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
+import com.liferay.dynamic.data.mapping.model.Value;
+import com.liferay.dynamic.data.mapping.service.DDMFieldLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
+import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.dynamic.data.mapping.storage.DDMStorageEngineManager;
 import com.liferay.dynamic.data.mapping.util.DDMIndexer;
@@ -28,6 +31,7 @@ import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.Document;
@@ -222,6 +226,42 @@ public class DLFileEntryModelDocumentContributor
 
 					_ddmIndexer.addAttributes(
 						document, ddmStructure, ddmFormValues);
+
+					if (!FeatureFlagManagerUtil.isEnabled(
+							dlFileVersion.getCompanyId(), "LPD-30087")) {
+
+						continue;
+					}
+
+					Map<String, List<DDMFormFieldValue>> ddmFormFieldValuesMap =
+						ddmFormValues.getDDMFormFieldValuesMap(false);
+
+					long tiffImageLength = _getDDMFormFieldsValueValue(
+						ddmFormFieldValuesMap.get("TIFF_IMAGE_LENGTH"));
+
+					if (tiffImageLength <= 0) {
+						continue;
+					}
+
+					long tiffImageWidth = _getDDMFormFieldsValueValue(
+						ddmFormFieldValuesMap.get("TIFF_IMAGE_WIDTH"));
+
+					if (tiffImageWidth <= 0) {
+						continue;
+					}
+
+					String aspectRatio = "square";
+
+					if (tiffImageLength > tiffImageWidth) {
+						aspectRatio = "tall";
+					}
+					else if (tiffImageLength < tiffImageWidth) {
+						aspectRatio = "wide";
+					}
+
+					document.addText("aspectRatio", aspectRatio);
+					document.addNumber("imageLength", tiffImageLength);
+					document.addNumber("imageWidth", tiffImageWidth);
 				}
 			}
 			catch (Exception exception) {
@@ -276,16 +316,26 @@ public class DLFileEntryModelDocumentContributor
 	private String _extractText(DLFileEntry dlFileEntry)
 		throws IOException, PortalException {
 
+		String indexVersionLabel = _getIndexVersionLabel(dlFileEntry);
+
 		if (_dlIndexerConfiguration.cacheTextExtraction() &&
 			_dlStore.hasFile(
 				dlFileEntry.getCompanyId(), dlFileEntry.getDataRepositoryId(),
-				dlFileEntry.getName(), _getIndexVersionLabel(dlFileEntry))) {
+				dlFileEntry.getName(), indexVersionLabel)) {
 
-			return StreamUtil.toString(
+			String string = StreamUtil.toString(
 				_dlStore.getFileAsStream(
 					dlFileEntry.getCompanyId(),
 					dlFileEntry.getDataRepositoryId(), dlFileEntry.getName(),
-					_getIndexVersionLabel(dlFileEntry)));
+					indexVersionLabel));
+
+			if (string.length() <= PropsValues.DL_FILE_INDEXING_MAX_SIZE) {
+				return string;
+			}
+
+			_dlStore.deleteFile(
+				dlFileEntry.getCompanyId(), dlFileEntry.getDataRepositoryId(),
+				dlFileEntry.getName(), indexVersionLabel);
 		}
 
 		InputStream inputStream = _getInputStream(dlFileEntry);
@@ -305,12 +355,34 @@ public class DLFileEntryModelDocumentContributor
 					dlFileEntry.getCompanyId(),
 					dlFileEntry.getDataRepositoryId(), dlFileEntry.getName()
 				).versionLabel(
-					_getIndexVersionLabel(dlFileEntry)
+					indexVersionLabel
 				).build(),
 				text.getBytes(StandardCharsets.UTF_8));
 		}
 
 		return text;
+	}
+
+	private long _getDDMFormFieldsValueValue(
+		List<DDMFormFieldValue> ddmFormFieldValues) {
+
+		if (ListUtil.isEmpty(ddmFormFieldValues)) {
+			return 0;
+		}
+
+		DDMFormFieldValue ddmFormFieldValue = ddmFormFieldValues.get(0);
+
+		if (ddmFormFieldValue == null) {
+			return 0;
+		}
+
+		Value value = ddmFormFieldValue.getValue();
+
+		if (value == null) {
+			return 0;
+		}
+
+		return GetterUtil.getLong(value.getString(LocaleUtil.ROOT));
 	}
 
 	private String _getIndexVersionLabel(DLFileEntry dlFileEntry)
@@ -377,6 +449,9 @@ public class DLFileEntryModelDocumentContributor
 
 	@Reference
 	private CTCollectionLocalService _ctCollectionLocalService;
+
+	@Reference
+	private DDMFieldLocalService _ddmFieldLocalService;
 
 	@Reference
 	private DDMIndexer _ddmIndexer;

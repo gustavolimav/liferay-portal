@@ -12,3 +12,18 @@
 # Bundle Version 1.0.3
 #
 e34b035ced6aacc6bce5d2f2ae47ec05ebe2e2ee^..26597a6849a99827bf52a1ebd5ca77529562a3e6=LPD-26455 LPD-26706 LPD-27157
+
+#
+# Bundle Version 1.0.4
+#
+26597a6849a99827bf52a1ebd5ca77529562a3e6^..eb7c8bb6f7eb9d7f04e76848b62146c65fdce69d=LPD-5443
+
+#
+# Bundle Version 1.0.5
+#
+eb7c8bb6f7eb9d7f04e76848b62146c65fdce69d^..95c3dc89a3c5b3044684cbedf6f66ae9d122fb1c=LPD-31151 LPD-31635
+
+#
+# Bundle Version 1.0.6
+#
+95c3dc89a3c5b3044684cbedf6f66ae9d122fb1c^..63702c4794ed81881896c3fd25d7bb0c3f86be0a=LPD-32125 LRCI-4395

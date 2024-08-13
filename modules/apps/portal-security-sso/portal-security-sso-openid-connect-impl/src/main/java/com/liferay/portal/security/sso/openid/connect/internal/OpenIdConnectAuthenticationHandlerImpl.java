@@ -12,6 +12,7 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
@@ -145,18 +146,17 @@ public class OpenIdConnectAuthenticationHandlerImpl
 
 			JWTClaimsSet jwtClaimsSet = jwt.getJWTClaimsSet();
 
-			JSONObject jsonObject = jwtClaimsSet.toJSONObject();
+			Map<String, Object> claims = jwtClaimsSet.toJSONObject();
 
 			List<String> emails = jwtClaimsSet.getStringListClaim("emails");
 
-			jsonObject.put("email", emails.get(0));
+			claims.put("email", emails.get(0));
 
-			jsonObject.put(
+			claims.put(
 				"family_name", jwtClaimsSet.getStringClaim("family_name"));
-			jsonObject.put(
-				"given_name", jwtClaimsSet.getStringClaim("given_name"));
+			claims.put("given_name", jwtClaimsSet.getStringClaim("given_name"));
 
-			UserInfo userInfo = new UserInfo(jsonObject);
+			UserInfo userInfo = new UserInfo(JWTClaimsSet.parse(claims));
 
 			userInfoJSON = userInfo.toJSONString();
 		}
@@ -365,7 +365,8 @@ public class OpenIdConnectAuthenticationHandlerImpl
 		}
 
 		try {
-			return Collections.singletonList(new LangTag(locale.getLanguage()));
+			return Collections.singletonList(
+				LangTag.parse(_language.getBCP47LangTag(locale)));
 		}
 		catch (LangTagException langTagException) {
 			if (_log.isDebugEnabled()) {
@@ -480,6 +481,9 @@ public class OpenIdConnectAuthenticationHandlerImpl
 	@Reference
 	private AuthorizationServerMetadataResolver
 		_authorizationServerMetadataResolver;
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private OAuthClientEntryLocalService _oAuthClientEntryLocalService;

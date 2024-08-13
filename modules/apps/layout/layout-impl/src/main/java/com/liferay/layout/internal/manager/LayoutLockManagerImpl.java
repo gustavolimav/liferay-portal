@@ -36,6 +36,7 @@ import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.DateUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -51,6 +52,7 @@ import com.liferay.portal.model.impl.LayoutModelImpl;
 import java.sql.Types;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Dictionary;
 import java.util.HashMap;
@@ -123,6 +125,8 @@ public class LayoutLockManagerImpl implements LayoutLockManager {
 	public List<LockedLayout> getLockedLayouts(
 		long companyId, long groupId, Locale locale) {
 
+		List<LockedLayout> lockedLayouts = new ArrayList<>();
+
 		List<Object[]> results = _layoutLocalService.dslQuery(
 			DSLQueryFactoryUtil.select(
 			).from(
@@ -168,8 +172,6 @@ public class LayoutLockManagerImpl implements LayoutLockManager {
 					"LockedLayoutsTable", LockedLayoutsTable.INSTANCE
 				)
 			));
-
-		List<LockedLayout> lockedLayouts = new ArrayList<>();
 
 		for (Object[] columns : results) {
 			Layout layout = _layoutLocalService.fetchLayout(
@@ -439,8 +441,8 @@ public class LayoutLockManagerImpl implements LayoutLockManager {
 				_configurationAdmin.listConfigurations(
 					_getLockedLayoutsGroupConfigurationFilterString(companyId));
 
-			if ((configurations == null) || (configurations.length == 0)) {
-				return lockedLayoutsGroupConfigurations;
+			if (ArrayUtil.isEmpty(configurations)) {
+				return Collections.emptyMap();
 			}
 
 			for (Configuration configuration : configurations) {

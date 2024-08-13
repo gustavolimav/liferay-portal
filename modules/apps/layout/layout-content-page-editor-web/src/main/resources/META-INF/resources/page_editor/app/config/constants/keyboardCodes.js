@@ -13,6 +13,8 @@ export const ARROW_UP_KEY_CODE = 'ArrowUp';
 
 export const BACKSPACE_KEY_CODE = 'Backspace';
 
+export const CONTROL_KEY_CODE = 'Control';
+
 export const D_KEY_CODE = 'KeyD';
 
 export const END_KEY_CODE = 'End';
@@ -21,9 +23,15 @@ export const ENTER_KEY_CODE = 'Enter';
 
 export const ESCAPE_KEY_CODE = 'Escape';
 
+export const H_KEY_CODE = 'KeyH';
+
 export const HOME_KEY_CODE = 'Home';
 
+export const META_KEY_CODE = 'Meta';
+
 export const PERIOD_KEY_CODE = 'Period';
+
+export const R_KEY_CODE = 'KeyR';
 
 export const S_KEY_CODE = 'KeyS';
 

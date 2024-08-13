@@ -1,4 +1,4 @@
-@component-name = "portal-wcm"
+@component-name = "portal-page-management"
 definition {
 
 	property ci.retries.disabled = "true";
@@ -26,36 +26,6 @@ definition {
 				groupName = ${randomSiteName},
 				layoutName = "Test Page Name",
 				type = "content");
-		}
-	}
-
-	@description = "This is a test for LPS-158527. The guest shouldn't be allowed to preview changes."
-	@priority = 4
-	test CannotPreviewChangesAsGuest {
-		task ("Given a guest has a content pages with draft changes") {
-			ContentPagesNavigator.openEditContentPage(
-				pageName = "Test Page Name",
-				siteName = ${randomSiteName});
-
-			PageEditor.addFragment(
-				collectionName = "Basic Components",
-				fragmentName = "Heading");
-
-			PageEditor.previewInANewTab();
-
-			var previewURL = Navigator.getCurrentURL();
-
-			Close.closeWindow();
-		}
-
-		task ("When the guest access to the content page at preview mode") {
-			User.logoutPG();
-
-			Navigator.openSpecificURL(url = ${previewURL});
-		}
-
-		task ("Then the guest should see not found") {
-			Alert.viewErrorMessage(errorMessage = "Your request failed to complete.");
 		}
 	}
 

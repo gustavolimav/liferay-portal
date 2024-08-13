@@ -306,7 +306,10 @@ public class MBCategoryLocalServiceImpl extends MBCategoryLocalServiceBaseImpl {
 
 	@Override
 	public MBCategory fetchMBCategory(long groupId, String friendlyURL) {
-		return mbCategoryPersistence.fetchByG_F(groupId, friendlyURL);
+		return mbCategoryPersistence.fetchByG_F(
+			groupId,
+			_friendlyURLNormalizer.normalizeWithEncodingPeriodsAndSlashes(
+				friendlyURL));
 	}
 
 	@Override
@@ -547,7 +550,10 @@ public class MBCategoryLocalServiceImpl extends MBCategoryLocalServiceBaseImpl {
 	public MBCategory getMBCategory(long groupId, String friendlyURL)
 		throws PortalException {
 
-		return mbCategoryPersistence.findByG_F(groupId, friendlyURL);
+		return mbCategoryPersistence.findByG_F(
+			groupId,
+			_friendlyURLNormalizer.normalizeWithEncodingPeriodsAndSlashes(
+				friendlyURL));
 	}
 
 	@Override
@@ -939,7 +945,9 @@ public class MBCategoryLocalServiceImpl extends MBCategoryLocalServiceBaseImpl {
 			name = String.valueOf(categoryId);
 		}
 		else {
-			name = _friendlyURLNormalizer.normalizeWithPeriodsAndSlashes(name);
+			name =
+				_friendlyURLNormalizer.normalizeWithEncodingPeriodsAndSlashes(
+					name);
 		}
 
 		name = ModelHintsUtil.trimString(
@@ -950,8 +958,16 @@ public class MBCategoryLocalServiceImpl extends MBCategoryLocalServiceBaseImpl {
 		MBCategory mbCategory = mbCategoryPersistence.fetchByG_F(
 			groupId, friendlyURL);
 
+		if (mbCategory == null) {
+			return friendlyURL;
+		}
+
+		if (!StringUtil.endsWith(friendlyURL, StringPool.DASH)) {
+			name = name + StringPool.DASH;
+		}
+
 		for (int i = 1; mbCategory != null; i++) {
-			friendlyURL = name + StringPool.DASH + i;
+			friendlyURL = name + i;
 
 			mbCategory = mbCategoryPersistence.fetchByG_F(groupId, friendlyURL);
 		}

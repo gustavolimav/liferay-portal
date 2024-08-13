@@ -1,5 +1,5 @@
 {
-	"@generated": "67b1e57321680e6c104a65173a45883f262736c2",
+	"@generated": "2b8f729eda9521d3797464cfe1864d8bb9f22262",
 	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
@@ -14,9 +14,10 @@
 		"paths": {
 		},
 		"rootDir": "../../../../../../../..",
+		"skipLibCheck": true,
 		"sourceMap": false,
 		"strict": true,
-		"target": "es2020",
+		"target": "esnext",
 		"tsBuildInfoFile": "../../../../../../../../.tsc/buildinfo/@liferay/monitoring-web.tsbuildinfo",
 		"typeRoots": [
 			"../../../../../../../../node_modules/@types"

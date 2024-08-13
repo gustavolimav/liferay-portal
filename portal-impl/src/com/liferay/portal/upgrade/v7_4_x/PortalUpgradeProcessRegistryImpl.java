@@ -425,13 +425,32 @@ public class PortalUpgradeProcessRegistryImpl
 				"User_", "password_", "VARCHAR(255) null"));
 
 		upgradeVersionTreeMap.put(
-			new Version(31, 1, 1), new UpgradePortletPreferencesCompanyId());
+			new Version(31, 1, 1), new DummyUpgradeProcess());
+
+		upgradeVersionTreeMap.put(
+			new Version(31, 1, 2), new UpgradePortletPreferencesCompanyId());
 
 		upgradeVersionTreeMap.put(
 			new Version(31, 2, 0), new UpgradeLayoutExternalReferenceCode());
 
 		upgradeVersionTreeMap.put(
 			new Version(31, 3, 0), RememberMeTokenTable.create());
+
+		upgradeVersionTreeMap.put(
+			new Version(31, 4, 0), new UpgradeRoleExternalReferenceCode());
+
+		upgradeVersionTreeMap.put(
+			new Version(31, 5, 0),
+			new BaseExternalReferenceCodeUpgradeProcess() {
+
+				@Override
+				protected String[][] getTableAndPrimaryKeyColumnNames() {
+					return new String[][] {
+						{"DLFileEntryType", "fileEntryTypeId"}
+					};
+				}
+
+			});
 	}
 
 }

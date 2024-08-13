@@ -543,10 +543,10 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 		try {
 			DBPartitionUtil.copyDBPartition(fromCompanyId, toCompanyId);
 		}
-		catch (PortalException portalException) {
+		catch (Throwable throwable) {
 			safeCloseable1.close();
 
-			throw portalException;
+			throw throwable;
 		}
 
 		SafeCloseable safeCloseable2 = CompanyThreadLocal.setWithSafeCloseable(
@@ -2463,7 +2463,7 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 		}
 
 		List<Group> groups = _groupLocalService.dslQuery(
-			DSLQueryFactoryUtil.selectDistinct(
+			DSLQueryFactoryUtil.select(
 				GroupTable.INSTANCE
 			).from(
 				GroupTable.INSTANCE

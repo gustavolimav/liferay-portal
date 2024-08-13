@@ -516,11 +516,11 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 			FileEntry fileEntry)
 		throws Exception {
 
+		ManifestSummary manifestSummary = null;
+
 		File file = FileUtil.createTempFile("lar");
 
 		ZipReader zipReader = null;
-
-		ManifestSummary manifestSummary = null;
 
 		try (InputStream inputStream = _dlFileEntryLocalService.getFileAsStream(
 				fileEntry.getFileEntryId(), fileEntry.getVersion(), false)) {
@@ -556,11 +556,12 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 			PortletDataContext portletDataContext)
 		throws Exception {
 
+		ManifestSummary manifestSummary = new ManifestSummary();
+
 		XMLReader xmlReader = SecureXMLFactoryProviderUtil.newXMLReader();
 
 		Group group = _groupLocalService.getGroup(
 			portletDataContext.getGroupId());
-		ManifestSummary manifestSummary = new ManifestSummary();
 
 		ElementHandler elementHandler = new ElementHandler(
 			new ManifestSummaryElementProcessor(group, manifestSummary),
@@ -1647,13 +1648,10 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 				_manifestSummary.addModelAdditionCount(
 					manifestSummaryKey, modelAdditionCount);
 
-				if (FeatureFlagManagerUtil.isEnabled("LPS-165481")) {
-					String assetTitle = GetterUtil.getString(
-						element.attributeValue("asset-title"));
+				String assetTitle = GetterUtil.getString(
+					element.attributeValue("asset-title"));
 
-					_manifestSummary.addAssetTitle(
-						manifestSummaryKey, assetTitle);
-				}
+				_manifestSummary.addAssetTitle(manifestSummaryKey, assetTitle);
 
 				long modelDeletionCount = GetterUtil.getLong(
 					element.attributeValue("deletion-count"));

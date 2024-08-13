@@ -9,16 +9,21 @@
 
 <%@ taglib uri="http://liferay.com/tld/aui" prefix="aui" %><%@
 taglib uri="http://liferay.com/tld/clay" prefix="clay" %><%@
+taglib uri="http://liferay.com/tld/frontend" prefix="liferay-frontend" %><%@
 taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %>
 
 <%@ page import="com.liferay.petra.string.StringPool" %><%@
+page import="com.liferay.portal.kernel.util.HashMapBuilder" %><%@
 page import="com.liferay.portal.kernel.util.HtmlUtil" %><%@
 page import="com.liferay.portal.kernel.util.PortalUtil" %><%@
 page import="com.liferay.portal.kernel.util.Validator" %>
 
+<%@ page import="java.util.Map" %>
+
 <liferay-theme:defineObjects />
 
 <%
+Map<String, Object> actionContext = (Map<String, Object>)request.getAttribute("liferay-commerce:info-box:actionContext");
 String actionLabel = (String)request.getAttribute("liferay-commerce:info-box:actionLabel");
 String actionTargetId = (String)request.getAttribute("liferay-commerce:info-box:actionTargetId");
 String actionUrl = (String)request.getAttribute("liferay-commerce:info-box:actionUrl");

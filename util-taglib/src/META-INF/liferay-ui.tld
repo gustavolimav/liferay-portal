@@ -2680,6 +2680,11 @@
 		<tei-class>com.liferay.taglib.ui.SearchContainerRowTei</tei-class>
 		<body-content>JSP</body-content>
 		<attribute>
+			<name>ariaLabel</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
 			<name>bold</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
@@ -2745,6 +2750,11 @@
 		</attribute>
 		<attribute>
 			<name>stringKey</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>tabIndex</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>

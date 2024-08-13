@@ -186,6 +186,15 @@ class App extends EventEmitter {
 		this.popstateScrollTop = 0;
 
 		/**
+		 * Whether to preload CSS files prior to surface flipping so that FOUC
+		 * does not happen.
+		 * @type {!Boolean}
+		 * @default false
+		 * @protected
+		 */
+		this.preloadCSS = !!config?.preloadCSS;
+
+		/**
 		 * Holds the redirect path containing the query parameters.
 		 * @type {?string}
 		 * @protected
@@ -486,8 +495,21 @@ class App extends EventEmitter {
 					this.extractParams(route, path)
 				);
 			})
-			.then(() => nextScreen.flip(this.surfaces))
-			.then(() => nextScreen.evaluateStyles(this.surfaces))
+			.then(() =>
+				this.preloadCSS
+					? nextScreen.preloadStyles(this.surfaces)
+					: Promise.resolve()
+			)
+			.then(() =>
+				this.preloadCSS
+					? nextScreen.evaluateStyles(this.surfaces)
+					: nextScreen.flip(this.surfaces)
+			)
+			.then(() =>
+				this.preloadCSS
+					? nextScreen.flip(this.surfaces)
+					: nextScreen.evaluateStyles(this.surfaces)
+			)
 			.then(() => nextScreen.evaluateScripts(this.surfaces))
 			.then(() => this.maybeUpdateScrollPositionState_())
 			.then(() => this.syncScrollPositionSyncThenAsync_())

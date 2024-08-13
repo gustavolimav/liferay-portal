@@ -33,15 +33,20 @@ export async function checkPackageJSONFiles() {
 		],
 	});
 
-	// Filters out packages that have their own yarn.lock
-
 	packages = packages.filter((packagePath) => {
 
-		// Ignore root level package.json
+		// Ignore serveral package.json files
 
-		if (packagePath === 'package.json') {
-			return true;
+		if (
+			packagePath.endsWith('modules/package.json') ||
+			packagePath.endsWith('modules/_node-scripts/package.json') ||
+			packagePath.endsWith('modules/test/playwright/package.json') ||
+			packagePath.includes('/workspaces/')
+		) {
+			return false;
 		}
+
+		// Filters out packages that have their own yarn.lock
 
 		return !fs.existsSync(
 			path.join(path.dirname(packagePath), 'yarn.lock')

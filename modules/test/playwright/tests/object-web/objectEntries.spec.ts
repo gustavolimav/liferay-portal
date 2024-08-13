@@ -5,21 +5,25 @@
 
 import {expect, mergeTests} from '@playwright/test';
 
-import {collectionsPagesTest} from '../../fixtures/CollectionsPageTest';
 import {apiHelpersTest} from '../../fixtures/apiHelpersTest';
+import {applicationsMenuPageTest} from '../../fixtures/applicationsMenuPageTest';
+import {collectionsPagesTest} from '../../fixtures/collectionsPagesTest';
 import {featureFlagsTest} from '../../fixtures/featureFlagsTest';
 import {isolatedSiteTest} from '../../fixtures/isolatedSiteTest';
 import {loginTest} from '../../fixtures/loginTest';
 import {objectPagesTest} from '../../fixtures/objectPagesTest';
 import {pageEditorPagesTest} from '../../fixtures/pageEditorPagesTest';
+import {workflowPagesTest} from '../../fixtures/workflowPagesTest';
 import {getRandomInt} from '../../utils/getRandomInt';
 import getRandomString from '../../utils/getRandomString';
 import {journalPagesTest} from '../journal-web/fixtures/journalPagesTest';
+import {mockedObjectFields} from './dependencies/objectMockedFields';
 import {getFDSDateFormat, getPageEditorDateFormat} from './utils/dateFormat';
 import {mockObjectFields} from './utils/mockObjectFields';
 
 export const test = mergeTests(
 	apiHelpersTest,
+	applicationsMenuPageTest,
 	collectionsPagesTest,
 	isolatedSiteTest,
 	featureFlagsTest({
@@ -28,43 +32,47 @@ export const test = mergeTests(
 	journalPagesTest,
 	loginTest(),
 	objectPagesTest,
-	pageEditorPagesTest
+	pageEditorPagesTest,
+	workflowPagesTest
 );
 
-const customListTypeDefinitions: ListTypeDefinition[] = [];
-const customObjectDefinitions: ObjectDefinition[] = [];
+const createdEntities = {
+	listTypeDefinitions: [],
+	objectDefinitions: [],
+} as {
+	listTypeDefinitions: ListTypeDefinition[];
+	objectDefinitions: ObjectDefinition[];
+};
 
 test.afterEach(async ({apiHelpers}) => {
-	if (customObjectDefinitions.length) {
-		for (const customObjectDefinition of customObjectDefinitions) {
-			await apiHelpers.objectAdmin.deleteObjectDefinition(
-				customObjectDefinition.id
-			);
-		}
+	for (const listTypeDefinition of createdEntities.listTypeDefinitions) {
+		await apiHelpers.listTypeAdmin.deleteListTypeDefinition(
+			listTypeDefinition.id
+		);
 	}
 
-	if (customListTypeDefinitions.length) {
-		for (const customListTypeDefinition of customListTypeDefinitions) {
-			await apiHelpers.listTypeAdmin.deleteListTypeDefinition(
-				customListTypeDefinition.id
-			);
-		}
+	for (const objectDefinition of createdEntities.objectDefinitions) {
+		await apiHelpers.objectAdmin.deleteObjectDefinition(
+			objectDefinition.id
+		);
 	}
 });
 
-test.describe('Manage object entries through page templates', () => {
+test.describe('Manage object entries through Page Templates', () => {
 	test('can view all entries related to an object in the relationship field', async ({
 		apiHelpers,
 		page,
 		viewObjectEntriesPage,
 	}) => {
+		const {objectDefinitions} = createdEntities;
+
 		const objectDefinition1 =
 			await apiHelpers.objectAdmin.postRandomObjectDefinition({
 				objectFolderExternalReferenceCode: 'default',
 				status: {code: 0},
 			});
 
-		customObjectDefinitions.push(objectDefinition1);
+		objectDefinitions.push(objectDefinition1);
 
 		const objectDefinition2 =
 			await apiHelpers.objectAdmin.postRandomObjectDefinition({
@@ -72,7 +80,7 @@ test.describe('Manage object entries through page templates', () => {
 				status: {code: 0},
 			});
 
-		customObjectDefinitions.push(objectDefinition2);
+		objectDefinitions.push(objectDefinition2);
 
 		const objectRelationshipLabel =
 			'objectRelationshipLabel' + getRandomInt();
@@ -127,16 +135,6 @@ test.describe('Manage object entries through page templates', () => {
 				page.getByRole('menuitem', {name: objectEntryId})
 			).toBeVisible();
 		});
-
-		// Clean up
-
-		await apiHelpers.objectAdmin.deleteObjectDefinition(
-			objectDefinition1.id
-		);
-
-		await apiHelpers.objectAdmin.deleteObjectDefinition(
-			objectDefinition2.id
-		);
 	});
 
 	test('verify if the object entries are displayed when selecting to preview an object entry on a page template', async ({
@@ -146,6 +144,8 @@ test.describe('Manage object entries through page templates', () => {
 		pageEditorPage,
 	}) => {
 		test.slow();
+
+		const {listTypeDefinitions, objectDefinitions} = createdEntities;
 
 		const objectDefinitionLabel = 'ObjectDefinitionLabel' + getRandomInt();
 		const objectDefinitionName = 'ObjectDefinitionName' + getRandomInt();
@@ -195,8 +195,8 @@ test.describe('Manage object entries through page templates', () => {
 				titleObjectFieldName,
 			});
 
-		customListTypeDefinitions.push(listTypeDefinition);
-		customObjectDefinitions.push(objectDefinition);
+		listTypeDefinitions.push(listTypeDefinition);
+		objectDefinitions.push(objectDefinition);
 
 		const applicationName =
 			'c/' + objectDefinition.name.toLowerCase() + 's';
@@ -210,7 +210,7 @@ test.describe('Manage object entries through page templates', () => {
 
 		const displayPageTemplateName = getRandomString();
 
-		await displayPageTemplatesPage.publishNewTemplate({
+		await displayPageTemplatesPage.createTemplate({
 			contentType: objectDefinition.label['en_US'],
 			name: displayPageTemplateName,
 		});
@@ -224,12 +224,12 @@ test.describe('Manage object entries through page templates', () => {
 
 			await page.getByText('Heading Example', {exact: true}).click();
 
-			await page.getByLabel('Select element-text').click();
-
 			await pageEditorPage.setMappingConfiguration({
-				entity: objectDefinitionLabel,
-				entry: objectEntry[titleObjectFieldName],
-				field: objectField.label.en_US,
+				mapping: {
+					entity: objectDefinitionLabel,
+					entry: objectEntry[titleObjectFieldName],
+					field: objectField.label.en_US,
+				},
 				source: 'content',
 			});
 
@@ -294,6 +294,8 @@ test.describe('Manage object entries through View Object Entries', () => {
 		page,
 		viewObjectEntriesPage,
 	}) => {
+		const {listTypeDefinitions, objectDefinitions} = createdEntities;
+
 		const ATTACHMENT_FILE_NAME = 'astronaut.png';
 		const {listTypeDefinition, objectEntry, objectFields} =
 			await mockObjectFields({
@@ -334,8 +336,8 @@ test.describe('Manage object entries through View Object Entries', () => {
 				},
 			});
 
-		customListTypeDefinitions.push(listTypeDefinition);
-		customObjectDefinitions.push(objectDefinition);
+		listTypeDefinitions.push(listTypeDefinition);
+		objectDefinitions.push(objectDefinition);
 
 		await viewObjectEntriesPage.goto(objectDefinition.id);
 
@@ -441,11 +443,68 @@ test.describe('Manage object entries through View Object Entries', () => {
 		}
 	});
 
+	test('can delete attachment field from object entry', async ({
+		apiHelpers,
+		viewObjectEntriesPage,
+	}) => {
+		const {objectDefinitions} = createdEntities;
+
+		const ATTACHMENT_FILE_NAME = 'astronaut.png';
+		const {objectFields} = await mockObjectFields({
+			apiHelpers,
+			objectFieldBusinessTypes: ['attachment'],
+		});
+
+		const objectDefinition =
+			await apiHelpers.objectAdmin.postObjectDefinition({
+				active: true,
+				externalReferenceCode: getRandomString(),
+				label: {
+					en_US: getRandomString(),
+				},
+				name: 'ObjectDefinitionName' + getRandomInt(),
+				objectFields,
+				panelCategoryKey: 'control_panel.object',
+				pluralLabel: {
+					en_US: 'NewObject',
+				},
+				portlet: true,
+				scope: 'company',
+				status: {
+					code: 0,
+				},
+			});
+
+		objectDefinitions.push(objectDefinition);
+
+		await viewObjectEntriesPage.goto(objectDefinition.id);
+
+		await viewObjectEntriesPage.clickAddObjectEntry(
+			objectDefinition.label['en_US']
+		);
+
+		await viewObjectEntriesPage.selectFileFromDocumentsAndMedia(
+			ATTACHMENT_FILE_NAME
+		);
+
+		await viewObjectEntriesPage.saveObjectEntryButton.click();
+
+		await expect(viewObjectEntriesPage.successMessage).toBeVisible();
+
+		await viewObjectEntriesPage.deleteFileButton.click();
+
+		await viewObjectEntriesPage.saveObjectEntryButton.click();
+
+		await expect(viewObjectEntriesPage.successMessage).toBeVisible();
+	});
+
 	test('can view all entries related to an object in the relationship field using autocomplete', async ({
 		apiHelpers,
 		page,
 		viewObjectEntriesPage,
 	}) => {
+		const {objectDefinitions} = createdEntities;
+
 		const objectDefinition1 =
 			await apiHelpers.objectAdmin.postRandomObjectDefinition({
 				objectFolderExternalReferenceCode: 'default',
@@ -453,11 +512,15 @@ test.describe('Manage object entries through View Object Entries', () => {
 				titleObjectFieldName: 'textField',
 			});
 
+		objectDefinitions.push(objectDefinition1);
+
 		const objectDefinition2 =
 			await apiHelpers.objectAdmin.postRandomObjectDefinition({
 				objectFolderExternalReferenceCode: 'default',
 				status: {code: 0},
 			});
+
+		objectDefinitions.push(objectDefinition2);
 
 		const objectRelationshipLabel =
 			'objectRelationshipLabel' + getRandomInt();
@@ -502,27 +565,104 @@ test.describe('Manage object entries through View Object Entries', () => {
 		);
 
 		await page.getByPlaceholder('Search', {exact: true}).fill('t 1');
-		await expect(page.getByRole('menuitem', {name: 'test1'})).toBeVisible();
+		await expect(page.getByRole('menuitem')).toContainText('test 1');
 
 		await page.locator('input[value="t 1"]').fill('t 2');
-		await expect(page.getByRole('menuitem', {name: 'test2'})).toBeVisible();
+		await expect(page.getByRole('menuitem')).toContainText('test 2');
 
 		await page.locator('input[value="t 2"]').fill('tes');
-		await expect(
-			page.getByRole('menuitem', {name: 'test 1'})
-		).toBeVisible();
-		await expect(
-			page.getByRole('menuitem', {name: 'test 2'})
-		).toBeVisible();
+		await expect(page.getByRole('menu')).toContainText('test 1');
+		await expect(page.getByRole('menu')).toContainText('test 2');
+	});
+});
 
-		// Clean up
+test('can view success message entirely in arabic', async ({
+	apiHelpers,
+	viewObjectEntriesPage,
+}) => {
+	const {objectDefinitions} = createdEntities;
 
-		await apiHelpers.objectAdmin.deleteObjectDefinition(
-			objectDefinition1.id
+	// Create object definition with an attachment field
+
+	const objectDefinition =
+		await apiHelpers.objectAdmin.postRandomObjectDefinition({
+			objectFields: [mockedObjectFields.attachmentFieldDocumentsAndMedia],
+			objectFolderExternalReferenceCode: 'default',
+			status: {code: 0},
+		});
+
+	objectDefinitions.push(objectDefinition);
+
+	// Add an entry to the created definition
+
+	await viewObjectEntriesPage.goto(objectDefinition.id, 'ar');
+
+	await viewObjectEntriesPage.addObjectEntryButton.click();
+
+	await viewObjectEntriesPage.selectFileFromDocumentsAndMediaArabic();
+
+	await viewObjectEntriesPage.saveObjectEntryButtonArabic.click();
+
+	// Verify the success message
+
+	await expect(viewObjectEntriesPage.successMessageArabic).toBeVisible();
+});
+
+test.describe('Manage object entries through Workflow Metrics', () => {
+	test('can view Asset Title, Asset Type and Item Subject of an entry on metrics page', async ({
+		apiHelpers,
+		applicationsMenuPage,
+		configurationTabPage,
+		metricsPage,
+		page,
+	}) => {
+		const {objectDefinitions} = createdEntities;
+
+		const assetType = 'Single Approver';
+
+		const objectDefinition =
+			await apiHelpers.objectAdmin.postRandomObjectDefinition({
+				objectFolderExternalReferenceCode: 'default',
+				status: {code: 0},
+				titleObjectFieldName: 'textField',
+			});
+
+		objectDefinitions.push(objectDefinition);
+
+		await applicationsMenuPage.goToProcessBuilder();
+
+		await configurationTabPage.configurationTabLink.click();
+
+		await configurationTabPage.assignWorkflowToAssetType(
+			assetType,
+			objectDefinition.label['en_US']
 		);
 
-		await apiHelpers.objectAdmin.deleteObjectDefinition(
-			objectDefinition2.id
+		const applicationName =
+			'c/' + objectDefinition.name.toLowerCase() + 's';
+
+		const objectEntry = await apiHelpers.objectEntry.postObjectEntry(
+			{textField: 'entry'},
+			applicationName
 		);
+
+		await applicationsMenuPage.goToMetrics();
+
+		await metricsPage.chooseProcess(assetType);
+
+		await metricsPage.viewAllPendingItems();
+
+		const itemSubject =
+			objectDefinition.label['en_US'] + ': ' + objectEntry.textField;
+
+		await expect(page.getByLabel(itemSubject)).toBeVisible();
+
+		await page.locator('.link-text').click();
+
+		await expect(
+			page.getByText(objectDefinition.label['en_US'])
+		).toBeVisible();
+
+		await expect(page.getByText(objectEntry.textField)).toBeVisible();
 	});
 });

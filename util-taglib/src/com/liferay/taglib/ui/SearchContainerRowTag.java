@@ -94,6 +94,7 @@ public class SearchContainerRowTag<R>
 		_rowIndex = 0;
 		_resultRow = null;
 
+		_ariaLabel = StringPool.BLANK;
 		_bold = false;
 		_className = null;
 		_cssClass = StringPool.BLANK;
@@ -107,6 +108,7 @@ public class SearchContainerRowTag<R>
 		_rowVar = DEFAULT_ROW_VAR;
 		_stringKey = false;
 		_state = StringPool.BLANK;
+		_tabIndex = StringPool.BLANK;
 
 		return EVAL_PAGE;
 	}
@@ -132,7 +134,11 @@ public class SearchContainerRowTag<R>
 		HttpServletRequest httpServletRequest = getRequest();
 
 		httpServletRequest.setAttribute(
+			"liferay-ui:search-container-row:ariaLabel", _ariaLabel);
+		httpServletRequest.setAttribute(
 			"liferay-ui:search-container-row:cssClass", _cssClass);
+		httpServletRequest.setAttribute(
+			"liferay-ui:search-container-row:tabIndex", _tabIndex);
 
 		if ((_results != null) && !_results.isEmpty()) {
 			processRow();
@@ -141,6 +147,10 @@ public class SearchContainerRowTag<R>
 		}
 
 		return SKIP_BODY;
+	}
+
+	public String getAriaLabel() {
+		return _ariaLabel;
 	}
 
 	public String getClassName() {
@@ -199,6 +209,10 @@ public class SearchContainerRowTag<R>
 		return _state;
 	}
 
+	public String getTabIndex() {
+		return _tabIndex;
+	}
+
 	public boolean isBold() {
 		return _bold;
 	}
@@ -213,6 +227,10 @@ public class SearchContainerRowTag<R>
 
 	public boolean isStringKey() {
 		return _stringKey;
+	}
+
+	public void setAriaLabel(String ariaLabel) {
+		_ariaLabel = ariaLabel;
 	}
 
 	public void setBold(boolean bold) {
@@ -279,6 +297,10 @@ public class SearchContainerRowTag<R>
 		_stringKey = stringKey;
 	}
 
+	public void setTabIndex(String tabIndex) {
+		_tabIndex = tabIndex;
+	}
+
 	protected void processRow() {
 		Object model = _results.get(_rowIndex);
 
@@ -331,13 +353,15 @@ public class SearchContainerRowTag<R>
 		}
 
 		_resultRow = new com.liferay.taglib.search.ResultRow(
-			rowId, model, primaryKey, _rowIndex, _bold, _cssClass, _state);
+			rowId, model, primaryKey, _rowIndex, _bold, _ariaLabel, _cssClass,
+			_state, _tabIndex);
 
 		pageContext.setAttribute(_indexVar, _rowIndex);
 		pageContext.setAttribute(_modelVar, model);
 		pageContext.setAttribute(_rowVar, _resultRow);
 	}
 
+	private String _ariaLabel = StringPool.BLANK;
 	private boolean _bold;
 	private String _className;
 	private String _cssClass = StringPool.BLANK;
@@ -358,5 +382,6 @@ public class SearchContainerRowTag<R>
 	private SearchContainer<R> _searchContainer;
 	private String _state = StringPool.BLANK;
 	private boolean _stringKey;
+	private String _tabIndex;
 
 }

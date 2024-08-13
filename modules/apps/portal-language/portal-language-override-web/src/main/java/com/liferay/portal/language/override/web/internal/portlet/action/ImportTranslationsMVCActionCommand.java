@@ -5,7 +5,6 @@
 
 package com.liferay.portal.language.override.web.internal.portlet.action;
 
-import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.servlet.SessionErrors;
@@ -13,16 +12,18 @@ import com.liferay.portal.kernel.upload.UploadPortletRequest;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.language.override.exception.PLOEntryImportException;
 import com.liferay.portal.language.override.service.PLOEntryService;
 import com.liferay.portal.language.override.web.internal.constants.PLOPortletKeys;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Reader;
 
 import java.nio.charset.StandardCharsets;
 
-import java.util.Enumeration;
 import java.util.Objects;
 import java.util.Properties;
 
@@ -66,8 +67,7 @@ public class ImportTranslationsMVCActionCommand extends BaseMVCActionCommand {
 	}
 
 	private void _importTranslations(
-			ActionRequest actionRequest, File file, String languageId)
-		throws Exception {
+		ActionRequest actionRequest, File file, String languageId) {
 
 		if ((file == null) || !file.exists()) {
 			SessionErrors.add(actionRequest, "fileEmpty");
@@ -83,32 +83,32 @@ public class ImportTranslationsMVCActionCommand extends BaseMVCActionCommand {
 			return;
 		}
 
-		Properties languageProperties = new Properties();
+		try (InputStream inputStream = new FileInputStream(file);
+			Reader reader = new InputStreamReader(
+				inputStream, StandardCharsets.UTF_8)) {
 
-		languageProperties.load(
-			new InputStreamReader(
-				new FileInputStream(file), StandardCharsets.UTF_8));
+			Properties properties = new Properties();
 
-		if (languageProperties.size() == 0) {
-			SessionErrors.add(actionRequest, "fileInvalid");
+			properties.load(reader);
 
-			return;
+			if (properties.isEmpty()) {
+				SessionErrors.add(actionRequest, "fileInvalid");
+			}
+
+			_ploEntryService.importPLOEntries(languageId, properties);
 		}
+		catch (PLOEntryImportException.InvalidTranslations
+					ploEntryImportException) {
 
-		Enumeration<String> enumeration =
-			(Enumeration<String>)languageProperties.propertyNames();
+			for (Throwable throwable :
+					ploEntryImportException.getSuppressed()) {
 
-		while (enumeration.hasMoreElements()) {
-			String key = enumeration.nextElement();
-
-			try {
-				_ploEntryService.addOrUpdatePLOEntry(
-					key, languageId, languageProperties.getProperty(key));
-			}
-			catch (PortalException portalException) {
 				SessionErrors.add(
-					actionRequest, portalException.getClass(), portalException);
+					actionRequest, throwable.getClass(), throwable);
 			}
+		}
+		catch (Exception exception) {
+			SessionErrors.add(actionRequest, exception.getClass(), exception);
 		}
 	}
 

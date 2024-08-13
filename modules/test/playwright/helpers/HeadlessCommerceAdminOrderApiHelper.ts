@@ -32,10 +32,12 @@ type TOrder = {
 	paymentStatus?: string;
 	paymentStatusInfo?: number;
 	shippingAddressId?: string;
+	shippingAmount?: number;
 };
 
 type TOrderItem = {
 	decimalQuantity?: number;
+	id?: number;
 	productId?: number;
 	quantity: number;
 	skuId?: string;
@@ -49,6 +51,14 @@ type TOrderRule = {
 	priority?: number;
 	type: string;
 	typeSettings?: string;
+};
+
+type TOrderType = {
+	active?: boolean;
+	id?: number;
+	name?: {
+		[key: string]: string;
+	};
 };
 
 export class HeadlessCommerceAdminOrderApiHelper {
@@ -66,9 +76,21 @@ export class HeadlessCommerceAdminOrderApiHelper {
 		);
 	}
 
+	async deleteOrderTypes(orderTypeId: number) {
+		return this.apiHelpers.delete(
+			`${this.apiHelpers.baseUrl}${this.basePath}/order-types/${orderTypeId}`
+		);
+	}
+
 	async deleteTerms(termsId: number) {
 		return this.apiHelpers.delete(
 			`${this.apiHelpers.baseUrl}${this.basePath}/terms/${termsId}`
+		);
+	}
+
+	async getOrder(orderId: number) {
+		return this.apiHelpers.get(
+			`${this.apiHelpers.baseUrl}${this.basePath}/orders/${orderId}`
 		);
 	}
 
@@ -162,5 +184,28 @@ export class HeadlessCommerceAdminOrderApiHelper {
 		}
 
 		return orderRule;
+	}
+
+	async postOrderType(orderType: TOrderType) {
+		orderType = {
+			active: orderType.active,
+			name: {
+				en_US: getRandomString(),
+			},
+			...orderType,
+		};
+
+		orderType = await this.apiHelpers.post(
+			`${this.apiHelpers.baseUrl}${this.basePath}/order-types`,
+			{
+				data: orderType,
+			}
+		);
+
+		if (this.apiHelpers instanceof DataApiHelpers) {
+			this.apiHelpers.data.push({id: orderType.id, type: 'orderType'});
+		}
+
+		return orderType;
 	}
 }

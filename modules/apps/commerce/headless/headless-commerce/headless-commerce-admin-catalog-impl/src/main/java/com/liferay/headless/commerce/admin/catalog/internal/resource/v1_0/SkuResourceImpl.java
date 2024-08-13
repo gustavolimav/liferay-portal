@@ -6,6 +6,7 @@
 package com.liferay.headless.commerce.admin.catalog.internal.resource.v1_0;
 
 import com.liferay.commerce.price.list.service.CommercePriceEntryLocalService;
+import com.liferay.commerce.price.list.service.CommercePriceEntryService;
 import com.liferay.commerce.price.list.service.CommercePriceListLocalService;
 import com.liferay.commerce.product.constants.CPField;
 import com.liferay.commerce.product.exception.CPDefinitionProductTypeNameException;
@@ -18,6 +19,7 @@ import com.liferay.commerce.product.service.CPDefinitionOptionRelService;
 import com.liferay.commerce.product.service.CPDefinitionOptionValueRelService;
 import com.liferay.commerce.product.service.CPDefinitionService;
 import com.liferay.commerce.product.service.CPInstanceService;
+import com.liferay.commerce.product.service.CPInstanceUnitOfMeasureService;
 import com.liferay.commerce.product.type.CPType;
 import com.liferay.commerce.product.type.CPTypeRegistry;
 import com.liferay.commerce.product.type.virtual.constants.VirtualCPTypeConstants;
@@ -26,11 +28,13 @@ import com.liferay.commerce.product.type.virtual.service.CPDefinitionVirtualSett
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.Product;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.Sku;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.SkuSubscriptionConfiguration;
+import com.liferay.headless.commerce.admin.catalog.dto.v1_0.SkuUnitOfMeasure;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.SkuVirtualSettings;
 import com.liferay.headless.commerce.admin.catalog.internal.dto.v1_0.converter.constants.DTOConverterConstants;
 import com.liferay.headless.commerce.admin.catalog.internal.dto.v1_0.util.CustomFieldsUtil;
 import com.liferay.headless.commerce.admin.catalog.internal.odata.entity.v1_0.SkuEntityModel;
 import com.liferay.headless.commerce.admin.catalog.internal.util.DateConfigUtil;
+import com.liferay.headless.commerce.admin.catalog.internal.util.v1_0.SkuUnitOfMeasureUtil;
 import com.liferay.headless.commerce.admin.catalog.internal.util.v1_0.SkuUtil;
 import com.liferay.headless.commerce.admin.catalog.internal.util.v1_0.SkuVirtualSettingsUtil;
 import com.liferay.headless.commerce.admin.catalog.resource.v1_0.SkuResource;
@@ -38,6 +42,7 @@ import com.liferay.headless.commerce.core.util.DateConfig;
 import com.liferay.headless.commerce.core.util.ServiceContextHelper;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
@@ -47,6 +52,7 @@ import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
@@ -306,7 +312,7 @@ public class SkuResourceImpl extends BaseSkuResourceImpl {
 			(BigDecimal)GetterUtil.get(sku.getPrice(), cpInstance.getPrice()),
 			(BigDecimal)GetterUtil.get(
 				sku.getPromoPrice(), cpInstance.getPromoPrice()),
-			serviceContext);
+			StringPool.BLANK, serviceContext);
 
 		_updateNestedResources(sku, cpInstance, serviceContext);
 
@@ -450,7 +456,26 @@ public class SkuResourceImpl extends BaseSkuResourceImpl {
 			return cpInstance;
 		}
 
-		// Virtual
+		if (ArrayUtil.isEmpty(sku.getSkuUnitOfMeasures())) {
+			SkuUtil.updateCommercePriceEntries(
+				_commercePriceEntryLocalService, _commercePriceListLocalService,
+				_configurationProvider, cpInstance,
+				(BigDecimal)GetterUtil.get(
+					sku.getPrice(), cpInstance.getPrice()),
+				(BigDecimal)GetterUtil.get(
+					sku.getPromoPrice(), cpInstance.getPromoPrice()),
+				StringPool.BLANK, serviceContext);
+		}
+		else {
+			for (SkuUnitOfMeasure skuUnitOfMeasure :
+					sku.getSkuUnitOfMeasures()) {
+
+				SkuUnitOfMeasureUtil.addOrUpdateCPInstanceUnitOfMeasure(
+					_cpInstanceUnitOfMeasureService, _commercePriceEntryService,
+					_commercePriceListLocalService, cpInstance,
+					skuUnitOfMeasure, serviceContext);
+			}
+		}
 
 		SkuVirtualSettings skuVirtualSettings = sku.getSkuVirtualSettings();
 
@@ -684,7 +709,7 @@ public class SkuResourceImpl extends BaseSkuResourceImpl {
 			(BigDecimal)GetterUtil.get(sku.getPrice(), cpInstance.getPrice()),
 			(BigDecimal)GetterUtil.get(
 				sku.getPromoPrice(), cpInstance.getPromoPrice()),
-			serviceContext);
+			StringPool.BLANK, serviceContext);
 
 		_updateNestedResources(sku, cpInstance, serviceContext);
 
@@ -695,6 +720,9 @@ public class SkuResourceImpl extends BaseSkuResourceImpl {
 
 	@Reference
 	private CommercePriceEntryLocalService _commercePriceEntryLocalService;
+
+	@Reference
+	private CommercePriceEntryService _commercePriceEntryService;
 
 	@Reference
 	private CommercePriceListLocalService _commercePriceListLocalService;
@@ -722,6 +750,9 @@ public class SkuResourceImpl extends BaseSkuResourceImpl {
 
 	@Reference
 	private CPInstanceService _cpInstanceService;
+
+	@Reference
+	private CPInstanceUnitOfMeasureService _cpInstanceUnitOfMeasureService;
 
 	@Reference
 	private CPTypeRegistry _cpTypeRegistry;

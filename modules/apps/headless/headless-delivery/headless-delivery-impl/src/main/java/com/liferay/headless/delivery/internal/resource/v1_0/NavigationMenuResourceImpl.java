@@ -10,6 +10,7 @@ import com.liferay.headless.common.spi.service.context.ServiceContextBuilder;
 import com.liferay.headless.delivery.dto.v1_0.NavigationMenu;
 import com.liferay.headless.delivery.dto.v1_0.NavigationMenuItem;
 import com.liferay.headless.delivery.dto.v1_0.util.CreatorUtil;
+import com.liferay.headless.delivery.dto.v1_0.util.CustomFieldsUtil;
 import com.liferay.headless.delivery.resource.v1_0.NavigationMenuResource;
 import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.json.JSONFactory;
@@ -201,6 +202,12 @@ public class NavigationMenuResourceImpl extends BaseNavigationMenuResourceImpl {
 				_getType(navigationMenuItem), unicodeProperties,
 				ServiceContextBuilder.create(
 					siteId, contextHttpServletRequest, null
+				).expandoBridgeAttributes(
+					CustomFieldsUtil.toMap(
+						SiteNavigationMenuItem.class.getName(),
+						contextCompany.getCompanyId(),
+						navigationMenuItem.getCustomFields(),
+						contextAcceptLanguage.getPreferredLocale())
 				).build());
 
 		_createNavigationMenuItems(
@@ -275,25 +282,45 @@ public class NavigationMenuResourceImpl extends BaseNavigationMenuResourceImpl {
 	}
 
 	private String _getName(
-			String type, UnicodeProperties unicodeProperties,
+			Layout layout, String type, UnicodeProperties unicodeProperties,
 			boolean useCustomName)
 		throws JSONException {
 
 		String defaultLanguageId = LocaleUtil.toLanguageId(
 			LocaleUtil.getDefault());
+		String preferredLanguageId =
+			contextAcceptLanguage.getPreferredLanguageId();
+
+		if (StringUtil.equals(type, "page")) {
+			if (!useCustomName && (layout == null)) {
+				return null;
+			}
+
+			if (!useCustomName && (layout != null)) {
+				return layout.getName(
+					contextAcceptLanguage.getPreferredLocale());
+			}
+
+			if (useCustomName) {
+				return unicodeProperties.getProperty(
+					"name_" + preferredLanguageId,
+					unicodeProperties.getProperty("name_" + defaultLanguageId));
+			}
+
+			return null;
+		}
 
 		if (useCustomName) {
 			JSONObject customNameJSONObject = _jsonFactory.createJSONObject(
 				unicodeProperties.getProperty("localizedNames"));
 
-			return customNameJSONObject.getString(defaultLanguageId);
+			return customNameJSONObject.getString(
+				preferredLanguageId,
+				customNameJSONObject.getString(defaultLanguageId));
 		}
 
 		if (StringUtil.equals(type, "navigationMenu") ||
 			StringUtil.equals(type, "url")) {
-
-			String preferredLanguageId =
-				contextAcceptLanguage.getPreferredLanguageId();
 
 			return unicodeProperties.getProperty(
 				"name_" + preferredLanguageId,
@@ -549,6 +576,13 @@ public class NavigationMenuResourceImpl extends BaseNavigationMenuResourceImpl {
 						_portal,
 						_userLocalService.fetchUser(
 							siteNavigationMenuItem.getUserId())));
+				setCustomFields(
+					() -> CustomFieldsUtil.toCustomFields(
+						contextAcceptLanguage.isAcceptAllLanguages(),
+						SiteNavigationMenuItem.class.getName(),
+						siteNavigationMenuItem.getSiteNavigationMenuItemId(),
+						siteNavigationMenuItem.getCompanyId(),
+						contextAcceptLanguage.getPreferredLocale()));
 				setDateCreated(siteNavigationMenuItem::getCreateDate);
 				setDateModified(siteNavigationMenuItem::getModifiedDate);
 				setId(siteNavigationMenuItem::getSiteNavigationMenuItemId);
@@ -587,18 +621,9 @@ public class NavigationMenuResourceImpl extends BaseNavigationMenuResourceImpl {
 						return i18nMap;
 					});
 				setName(
-					() -> {
-						String name = _getName(
-							navigationMenuItemType, unicodeProperties,
-							getUseCustomName());
-
-						if ((name == null) && (layout != null)) {
-							return layout.getName(
-								contextAcceptLanguage.getPreferredLocale());
-						}
-
-						return name;
-					});
+					() -> _getName(
+						layout, navigationMenuItemType, unicodeProperties,
+						getUseCustomName()));
 				setName_i18n(
 					() -> {
 						if (contextAcceptLanguage.isAcceptAllLanguages()) {
@@ -606,7 +631,9 @@ public class NavigationMenuResourceImpl extends BaseNavigationMenuResourceImpl {
 								_getLocalizedNamesFromProperties(
 									unicodeProperties);
 
-							if (localizedNames.isEmpty() && (layout != null)) {
+							if ((!useCustomName || localizedNames.isEmpty()) &&
+								(layout != null)) {
+
 								localizedNames = layout.getNameMap();
 							}
 
@@ -721,6 +748,13 @@ public class NavigationMenuResourceImpl extends BaseNavigationMenuResourceImpl {
 									siteNavigationMenuItem),
 								ServiceContextBuilder.create(
 									siteId, contextHttpServletRequest, null
+								).expandoBridgeAttributes(
+									CustomFieldsUtil.toMap(
+										SiteNavigationMenuItem.class.getName(),
+										contextCompany.getCompanyId(),
+										navigationMenuItem.getCustomFields(),
+										contextAcceptLanguage.
+											getPreferredLocale())
 								).build());
 
 					_updateNavigationMenuItems(
@@ -743,7 +777,7 @@ public class NavigationMenuResourceImpl extends BaseNavigationMenuResourceImpl {
 				siteNavigationMenuItems) {
 
 			_siteNavigationMenuItemService.deleteSiteNavigationMenuItem(
-				siteNavigationMenuItem.getSiteNavigationMenuItemId());
+				siteNavigationMenuItem.getSiteNavigationMenuItemId(), true);
 		}
 	}
 

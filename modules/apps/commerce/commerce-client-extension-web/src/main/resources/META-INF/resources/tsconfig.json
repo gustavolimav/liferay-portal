@@ -1,5 +1,5 @@
 {
-	"@generated": "d9291eaf110727fdb3f78d8121834d08039600a2",
+	"@generated": "7935b92a552f34315a6b3bc8e9ce384375ce1dd1",
 	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
@@ -17,9 +17,10 @@
 			]
 		},
 		"rootDir": "../../../../../../../..",
+		"skipLibCheck": true,
 		"sourceMap": false,
 		"strict": true,
-		"target": "es2020",
+		"target": "esnext",
 		"tsBuildInfoFile": "../../../../../../../../.tsc/buildinfo/@liferay/commerce-client-extension-web.tsbuildinfo",
 		"typeRoots": [
 			"../../../../../../../../node_modules/@types"

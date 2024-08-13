@@ -44,9 +44,8 @@ public class UpgradeUserTest {
 	public void testUpgradeInactive() throws Exception {
 		_user = UserTestUtil.addUser();
 
-		_userLocalService.updateStatus(
-			_user.getUserId(), WorkflowConstants.STATUS_INACTIVE,
-			new ServiceContext());
+		_user = _userLocalService.updateStatus(
+			_user, WorkflowConstants.STATUS_INACTIVE, new ServiceContext());
 
 		Group group = _user.getGroup();
 

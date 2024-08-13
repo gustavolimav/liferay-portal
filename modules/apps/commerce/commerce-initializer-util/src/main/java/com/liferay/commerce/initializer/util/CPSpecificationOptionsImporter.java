@@ -96,13 +96,14 @@ public class CPSpecificationOptionsImporter {
 		if (cpSpecificationOption != null) {
 			return _cpSpecificationOptionLocalService.
 				updateCPSpecificationOption(
+					cpSpecificationOption.getExternalReferenceCode(),
 					cpSpecificationOption.getCPSpecificationOptionId(),
 					cpOptionCategoryId, 0, titleMap, descriptionMap, facetable,
 					key, priority, serviceContext);
 		}
 
 		return _cpSpecificationOptionLocalService.addCPSpecificationOption(
-			serviceContext.getUserId(), cpOptionCategoryId, 0, titleMap,
+			null, serviceContext.getUserId(), cpOptionCategoryId, 0, titleMap,
 			descriptionMap, facetable, key, priority, serviceContext);
 	}
 

@@ -172,6 +172,16 @@
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
+			<name>additionalStatusLabel</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>additionalStatusLabelStyle</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
 			<name>assignerModalUrl</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
@@ -261,6 +271,11 @@
 		<name>info-box</name>
 		<tag-class>com.liferay.commerce.frontend.taglib.servlet.taglib.InfoBoxTag</tag-class>
 		<body-content>JSP</body-content>
+		<attribute>
+			<name>actionContext</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
 		<attribute>
 			<name>actionLabel</name>
 			<required>false</required>

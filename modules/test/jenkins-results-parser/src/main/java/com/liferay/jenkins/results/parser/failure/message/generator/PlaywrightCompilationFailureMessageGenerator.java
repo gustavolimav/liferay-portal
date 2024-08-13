@@ -16,18 +16,7 @@ public class PlaywrightCompilationFailureMessageGenerator
 	extends BaseFailureMessageGenerator {
 
 	@Override
-	public Element getMessageElement(Build build) {
-		String jobVariant = build.getJobVariant();
-
-		if (!jobVariant.contains("playwright-compile")) {
-			return null;
-		}
-
-		return getMessageElement(build.getConsoleText());
-	}
-
-	@Override
-	public Element getMessageElement(String consoleText) {
+	public String getMessage(String consoleText) {
 		int end = consoleText.indexOf(_TOKEN_END_SNIPPET);
 
 		end = consoleText.lastIndexOf("\n", end);
@@ -48,7 +37,18 @@ public class PlaywrightCompilationFailureMessageGenerator
 
 		start = consoleText.lastIndexOf("\n", start);
 
-		return getConsoleTextSnippetElement(consoleText, true, start, end);
+		return getConsoleTextSnippet(consoleText, true, start, end);
+	}
+
+	@Override
+	public Element getMessageElement(Build build) {
+		String jobVariant = build.getJobVariant();
+
+		if (!jobVariant.contains("playwright-compile")) {
+			return null;
+		}
+
+		return getMessageElement(build.getConsoleText());
 	}
 
 	private static final String _TOKEN_END_SNIPPET =

@@ -5,6 +5,44 @@
 
 import {Page, expect} from '@playwright/test';
 
+import {waitForLoading} from './loading';
+
+export async function viewNameNotPresentOnTableList({
+	itemNames,
+	page,
+}: {
+	itemNames: string[] | string;
+	page: Page;
+}) {
+	const itemNamesArray = Array.isArray(itemNames) ? itemNames : [itemNames];
+
+	for (const itemName of itemNamesArray) {
+		await expect(
+			page.locator('.table-title').getByText(itemName)
+		).toBeHidden({
+			timeout: 100 * 1000,
+		});
+	}
+}
+
+export async function viewNameOnTableList({
+	itemNames,
+	page,
+}: {
+	itemNames: string[] | string;
+	page: Page;
+}) {
+	const itemNamesArray = Array.isArray(itemNames) ? itemNames : [itemNames];
+
+	for (const itemName of itemNamesArray) {
+		await expect(
+			page.locator('.table-title').getByText(itemName)
+		).toBeVisible({
+			timeout: 100 * 1000,
+		});
+	}
+}
+
 export async function searchByTerm({
 	page,
 	searchTerm,
@@ -12,35 +50,11 @@ export async function searchByTerm({
 	page: Page;
 	searchTerm: string;
 }) {
+	await waitForLoading(page);
+
 	await page.getByPlaceholder('Search').first().click();
 	await page.getByPlaceholder('Search').first().fill(searchTerm);
 	await page.getByPlaceholder('Search').first().press('Enter');
-}
 
-export async function expectNotToBeVisible({
-	itemNames,
-	page,
-}: {
-	itemNames: string[];
-	page: Page;
-}) {
-	for (const itemName of itemNames) {
-		await expect(page.getByRole('cell', {name: itemName})).toBeHidden({
-			timeout: 100 * 1000,
-		});
-	}
-}
-
-export async function expectToBeVisible({
-	itemNames,
-	page,
-}: {
-	itemNames: string[];
-	page: Page;
-}) {
-	for (const itemName of itemNames) {
-		await expect(page.getByRole('cell', {name: itemName})).toBeVisible({
-			timeout: 100 * 1000,
-		});
-	}
+	await waitForLoading(page);
 }

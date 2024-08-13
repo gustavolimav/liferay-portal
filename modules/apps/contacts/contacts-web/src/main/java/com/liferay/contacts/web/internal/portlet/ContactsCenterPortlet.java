@@ -121,7 +121,7 @@ import org.osgi.service.component.annotations.Reference;
 		"com.liferay.portlet.display-category=category.social",
 		"com.liferay.portlet.friendly-url-mapping=contacts",
 		"com.liferay.portlet.header-portlet-css=/css/main.css",
-		"com.liferay.portlet.header-portlet-javascript=/js/main.js",
+		"com.liferay.portlet.header-portlet-javascript=/js/legacy/main.js",
 		"com.liferay.portlet.icon=/icons/contacts_center.png",
 		"javax.portlet.display-name=Contacts Center",
 		"javax.portlet.expiration-cache=0",
@@ -968,7 +968,8 @@ public class ContactsCenterPortlet extends MVCPortlet {
 
 				usersList = new ArrayList<>(users);
 
-				ListUtil.sort(usersList, new UserLastNameComparator(true));
+				ListUtil.sort(
+					usersList, UserLastNameComparator.getInstance(true));
 			}
 			else {
 				int usersCount = userLocalService.searchCount(
@@ -980,7 +981,7 @@ public class ContactsCenterPortlet extends MVCPortlet {
 				usersList = userLocalService.search(
 					themeDisplay.getCompanyId(), keywords,
 					WorkflowConstants.STATUS_APPROVED, params, start, end,
-					new UserLastNameComparator(true));
+					UserLastNameComparator.getInstance(true));
 			}
 
 			for (User user : usersList) {

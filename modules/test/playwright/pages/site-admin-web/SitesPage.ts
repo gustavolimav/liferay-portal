@@ -16,22 +16,28 @@ export class SitesPage {
 	readonly customSiteTemplatesItem: Locator;
 	readonly defaultPagesAsPrivateCheck: Locator;
 	readonly nameBox: Locator;
-	readonly uiElementsPage;
+	readonly uiElementsPage: UIElementsPage;
 
 	constructor(page: Page) {
-		this.uiElementsPage = new UIElementsPage(page);
 		this.page = page;
 
+		this.addButton = page
+			.frameLocator('iframe[title="Add Site"]')
+			.getByRole('button', {name: 'Add'});
 		this.addSiteButton = page.getByRole('link', {name: 'Add Site'});
+		this.addSiteIFrame = page.frameLocator('iframe[title="Add Site"]');
 		this.customSiteTemplatesItem = page.getByRole('menuitem', {
 			name: 'Custom Site Templates',
 		});
-		this.addSiteIFrame = page.frameLocator('iframe[title="Add Site"]');
-		this.nameBox = this.addSiteIFrame.getByLabel('Name Required');
-		this.defaultPagesAsPrivateCheck = this.addSiteIFrame.getByLabel(
-			'Create default pages as private (available only to members). If unchecked, they will be public (available to anyone).'
-		);
-		this.addButton = this.addSiteIFrame.getByRole('button', {name: 'Add'});
+		this.defaultPagesAsPrivateCheck = page
+			.frameLocator('iframe[title="Add Site"]')
+			.getByLabel(
+				'Create default pages as private (available only to members). If unchecked, they will be public (available to anyone).'
+			);
+		this.nameBox = page
+			.frameLocator('iframe[title="Add Site"]')
+			.getByLabel('Name Required');
+		this.uiElementsPage = new UIElementsPage(page);
 	}
 
 	async createSiteFromTemplate(

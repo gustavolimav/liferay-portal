@@ -36,6 +36,8 @@ export default function DefinitionBuilder(props) {
 	const [sourceView, setSourceView] = useState(false);
 	const [showAlert, setShowAlert] = useState(false);
 	const [version, setVersion] = useState(parseInt(props.version, 10));
+	const [workflowDefinitionVersions, setWorkflowDefinitionVersions] =
+		useState(props.definitionVersions ? props.definitionVersions : []);
 
 	const contextProps = {
 		accountEntryId,
@@ -79,22 +81,26 @@ export default function DefinitionBuilder(props) {
 		setShowDefinitionInfo,
 		setSourceView,
 		setVersion,
+		setWorkflowDefinitionVersions,
 		showAlert,
 		showDefinitionInfo,
 		sourceView,
 		statuses: props.statuses,
+		timeZoneId: props.timeZoneId,
 		version,
+		versions: props.versions,
+		workflowDefinitionVersions,
 	};
 
 	return (
-		<DefinitionBuilderContextProvider {...contextProps}>
-			<div className="definition-builder-app">
-				<ReactFlowProvider>
+		<ReactFlowProvider>
+			<DefinitionBuilderContextProvider {...contextProps}>
+				<div className="definition-builder-app">
 					<UpperToolbar {...props} />
 
 					{sourceView ? <SourceBuilder /> : <DiagramBuilder />}
-				</ReactFlowProvider>
-			</div>
-		</DefinitionBuilderContextProvider>
+				</div>
+			</DefinitionBuilderContextProvider>
+		</ReactFlowProvider>
 	);
 }

@@ -5,9 +5,11 @@
 
 import {FrameLocator, Locator, Page, expect} from '@playwright/test';
 
+import {DataApiHelpers} from '../../helpers/ApiHelpers';
 import {liferayConfig} from '../../liferay.config';
 
 export class CommerceLayoutsPage {
+	readonly addOrderButton: Locator;
 	readonly addPageButton: Locator;
 	readonly addPageModalSubmitButton: Locator;
 	readonly addPageNameInput: Locator;
@@ -15,6 +17,7 @@ export class CommerceLayoutsPage {
 	readonly addWidgetLabel: (widgetName: string) => Locator;
 	readonly availableThemesFrame: FrameLocator;
 	readonly backLink: Locator;
+	readonly catalogLink: Locator;
 	readonly changeCurrentThemeButton: Locator;
 	readonly closeProductMenuButton: Locator;
 	readonly configureMenuItem: Locator;
@@ -31,6 +34,7 @@ export class CommerceLayoutsPage {
 	readonly page: Page;
 	readonly pagesMenuItem: Locator;
 	readonly pageTemplatesMenuItem: Locator;
+	readonly pendingOrdersLink: Locator;
 	readonly previewItemSelectorButton: Locator;
 	readonly publishButton: Locator;
 	readonly saveButton: Locator;
@@ -42,6 +46,10 @@ export class CommerceLayoutsPage {
 	readonly widgetPageTemplateButton: Locator;
 
 	constructor(page: Page) {
+		this.addOrderButton = page.getByRole('button', {
+			exact: true,
+			name: 'Add Order',
+		});
 		this.addPageButton = page
 			.getByTestId('creationMenuNewButton')
 			.locator('visible=true');
@@ -62,7 +70,12 @@ export class CommerceLayoutsPage {
 		this.availableThemesFrame = page.frameLocator(
 			'iframe[title="Available Themes"]'
 		);
+
 		this.backLink = page.getByRole('link', {exact: true, name: 'Back'});
+		this.catalogLink = page.getByRole('link', {
+			exact: true,
+			name: 'Catalog',
+		});
 		this.changeCurrentThemeButton = page.getByRole('button', {
 			exact: true,
 			name: 'Change Current Theme',
@@ -113,6 +126,10 @@ export class CommerceLayoutsPage {
 		this.pageTemplatesMenuItem = page
 			.getByTestId('app')
 			.filter({hasText: 'Page Templates'});
+		this.pendingOrdersLink = page.getByRole('link', {
+			exact: true,
+			name: 'Pending Orders',
+		});
 		this.previewItemSelectorButton = page.getByTestId(
 			'previewItemSelectorButton'
 		);
@@ -175,6 +192,82 @@ export class CommerceLayoutsPage {
 		await this.addWidgetButton.click();
 		await this.searchFormInput.fill(widgetName);
 		await this.addWidgetLabel(widgetName).click();
+	}
+
+	async cleanupSiteInitializerData(
+		apiHelpers: DataApiHelpers,
+		siteName: string
+	) {
+		const channels =
+			await apiHelpers.headlessCommerceAdminChannel.getChannelsPage(
+				siteName
+			);
+
+		apiHelpers.data.push({id: channels.items[0].id, type: 'channel'});
+
+		const catalogs =
+			await apiHelpers.headlessCommerceAdminCatalog.getCatalogsPage(
+				siteName
+			);
+
+		const catalogId = catalogs.items[0].id;
+
+		apiHelpers.data.push({id: catalogId, type: 'catalog'});
+
+		const products =
+			await apiHelpers.headlessCommerceAdminCatalog.getProductsPage(
+				50,
+				''
+			);
+
+		products.items.forEach((product) => {
+			if (product.catalogId === catalogId) {
+				apiHelpers.data.push({
+					id: product.productId,
+					type: 'product',
+				});
+			}
+		});
+
+		const options =
+			await apiHelpers.headlessCommerceAdminCatalog.getOptions();
+
+		options.items.forEach((option) => {
+			apiHelpers.data.push({
+				id: option.id,
+				type: 'option',
+			});
+		});
+
+		const optionCategories =
+			await apiHelpers.headlessCommerceAdminCatalog.getOptionCategories();
+
+		optionCategories.items.forEach((optionCategory) => {
+			apiHelpers.data.push({
+				id: optionCategory.id,
+				type: 'optionCategory',
+			});
+		});
+
+		const specifications =
+			await apiHelpers.headlessCommerceAdminCatalog.getSpecifications();
+
+		specifications.items.forEach((specification) => {
+			apiHelpers.data.push({
+				id: specification.id,
+				type: 'specification',
+			});
+		});
+
+		const warehouses =
+			await apiHelpers.headlessCommerceAdminInventoryApiHelper.getWarehousesPage();
+
+		warehouses.items.forEach((warehouse) => {
+			apiHelpers.data.push({
+				id: warehouse.id,
+				type: 'warehouse',
+			});
+		});
 	}
 
 	async createDisplayPageTemplate(

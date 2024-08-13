@@ -23,11 +23,13 @@ import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.model.ObjectValidationRule;
 import com.liferay.object.model.ObjectValidationRuleSetting;
+import com.liferay.object.scripting.executor.ObjectScriptingExecutor;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectEntryLocalService;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.object.service.ObjectValidationRuleLocalService;
 import com.liferay.object.test.util.ObjectDefinitionTestUtil;
+import com.liferay.object.validation.rule.ObjectValidationRuleEngineRegistry;
 import com.liferay.object.validation.rule.ObjectValidationRuleResult;
 import com.liferay.object.validation.rule.setting.builder.ObjectValidationRuleSettingBuilder;
 import com.liferay.petra.string.StringPool;
@@ -39,6 +41,7 @@ import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUti
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.test.AssertUtils;
+import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -48,10 +51,11 @@ import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.security.script.management.test.rule.ScriptManagementConfigurationTestRule;
 import com.liferay.portal.security.script.management.test.util.ScriptManagementConfigurationTestUtil;
-import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
@@ -62,9 +66,12 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Queue;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -76,7 +83,6 @@ import org.junit.runner.RunWith;
 /**
  * @author Marcela Cunha
  */
-@FeatureFlags("LPS-187854")
 @RunWith(Arquillian.class)
 public class ObjectValidationRuleLocalServiceTest {
 
@@ -398,14 +404,18 @@ public class ObjectValidationRuleLocalServiceTest {
 
 		String externalReferenceCode = RandomTestUtil.randomString();
 
+		ObjectValidationRule objectValidationRule = _addObjectValidationRule(
+			ObjectValidationRuleConstants.ENGINE_TYPE_DDM, errorLabelMap,
+			externalReferenceCode, nameLabelMap, _VALID_DDM_SCRIPT);
+
 		_assertObjectValidationRule(
 			true, ObjectValidationRuleConstants.ENGINE_TYPE_DDM, errorLabelMap,
 			externalReferenceCode, nameLabelMap, null,
 			ObjectValidationRuleConstants.OUTPUT_TYPE_FULL_VALIDATION,
-			_VALID_DDM_SCRIPT,
-			_addObjectValidationRule(
-				ObjectValidationRuleConstants.ENGINE_TYPE_DDM, errorLabelMap,
-				externalReferenceCode, nameLabelMap, _VALID_DDM_SCRIPT));
+			_VALID_DDM_SCRIPT, objectValidationRule);
+
+		_objectValidationRuleLocalService.deleteObjectValidationRule(
+			objectValidationRule.getObjectValidationRuleId());
 
 		externalReferenceCode = RandomTestUtil.randomString();
 
@@ -421,6 +431,39 @@ public class ObjectValidationRuleLocalServiceTest {
 				ObjectValidationRuleConstants.ENGINE_TYPE_GROOVY, errorLabelMap,
 				externalReferenceCode, nameLabelMap, script));
 
+		ObjectScriptingExecutor originalObjectScriptingExecutor =
+			(ObjectScriptingExecutor)_getAndSetFieldValue(
+				ObjectScriptingExecutor.class, "_objectScriptingExecutor",
+				ObjectValidationRuleConstants.ENGINE_TYPE_GROOVY);
+
+		try {
+			Assert.assertEquals(0, _argumentsList.size());
+
+			_objectEntryLocalService.addObjectEntry(
+				TestPropsValues.getUserId(), 0,
+				_objectDefinition.getObjectDefinitionId(),
+				HashMapBuilder.<String, Serializable>put(
+					"textObjectField", RandomTestUtil.randomString()
+				).build(),
+				ServiceContextTestUtil.getServiceContext());
+
+			Assert.assertEquals(1, _argumentsList.size());
+
+			Object[] arguments = _argumentsList.poll();
+
+			Assert.assertEquals(
+				TestPropsValues.getUserId(),
+				MapUtil.getLong(
+					(Map<String, Object>)arguments[0], "currentUserId"));
+		}
+		finally {
+			ReflectionTestUtil.setFieldValue(
+				_objectValidationRuleEngineRegistry.
+					getObjectValidationRuleEngine(
+						0, ObjectValidationRuleConstants.ENGINE_TYPE_GROOVY),
+				"_objectScriptingExecutor", originalObjectScriptingExecutor);
+		}
+
 		externalReferenceCode = RandomTestUtil.randomString();
 
 		String engine = RandomTestUtil.randomString();
@@ -435,7 +478,7 @@ public class ObjectValidationRuleLocalServiceTest {
 
 		externalReferenceCode = RandomTestUtil.randomString();
 
-		ObjectValidationRule objectValidationRule = _addObjectValidationRule(
+		objectValidationRule = _addObjectValidationRule(
 			ObjectValidationRuleConstants.ENGINE_TYPE_DDM, errorLabelMap,
 			externalReferenceCode, nameLabelMap,
 			ObjectValidationRuleConstants.OUTPUT_TYPE_PARTIAL_VALIDATION,
@@ -839,6 +882,34 @@ public class ObjectValidationRuleLocalServiceTest {
 		}
 	}
 
+	private Object _getAndSetFieldValue(
+			Class<?> clazz, String fieldName,
+			String objectValidationRuleEngineKey)
+		throws Exception {
+
+		return ReflectionTestUtil.getAndSetFieldValue(
+			_objectValidationRuleEngineRegistry.getObjectValidationRuleEngine(
+				0, objectValidationRuleEngineKey),
+			fieldName,
+			ProxyUtil.newProxyInstance(
+				clazz.getClassLoader(), new Class<?>[] {clazz},
+				(proxy, method, arguments) -> {
+					_argumentsList.add(arguments);
+
+					if (Objects.equals(
+							method.getDeclaringClass(),
+							ObjectScriptingExecutor.class) &&
+						Objects.equals(method.getName(), "execute")) {
+
+						return HashMapBuilder.<String, Object>put(
+							"validationCriteriaMet", true
+						).build();
+					}
+
+					return null;
+				}));
+	}
+
 	private void _testDeleteObjectValidationRule(long objectValidationRuleId)
 		throws Exception {
 
@@ -857,6 +928,8 @@ public class ObjectValidationRuleLocalServiceTest {
 	private static final String _VALID_DDM_SCRIPT =
 		"isEmailAddress(textObjectField)";
 
+	private final Queue<Object[]> _argumentsList = new LinkedList<>();
+
 	@DeleteAfterTestRun
 	private ObjectDefinition _objectDefinition;
 
@@ -868,6 +941,10 @@ public class ObjectValidationRuleLocalServiceTest {
 
 	@Inject
 	private ObjectFieldLocalService _objectFieldLocalService;
+
+	@Inject
+	private ObjectValidationRuleEngineRegistry
+		_objectValidationRuleEngineRegistry;
 
 	@Inject
 	private ObjectValidationRuleLocalService _objectValidationRuleLocalService;

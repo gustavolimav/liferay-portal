@@ -24,7 +24,7 @@ const test = mergeTests(
 	pageEditorPagesTest
 );
 
-test('allows moving through layout content with keyboard', async ({
+test('Allows moving through layout content with keyboard', async ({
 	apiHelpers,
 	pageEditorPage,
 	site,
@@ -97,7 +97,7 @@ test('allows moving through layout content with keyboard', async ({
 	await expect(secondEditable).toHaveClass(/page-editor__editable--active/);
 });
 
-test('focus order is correct', async ({
+test('Focus order is correct', async ({
 	apiHelpers,
 	page,
 	pageEditorPage,
@@ -158,7 +158,7 @@ test('focus order is correct', async ({
 	await expect(generalTab).toBeFocused();
 });
 
-test('check that it cannot be accessed by keyboard in disabled areas', async ({
+test('Check that it cannot be accessed by keyboard in disabled areas', async ({
 	apiHelpers,
 	page,
 	pageEditorPage,
@@ -179,7 +179,7 @@ test('check that it cannot be accessed by keyboard in disabled areas', async ({
 	}
 });
 
-test('checks the correct keyboard navigation in the experience selector', async ({
+test('Checks the correct keyboard navigation in the experience selector', async ({
 	apiHelpers,
 	page,
 	pageEditorPage,
@@ -194,9 +194,7 @@ test('checks the correct keyboard navigation in the experience selector', async 
 
 	// Open the experience selector
 
-	const experienceSelectorButton = await page.getByLabel(
-		'Experience: Default'
-	);
+	const experienceSelectorButton = page.getByLabel('Experience: Default');
 
 	await experienceSelectorButton.press('Enter');
 
@@ -228,4 +226,50 @@ test('checks the correct keyboard navigation in the experience selector', async 
 	// Check that the dropdown is closed
 
 	await expect(newExperienceButton).not.toBeVisible();
+});
+
+test('checks that a fragment is selected when it is added and the panel does not change when the fragment is selected', async ({
+	apiHelpers,
+	page,
+	pageEditorPage,
+	site,
+}) => {
+	const layout = await apiHelpers.headlessDelivery.createSitePage({
+		siteId: site.id,
+		title: getRandomString(),
+	});
+
+	await pageEditorPage.goto(layout, site.friendlyUrlPath);
+
+	// Checks that Heading is selected when it is added to the page
+
+	await pageEditorPage.addFragment('Basic Components', 'Heading');
+
+	const headingId = await pageEditorPage.getFragmentId('Heading');
+
+	await expect(await pageEditorPage.isActive(headingId)).toBe(true);
+
+	// Checks that Container is selected when it is added to the page
+
+	await pageEditorPage.addFragment('Layout Elements', 'Container');
+
+	const containerId = await pageEditorPage.getFragmentId('Container');
+
+	await expect(await pageEditorPage.isActive(containerId)).toBe(true);
+
+	// Checks that a Widget is selected when it is added to the page
+
+	await pageEditorPage.addWidget('Commerce', 'Sort');
+
+	const widgetId = await pageEditorPage.getFragmentId('Sort');
+
+	await expect(await pageEditorPage.isActive(widgetId)).toBe(true);
+
+	// The panel does not change to the Browser panel when a fragment is selected
+
+	await pageEditorPage.selectFragment(headingId);
+
+	await expect(
+		await page.getByLabel('Fragments and Widgets Panel')
+	).toBeVisible();
 });

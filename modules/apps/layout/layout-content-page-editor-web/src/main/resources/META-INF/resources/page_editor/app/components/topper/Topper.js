@@ -19,6 +19,7 @@ import {config} from '../../config/index';
 import {useSetCollectionActiveItemContext} from '../../contexts/CollectionActiveItemContext';
 import {
 	useActivationOrigin,
+	useActiveItemIds,
 	useHoverItem,
 	useIsActive,
 	useIsHovered,
@@ -94,12 +95,16 @@ function TopperContent({
 	item,
 	itemElement,
 }) {
+	const activeItemIds = useActiveItemIds();
 	const canUpdatePageStructure = useSelector(selectCanUpdatePageStructure);
-	const commentsPanelId = config.sidebarPanels?.comments?.sidebarPanelId;
+	const commentsPanelId = config.sidebarPanelsMap?.comments?.sidebarPanelId;
 	const dispatch = useDispatch();
 	const editableProcessorUniqueId = useEditableProcessorUniqueId();
 	const hoverItem = useHoverItem();
 	const {isOverTarget, targetPosition, targetRef} = useDropTarget(item);
+	const isMultiSelect = Liferay.FeatureFlags['LPD-18221']
+		? activeItemIds.length > 1
+		: false;
 	const {itemId: keyboardMovementTargetId} = useMovementTarget();
 	const keyboardMovementPosition = useMovementTargetPosition();
 	const selectItem = useSelectItem();
@@ -162,7 +167,9 @@ function TopperContent({
 			onDragEnd,
 			() => {
 				if (!isActive) {
-					selectItem(item.itemId);
+					selectItem(item.itemId, {
+						origin: ITEM_ACTIVATION_ORIGINS.layout,
+					});
 				}
 			}
 		);
@@ -172,7 +179,9 @@ function TopperContent({
 		isDraggingSource: topperIsDraggingSource,
 	} = useDragItem({...item, fragmentEntryType, name}, onDragEnd, () => {
 		if (!isActive) {
-			selectItem(item.itemId);
+			selectItem(item.itemId, {
+				origin: ITEM_ACTIVATION_ORIGINS.layout,
+			});
 		}
 	});
 
@@ -219,7 +228,9 @@ function TopperContent({
 					return;
 				}
 
-				selectItem(item.itemId);
+				selectItem(item.itemId, {
+					origin: ITEM_ACTIVATION_ORIGINS.layout,
+				});
 			}}
 			onMouseLeave={(event) => {
 				event.stopPropagation();
@@ -229,7 +240,9 @@ function TopperContent({
 				}
 
 				if (isHovered) {
-					hoverItem(null);
+					hoverItem(null, {
+						origin: ITEM_ACTIVATION_ORIGINS.layout,
+					});
 				}
 			}}
 			onMouseOver={(event) => {
@@ -239,7 +252,9 @@ function TopperContent({
 					return;
 				}
 
-				hoverItem(item.itemId);
+				hoverItem(item.itemId, {
+					origin: ITEM_ACTIVATION_ORIGINS.layout,
+				});
 			}}
 			ref={(element) => {
 				if (canBeDragged) {
@@ -281,7 +296,9 @@ function TopperContent({
 									aria-label={Liferay.Language.get(
 										'comments'
 									)}
+									disabled={isMultiSelect}
 									displayType="unstyled"
+									onClick={(event) => event.stopPropagation()}
 									size="sm"
 									title={Liferay.Language.get('comments')}
 								>
@@ -304,7 +321,10 @@ function TopperContent({
 
 						{canUpdatePageStructure && isActive && (
 							<li className="page-editor__topper__item tbar-item">
-								<TopperItemActions item={item} />
+								<TopperItemActions
+									disabled={isMultiSelect}
+									item={item}
+								/>
 							</li>
 						)}
 					</ul>

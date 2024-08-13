@@ -100,8 +100,15 @@ public class SynonymSearchTest {
 
 			addSynonymSet("dxp,portal");
 			addSynonymSet("efectivo,productivo");
+			addSynonymSet("effectief,productief");
+			addSynonymSet("feliz,alegre");
+			addSynonymSet("feliç,satisfet");
+			addSynonymSet("glücklich,heiter");
 			addSynonymSet("hatékony,produktív");
+			addSynonymSet("lycklig,nöjd");
 			addSynonymSet("maison,logement");
+			addSynonymSet("tehokas,tuottava");
+			addSynonymSet("منتج, فعال");
 		}
 
 		addJournalArticles();
@@ -118,18 +125,17 @@ public class SynonymSearchTest {
 	public void testSearchOnLocalesWithDefaultSynonymFilters()
 		throws Exception {
 
-		doAssertSearch("efectivo", Field.TITLE, LocaleUtil.SPAIN, 2);
 		doAssertSearch("dxp", Field.TITLE, LocaleUtil.US, 2);
-	}
-
-	@Test
-	public void testSearchOnLocaleWithCustomSynonymFilter() throws Exception {
+		doAssertSearch("efectivo", Field.TITLE, LocaleUtil.SPAIN, 2);
+		doAssertSearch("effectief", Field.TITLE, LocaleUtil.NETHERLANDS, 2);
+		doAssertSearch("feliz", Field.TITLE, LocaleUtil.BRAZIL, 2);
+		doAssertSearch("feliç", Field.TITLE, _CATALAN_LOCALE, 2);
+		doAssertSearch("glücklich", Field.TITLE, LocaleUtil.GERMANY, 2);
+		doAssertSearch("hatékony", Field.TITLE, LocaleUtil.HUNGARY, 2);
+		doAssertSearch("lycklig", Field.TITLE, _SWEDISH_LOCALE, 2);
 		doAssertSearch("maison", Field.TITLE, LocaleUtil.FRANCE, 2);
-	}
-
-	@Test
-	public void testSearchOnLocaleWithoutSynonymFilter() throws Exception {
-		doAssertSearch("hatékony", Field.TITLE, LocaleUtil.HUNGARY, 1);
+		doAssertSearch("tehokas", Field.TITLE, _FINNISH_LOCALE, 2);
+		doAssertSearch("فعال", Field.TITLE, _ARABIC_LOCALE, 2);
 	}
 
 	protected static void addJournalArticle(Map<Locale, String> localeStringMap)
@@ -154,9 +160,23 @@ public class SynonymSearchTest {
 
 		addJournalArticle(
 			HashMapBuilder.put(
+				_ARABIC_LOCALE, "فعال"
+			).put(
+				_CATALAN_LOCALE, "feliç"
+			).put(
+				_FINNISH_LOCALE, "tehokas"
+			).put(
+				_SWEDISH_LOCALE, "lycklig"
+			).put(
+				LocaleUtil.BRAZIL, "feliz"
+			).put(
 				LocaleUtil.FRANCE, "maison"
 			).put(
+				LocaleUtil.GERMANY, "glücklich"
+			).put(
 				LocaleUtil.HUNGARY, "hatékony"
+			).put(
+				LocaleUtil.NETHERLANDS, "effectief"
 			).put(
 				LocaleUtil.SPAIN, "efectivo"
 			).put(
@@ -164,9 +184,23 @@ public class SynonymSearchTest {
 			).build());
 		addJournalArticle(
 			HashMapBuilder.put(
+				_ARABIC_LOCALE, "منتج"
+			).put(
+				_CATALAN_LOCALE, "satisfet"
+			).put(
+				_FINNISH_LOCALE, "tuottava"
+			).put(
+				_SWEDISH_LOCALE, "nöjd"
+			).put(
+				LocaleUtil.BRAZIL, "alegre"
+			).put(
 				LocaleUtil.FRANCE, "logement"
 			).put(
+				LocaleUtil.GERMANY, "heiter"
+			).put(
 				LocaleUtil.HUNGARY, "produktív"
+			).put(
+				LocaleUtil.NETHERLANDS, "productief"
 			).put(
 				LocaleUtil.SPAIN, "productivo"
 			).put(
@@ -238,9 +272,6 @@ public class SynonymSearchTest {
 			properties = new HashMapDictionary<>();
 		}
 
-		properties.put(
-			"additionalIndexConfigurations",
-			loadAdditionalIndexConfigurations());
 		properties.put("overrideTypeMappings", loadOverrideTypeMappings());
 
 		return properties;
@@ -250,8 +281,12 @@ public class SynonymSearchTest {
 		return HashMapDictionaryBuilder.<String, Object>put(
 			"filterNames",
 			new String[] {
-				"liferay_filter_synonym_en", "liferay_filter_synonym_es",
-				"custom-synonym-filter-fr"
+				"liferay_filter_synonym_ar", "liferay_filter_synonym_ca",
+				"liferay_filter_synonym_de", "liferay_filter_synonym_en",
+				"liferay_filter_synonym_es", "liferay_filter_synonym_fi",
+				"liferay_filter_synonym_fr", "liferay_filter_synonym_hu",
+				"liferay_filter_synonym_nl", "liferay_filter_synonym_pt_BR",
+				"liferay_filter_synonym_sv"
 			}
 		).build();
 	}
@@ -294,6 +329,10 @@ public class SynonymSearchTest {
 		return _CONFIGURATION_PID_ELASTICSEARCH;
 	}
 
+	private static final Locale _ARABIC_LOCALE = new Locale("ar", "SA");
+
+	private static final Locale _CATALAN_LOCALE = new Locale("ca", "ES");
+
 	private static final String _CONFIGURATION_PID_ELASTICSEARCH =
 		"com.liferay.portal.search.elasticsearch7.configuration." +
 			"ElasticsearchConfiguration";
@@ -305,6 +344,10 @@ public class SynonymSearchTest {
 	private static final String _CONFIGURATION_PID_SYNONYMS =
 		"com.liferay.portal.search.tuning.synonyms.web.internal." +
 			"configuration.SynonymsConfiguration";
+
+	private static final Locale _FINNISH_LOCALE = new Locale("fi", "FI");
+
+	private static final Locale _SWEDISH_LOCALE = new Locale("sv", "SE");
 
 	private static Company _company;
 

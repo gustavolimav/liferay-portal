@@ -5,32 +5,41 @@
 
 import {Locator, Page, expect} from '@playwright/test';
 
-import {liferayConfig} from '../../liferay.config';
-import getPageDefinition from '../../tests/layout-content-page-editor-web/utils/getPageDefinition';
 import {clickAndExpectToBeHidden} from '../../utils/clickAndExpectToBeHidden';
 import {clickAndExpectToBeVisible} from '../../utils/clickAndExpectToBeVisible';
+import {collapseSection} from '../../utils/collapseSection';
+import dragAndDropElement from '../../utils/dragAndDropElement';
+import {expandSection} from '../../utils/expandSection';
 import fillAndClickOutside from '../../utils/fillAndClickOutside';
-import getRandomString from '../../utils/getRandomString';
+import {selectElement} from '../../utils/selectElement';
 import {waitForSuccessAlert} from '../../utils/waitForSuccessAlert';
 import {SegmentEditorPage} from '../segments-web/SegmentEditorPage';
+
+const VIEWPORTS_CLASSNAMES = {
+	'Desktop': 'desktop',
+	'Landscape Phone': 'landscapeMobile',
+	'Portrait Phone': 'portraitMobile',
+	'Tablet': 'tablet',
+};
 
 export class PageEditorPage {
 	readonly page: Page;
 
+	readonly editModeButton: Locator;
 	readonly experienceSelector: Locator;
 	readonly languageSelector: Locator;
 	readonly publishButton: Locator;
 	readonly publishMasterButton: Locator;
 	readonly redoButton: Locator;
+	readonly segmentEditorPage: SegmentEditorPage;
+	readonly selectItemMappingButton: Locator;
 	readonly undoButton: Locator;
 	readonly undoHistory: Locator;
-	readonly selectItemMappingButton: Locator;
-
-	readonly segmentEditorPage: SegmentEditorPage;
 
 	constructor(page: Page) {
 		this.page = page;
 
+		this.editModeButton = page.getByLabel('Select edit mode').first();
 		this.experienceSelector = page.locator(
 			'.page-editor__experience-selector'
 		);
@@ -40,14 +49,15 @@ export class PageEditorPage {
 			exact: true,
 		});
 		this.redoButton = page.getByTitle('Redo');
+		this.segmentEditorPage = new SegmentEditorPage(page);
+		this.selectItemMappingButton = page.getByLabel('Select Item');
 		this.undoButton = page.getByTitle('Undo');
 		this.undoHistory = page.locator('.page-editor__undo-history');
-		this.selectItemMappingButton = page.getByLabel('Select Item');
-
-		this.segmentEditorPage = new SegmentEditorPage(page);
 	}
 
 	async goto(layout: Layout, siteUrl?: Site['friendlyUrlPath']) {
+		await this.page.goto('/');
+
 		await this.page.goto(
 			`/web${siteUrl || '/guest'}${layout.friendlyUrlPath}?p_l_mode=edit`
 		);
@@ -61,19 +71,14 @@ export class PageEditorPage {
 			name: setName,
 		});
 
-		const isOpen = await header.evaluate(
-			(element) => element.getAttribute('aria-expanded') === 'true'
-		);
-
-		if (!isOpen) {
-			await header.click();
-		}
+		await expandSection(header);
 
 		if (dropTarget) {
-			this.dragAndDropElement(
-				this.page.getByRole('menuitem', {name}).first(),
-				dropTarget
-			);
+			await dragAndDropElement({
+				dragTarget: this.page.getByRole('menuitem', {name}).first(),
+				dropTarget,
+				page: this.page,
+			});
 		}
 		else {
 			await this.page.getByLabel(`Add ${name}`).focus();
@@ -83,6 +88,26 @@ export class PageEditorPage {
 		}
 
 		await this.waitForChangesSaved();
+	}
+
+	async addFragmentComment(fragmentId: string, comment: string) {
+		await this.selectFragment(fragmentId);
+
+		await this.goToSidebarTab('Comments');
+
+		const commentButton = this.page.getByRole('button', {
+			exact: true,
+			name: 'Comment',
+		});
+
+		await this.page.getByLabel('Add Comment').click();
+
+		await this.page.keyboard.type(comment);
+
+		await expect(commentButton).toBeEnabled();
+
+		await commentButton.click();
+		await commentButton.waitFor({state: 'hidden'});
 	}
 
 	async addRuleAction() {
@@ -123,19 +148,14 @@ export class PageEditorPage {
 			name: category,
 		});
 
-		const isOpen = await header.evaluate(
-			(element) => element.getAttribute('aria-expanded') === 'true'
-		);
-
-		if (!isOpen) {
-			await header.click();
-		}
+		await expandSection(header);
 
 		if (dropTarget) {
-			this.dragAndDropElement(
-				this.page.getByRole('menuitem', {name}).first(),
-				dropTarget
-			);
+			await dragAndDropElement({
+				dragTarget: this.page.getByRole('menuitem', {name}).first(),
+				dropTarget,
+				page: this.page,
+			});
 		}
 		else {
 			await this.page.getByLabel(`Add ${name}`).first().focus();
@@ -145,6 +165,20 @@ export class PageEditorPage {
 		}
 
 		await this.waitForChangesSaved();
+	}
+
+	async changeEditMode(mode: 'Page Design' | 'Content Editing') {
+		const currentMode = await this.editModeButton.evaluate(
+			(element) => element.textContent
+		);
+
+		if (currentMode === mode) {
+			return;
+		}
+
+		await this.editModeButton.click();
+
+		await this.page.getByRole('option', {name: mode}).click();
 	}
 
 	async changeFragmentConfiguration({
@@ -234,12 +268,12 @@ export class PageEditorPage {
 
 			await this.page.getByRole('menuitem', {name: unit}).click();
 
-			const input = await this.page.getByRole('spinbutton', {
+			const input = this.page.getByRole('spinbutton', {
 				name: spacingType,
 			});
 
-			await input.fill(value);
-			await input.blur();
+			await fillAndClickOutside(this.page, input, value);
+
 			await input.waitFor({state: 'hidden'});
 		}
 		else {
@@ -283,17 +317,11 @@ export class PageEditorPage {
 	}
 
 	async closeExperienceSelector() {
-		const isOpen = await this.experienceSelector.evaluate(
-			(element) => element.getAttribute('aria-expanded') === 'true'
-		);
+		await collapseSection(this.experienceSelector);
 
-		if (isOpen) {
-			await this.experienceSelector.click();
-
-			await this.page
-				.getByText('Select Experience')
-				.waitFor({state: 'hidden'});
-		}
+		await this.page
+			.getByText('Select Experience')
+			.waitFor({state: 'hidden'});
 	}
 
 	async createExperience(name: string) {
@@ -318,22 +346,6 @@ export class PageEditorPage {
 			'Success:The experience was created successfully.',
 			{autoClose: false}
 		);
-	}
-
-	async createPageWithFragmentAndGoToEditMode({apiHelpers, fragment, site}) {
-		await this.page.goto(liferayConfig.environment.baseUrl);
-
-		// Create a page with a fragment
-
-		const layout = await apiHelpers.headlessDelivery.createSitePage({
-			pageDefinition: getPageDefinition([fragment]),
-			siteId: site.id,
-			title: getRandomString(),
-		});
-
-		// Go to edit mode of page
-
-		await this.goto(layout, site.friendlyUrlPath);
 	}
 
 	async deleteExperience(name: string) {
@@ -377,25 +389,6 @@ export class PageEditorPage {
 			'Success:The experience was duplicated successfully.',
 			{autoClose: false}
 		);
-	}
-
-	async dragAndDropElement(dragTarget, dropTarget) {
-		await dragTarget.hover();
-
-		await this.page.mouse.down();
-		await dropTarget.hover();
-
-		const boundingClientRect = await dropTarget.evaluate((element) =>
-			element.getBoundingClientRect()
-		);
-
-		await dropTarget.hover({
-			position: {
-				x: boundingClientRect.width / 2,
-				y: boundingClientRect.height / 2,
-			},
-		});
-		await this.page.mouse.up();
 	}
 
 	async duplicateFragment(fragmentId: string) {
@@ -564,9 +557,9 @@ export class PageEditorPage {
 	 */
 
 	async getFragmentId(fragmentName: string) {
-		const topper = this.page.locator(
-			`.page-editor__topper[data-name="${fragmentName}"]`
-		);
+		const topper = this.page
+			.locator(`.page-editor__topper[data-name="${fragmentName}"]`)
+			.first();
 
 		const fragmentId = await topper.evaluate((element) =>
 			Array.from(element.classList)
@@ -608,18 +601,34 @@ export class PageEditorPage {
 	async goToSidebarTab(tab: SidebarTab) {
 		const tabElement = this.page.getByRole('tab', {exact: true, name: tab});
 
-		const isOpen = await tabElement.evaluate(
-			(element) => element.getAttribute('aria-selected') === 'true'
-		);
+		await selectElement(tabElement);
+	}
 
-		if (!isOpen) {
-			await this.page.getByRole('tab', {exact: true, name: tab}).click();
+	async hideFragment(fragmentId: string, isDesktop = true) {
+		await this.selectFragment(fragmentId, isDesktop);
 
-			await this.page.locator('header', {hasText: tab}).waitFor();
-		}
+		await this.page
+			.locator('.page-editor__topper__item')
+			.getByRole('button', {name: 'Options'})
+			.click();
+
+		await this.page
+			.locator('.dropdown-menu.show')
+			.getByText('Hide Fragment')
+			.click();
+
+		await this.waitForChangesSaved();
 	}
 
 	async isActive(fragmentId: string, isDesktop = true) {
+		const editMode = await this.editModeButton.evaluate(
+			(element) => element.textContent
+		);
+
+		if (editMode === 'Content Editing') {
+			return false;
+		}
+
 		const topper = this.getTopper(fragmentId, isDesktop);
 
 		return await topper.evaluate((element) =>
@@ -635,40 +644,51 @@ export class PageEditorPage {
 		);
 	}
 
-	async mapFormFragment(fragmentId: string, type: string, fields: string[]) {
+	async mapFormFragment(
+		fragmentId: string,
+		type: string,
+		fields: string[] = []
+	) {
 		const fragment = this.getFragment(fragmentId);
 
 		await fragment.getByLabel('Content Type').selectOption(type);
 
-		const fieldsModal = this.page.frameLocator(
-			'iframe[title="Manage Form Fields"]'
-		);
+		if (await this.page.evaluate(() => Liferay.FeatureFlags['LPD-20213'])) {
+			const fieldsModal = this.page.frameLocator(
+				'iframe[title="Manage Form Fields"]'
+			);
 
-		for (const field of fields) {
 			await fieldsModal
-				.getByRole('row', {name: field})
+				.getByRole('row')
 				.getByRole('checkbox')
-				.check();
+				.first()
+				.waitFor();
+
+			for (const field of fields) {
+				await fieldsModal
+					.getByRole('row', {name: field})
+					.getByRole('checkbox')
+					.check();
+			}
+
+			await clickAndExpectToBeHidden({
+				target: this.page.locator('.modal-title', {
+					hasText: 'Manage Form Fields',
+				}),
+				trigger: this.page.locator('.modal-footer').getByText('Save'),
+			});
+
+			await waitForSuccessAlert(
+				this.page,
+				'Success:Your form has been successfully loaded.'
+			);
 		}
-
-		await this.page.locator('.modal-footer').getByText('Save').click();
-
-		await waitForSuccessAlert(
-			this.page,
-			'Success:Your form has been successfully loaded.'
-		);
 	}
 
 	async openExperienceSelector() {
-		const isOpen = await this.experienceSelector.evaluate(
-			(element) => element.getAttribute('aria-expanded') === 'true'
-		);
+		await expandSection(this.experienceSelector);
 
-		if (!isOpen) {
-			await this.experienceSelector.click();
-
-			await this.page.getByText('Select Experience').waitFor();
-		}
+		await this.page.getByText('Select Experience').waitFor();
 	}
 
 	async openSpacingSelector(fragmentId: string, spacingType: SpacingType) {
@@ -717,22 +737,6 @@ export class PageEditorPage {
 		await this.waitForChangesSaved();
 	}
 
-	async hideFragment(fragmentId: string, isDesktop = true) {
-		await this.selectFragment(fragmentId, isDesktop);
-
-		await this.page
-			.locator('.page-editor__topper__item')
-			.getByRole('button', {name: 'Options'})
-			.click();
-
-		await this.page
-			.locator('.dropdown-menu.show')
-			.getByText('Hide Fragment')
-			.click();
-
-		await this.waitForChangesSaved();
-	}
-
 	async selectFragment(fragmentId: string, isDesktop = true) {
 		const isActive = await this.isActive(fragmentId, isDesktop);
 
@@ -744,16 +748,24 @@ export class PageEditorPage {
 
 		await fragment.click();
 
-		const treeNode = this.page.locator(
-			`.treeview-link[data-id*="${fragmentId}"]`
+		// Click the tree node again to make sure we activate it
+		// if it's a collection
+
+		const isCollection = await fragment.evaluate((element) =>
+			element.classList.contains('page-editor__collection')
 		);
 
-		// Click the tree node again to make sure we activate it
-		// This is specific for Collection Display fragment
+		if (isCollection) {
+			await this.goToSidebarTab('Browser');
 
-		await treeNode.click();
+			const treeNode = this.page.locator(
+				`.treeview-link[data-id*="${fragmentId}"]`
+			);
 
-		await expect(treeNode).toHaveClass(/focus/);
+			await treeNode.click();
+
+			await expect(treeNode).toHaveClass(/focus/);
+		}
 	}
 
 	async selectEditable(
@@ -767,10 +779,20 @@ export class PageEditorPage {
 
 		await editable.click();
 
-		await expect(editable).toBeFocused();
+		await expect(editable).toHaveClass(/page-editor__editable--active/);
 	}
 
-	async setMappedItem(entity: string, entry: string) {
+	async setMappedItem({
+		entity,
+		entry,
+		entryLocator,
+		folder,
+	}: {
+		entity: string;
+		entry: string;
+		entryLocator?: Locator;
+		folder?: string;
+	}) {
 		await this.selectItemMappingButton.click();
 
 		const recentItem = this.page.getByRole('menuitem', {name: entry});
@@ -798,9 +820,20 @@ export class PageEditorPage {
 				trigger: iframe.getByRole('menuitem', {name: entity}),
 			});
 
+			if (folder) {
+				await clickAndExpectToBeVisible({
+					target: iframe
+						.getByRole('paragraph')
+						.filter({hasText: entry}),
+					trigger: iframe.getByRole('link').filter({hasText: folder}),
+				});
+			}
+
 			await clickAndExpectToBeHidden({
 				target: iframe.locator('.sheet-title').getByText(entity),
-				trigger: iframe.getByRole('paragraph').filter({hasText: entry}),
+				trigger: entryLocator
+					? entryLocator
+					: iframe.getByRole('paragraph').filter({hasText: entry}),
 			});
 		}
 
@@ -810,18 +843,21 @@ export class PageEditorPage {
 	}
 
 	async setMappingConfiguration({
-		entity,
-		entry,
-		field,
+		mapping,
 		relationship,
 		source,
 	}: {
-		entity?: string;
-		entry?: string;
-		field: string;
+		mapping: {
+			entity?: string;
+			entry?: string;
+			entryLocator?: Locator;
+			field: string;
+			folder?: string;
+		};
 		relationship?: string;
 		source?: 'content' | 'relationship' | 'structure';
 	}) {
+		const {entity, entry, entryLocator, field, folder} = mapping;
 
 		// Select source and relationship if needed
 
@@ -837,7 +873,7 @@ export class PageEditorPage {
 
 		// If source is not content, just select the field
 
-		if (source !== 'content') {
+		if (source && source !== 'content') {
 			await this.page.getByLabel('Field').selectOption(field);
 
 			return;
@@ -845,7 +881,7 @@ export class PageEditorPage {
 
 		// If source is content, select the item and the field
 
-		await this.setMappedItem(entity, entry);
+		await this.setMappedItem({entity, entry, entryLocator, folder});
 
 		await this.page.getByLabel('Field').selectOption(field);
 	}
@@ -878,13 +914,11 @@ export class PageEditorPage {
 
 	async switchViewport(viewport: Viewport) {
 		await this.page.getByLabel(viewport, {exact: true}).click();
-
-		if (viewport !== 'Desktop') {
-			await this.page
-				.frameLocator('.page-editor__global-context-iframe')
-				.locator('.page-editor')
-				.waitFor();
-		}
+		await this.page
+			.locator(
+				`.page-editor__layout-viewport--size-${VIEWPORTS_CLASSNAMES[viewport]}`
+			)
+			.waitFor();
 	}
 
 	async waitForChangesSaved() {
@@ -895,6 +929,12 @@ export class PageEditorPage {
 				'Changes have been saved. Page editor will autosave new changes.'
 			)
 			.waitFor();
+	}
+
+	getEditable(fragmentId: string, editableId: string, isDesktop = true) {
+		return this.getFragment(fragmentId, isDesktop)
+			.locator(`[data-lfr-editable-id="${editableId}"]`)
+			.first();
 	}
 
 	getFragment(fragmentId: string, isDesktop = true) {
@@ -909,12 +949,6 @@ export class PageEditorPage {
 				.locator(`.lfr-layout-structure-item-${fragmentId}`)
 				.first();
 		}
-	}
-
-	getEditable(fragmentId: string, editableId: string, isDesktop = true) {
-		return this.getFragment(fragmentId, isDesktop)
-			.locator(`[data-lfr-editable-id="${editableId}"]`)
-			.first();
 	}
 
 	getTopper(fragmentId: string, isDesktop = true) {

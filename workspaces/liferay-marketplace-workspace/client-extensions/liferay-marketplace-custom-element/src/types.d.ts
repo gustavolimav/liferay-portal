@@ -107,6 +107,7 @@ type Categories = {
 	externalReferenceCode: string;
 	id: string;
 	name: string;
+	value?: string;
 	vocabulary: string;
 };
 
@@ -407,6 +408,7 @@ interface PlacedOrderItems {
 }
 
 interface VirtualItem {
+	productVersion?: String;
 	url: string;
 	usages: number;
 	version: string;

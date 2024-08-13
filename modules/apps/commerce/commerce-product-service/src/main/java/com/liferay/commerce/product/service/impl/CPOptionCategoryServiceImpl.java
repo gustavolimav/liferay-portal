@@ -40,8 +40,9 @@ public class CPOptionCategoryServiceImpl
 
 	@Override
 	public CPOptionCategory addCPOptionCategory(
-			Map<Locale, String> titleMap, Map<Locale, String> descriptionMap,
-			double priority, String key, ServiceContext serviceContext)
+			String externalReferenceCode, Map<Locale, String> titleMap,
+			Map<Locale, String> descriptionMap, double priority, String key,
+			ServiceContext serviceContext)
 		throws PortalException {
 
 		PortletResourcePermission portletResourcePermission =
@@ -53,8 +54,46 @@ public class CPOptionCategoryServiceImpl
 			CPActionKeys.ADD_COMMERCE_PRODUCT_OPTION_CATEGORY);
 
 		return cpOptionCategoryLocalService.addCPOptionCategory(
-			getUserId(), titleMap, descriptionMap, priority, key,
-			serviceContext);
+			externalReferenceCode, getUserId(), titleMap, descriptionMap,
+			priority, key, serviceContext);
+	}
+
+	@Override
+	public CPOptionCategory addOrUpdateCPOptionCategory(
+			String externalReferenceCode, long cpOptionCategoryId,
+			Map<Locale, String> titleMap, Map<Locale, String> descriptionMap,
+			double priority, String key, ServiceContext serviceContext)
+		throws PortalException {
+
+		CPOptionCategory cpOptionCategory =
+			cpOptionCategoryLocalService.
+				fetchCPOptionCategoryByExternalReferenceCode(
+					externalReferenceCode, serviceContext.getCompanyId());
+
+		if ((cpOptionCategory == null) && (cpOptionCategoryId > 0)) {
+			cpOptionCategory =
+				cpOptionCategoryLocalService.fetchCPOptionCategory(
+					cpOptionCategoryId);
+		}
+
+		if (cpOptionCategory == null) {
+			PortletResourcePermission portletResourcePermission =
+				_cpOptionCategoryModelResourcePermission.
+					getPortletResourcePermission();
+
+			portletResourcePermission.check(
+				getPermissionChecker(), null,
+				CPActionKeys.ADD_COMMERCE_PRODUCT_OPTION_CATEGORY);
+		}
+		else {
+			_cpOptionCategoryModelResourcePermission.check(
+				getPermissionChecker(),
+				cpOptionCategory.getCPOptionCategoryId(), ActionKeys.UPDATE);
+		}
+
+		return cpOptionCategoryLocalService.addOrUpdateCPOptionCategory(
+			externalReferenceCode, getUserId(), cpOptionCategoryId, titleMap,
+			descriptionMap, priority, key, serviceContext);
 	}
 
 	@Override
@@ -95,6 +134,23 @@ public class CPOptionCategoryServiceImpl
 	}
 
 	@Override
+	public CPOptionCategory getCPOptionCategoryByExternalReferenceCode(
+			String externalReferenceCode, long companyId)
+		throws PortalException {
+
+		CPOptionCategory cpOptionCategory =
+			cpOptionCategoryLocalService.
+				getCPOptionCategoryByExternalReferenceCode(
+					externalReferenceCode, companyId);
+
+		_cpOptionCategoryModelResourcePermission.check(
+			getPermissionChecker(), cpOptionCategory.getCPOptionCategoryId(),
+			ActionKeys.VIEW);
+
+		return cpOptionCategory;
+	}
+
+	@Override
 	public BaseModelSearchResult<CPOptionCategory> searchCPOptionCategories(
 			long companyId, String keywords, int start, int end, Sort sort)
 		throws PortalException {
@@ -105,15 +161,17 @@ public class CPOptionCategoryServiceImpl
 
 	@Override
 	public CPOptionCategory updateCPOptionCategory(
-			long cpOptionCategoryId, Map<Locale, String> titleMap,
-			Map<Locale, String> descriptionMap, double priority, String key)
+			String externalReferenceCode, long cpOptionCategoryId,
+			Map<Locale, String> titleMap, Map<Locale, String> descriptionMap,
+			double priority, String key)
 		throws PortalException {
 
 		_cpOptionCategoryModelResourcePermission.check(
 			getPermissionChecker(), cpOptionCategoryId, ActionKeys.UPDATE);
 
 		return cpOptionCategoryLocalService.updateCPOptionCategory(
-			cpOptionCategoryId, titleMap, descriptionMap, priority, key);
+			externalReferenceCode, cpOptionCategoryId, titleMap, descriptionMap,
+			priority, key);
 	}
 
 	@Reference(

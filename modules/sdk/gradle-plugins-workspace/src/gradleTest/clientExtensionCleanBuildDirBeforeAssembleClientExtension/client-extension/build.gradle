@@ -1,0 +1,11 @@
+task copyDummyFile(type: Copy)
+
+assembleClientExtension {
+	dependsOn copyDummyFile
+}
+
+copyDummyFile {
+	from "foo"
+	include "dummy.txt"
+	into project.file("${buildDir}/liferay-client-extension-build/static")
+}

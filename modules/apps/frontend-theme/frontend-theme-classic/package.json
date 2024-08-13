@@ -20,9 +20,9 @@
 	"name": "liferay-classic-theme",
 	"repository": "liferay/liferay-portal",
 	"scripts": {
-		"build": "liferay-npm-scripts theme build",
+		"build": "node-scripts build:theme",
 		"checkFormat": "node-scripts format --check",
 		"format": "node-scripts format"
 	},
-	"version": "5.0.95"
+	"version": "5.0.98"
 }

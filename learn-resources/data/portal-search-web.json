@@ -22,6 +22,12 @@
 			"message": "Learn more."
 		}
 	},
+	"search-pages-and-widgets": {
+		"en_US": {
+			"message": "Learn more.",
+			"url": "https://learn.liferay.com/w/dxp/using-search/search-pages-and-widgets"
+		}
+	},
 	"sorting-search-results": {
 		"en_US": {
 			"message": "Learn more.",

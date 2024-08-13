@@ -30,6 +30,8 @@ portletDisplay.setURLBack(String.valueOf(renderResponse.createRenderURL()));
 
 <commerce-ui:header
 	actions="<%= commerceReturnContentDisplayContext.getHeaderActionModels() %>"
+	additionalStatusLabel="<%= commerceReturn.getReturnStatus() %>"
+	additionalStatusLabelStyle="<%= CommerceReturnConstants.getReturnStatusLabelStyle(commerceReturn.getReturnStatus()) %>"
 	bean="<%= (commerceReturn == null) ? null : commerceReturn.getObjectEntry() %>"
 	beanIdLabel='<%= (commerceReturn == null) ? null : "id" %>'
 	externalReferenceCode="<%= (commerceReturn == null) ? StringPool.BLANK : commerceReturn.getExternalReferenceCode() %>"
@@ -108,17 +110,6 @@ portletDisplay.setURLBack(String.valueOf(renderResponse.createRenderURL()));
 						</div>
 
 						<div class="col-4">
-							<commerce-ui:info-box
-								elementClasses="py-3"
-								title='<%= LanguageUtil.get(request, "return-status") %>'
-							>
-								<clay:label
-									cssClass="mb-0"
-									displayType="<%= commerceReturnContentDisplayContext.getReturnStatusDisplayType() %>"
-									label="<%= commerceReturnContentDisplayContext.getReturnStatus() %>"
-								/>
-							</commerce-ui:info-box>
-
 							<liferay-portlet:renderURL var="editCommerceReturnNoteURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
 								<portlet:param name="mvcRenderCommandName" value="/commerce_return_content/edit_commerce_return_note" />
 								<portlet:param name="redirect" value="<%= currentURL %>" />
@@ -173,7 +164,7 @@ portletDisplay.setURLBack(String.valueOf(renderResponse.createRenderURL()));
 							creationMenu="<%= commerceReturnContentDisplayContext.getCommerceReturnItemCreationMenu() %>"
 							fdsActionDropdownItems="<%= commerceReturnContentDisplayContext.getCommerceReturnItemFDSActionDropdownItems() %>"
 							formName="fm"
-							id="<%= CommerceOrderFDSNames.RETURN_ITEMS %>"
+							id="<%= ((commerceReturn == null) || Objects.equals(commerceReturn.getReturnStatus(), CommerceReturnConstants.RETURN_STATUS_DRAFT)) ? CommerceOrderFDSNames.DRAFT_RETURN_ITEMS : CommerceOrderFDSNames.RETURN_ITEMS %>"
 							itemsPerPage="<%= 10 %>"
 							propsTransformer="{commerceReturnItemsPropsTransformer} from commerce-order-content-web"
 							style="stacked"
@@ -237,7 +228,7 @@ portletDisplay.setURLBack(String.valueOf(renderResponse.createRenderURL()));
 		).put(
 			"redirectURL", currentURL
 		).put(
-			"returnStatus", "completed"
+			"returnStatus", CommerceReturnConstants.RETURN_STATUS_PENDING
 		).build()
 	%>'
 	module="{editCommerceReturn} from commerce-order-content-web"

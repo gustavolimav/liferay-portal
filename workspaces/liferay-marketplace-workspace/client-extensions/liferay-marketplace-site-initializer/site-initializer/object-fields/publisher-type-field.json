@@ -1,0 +1,19 @@
+{
+	"object-fields": [
+		{
+			"DBType": "String",
+			"businessType": "MultiselectPicklist",
+			"externalReferenceCode": "PUBLISHER-TYPE-FIELD",
+			"indexedAsKeyword": false,
+			"indexedLanguageId": "en_US",
+			"label": {
+				"en_US": "Publisher Type"
+			},
+			"listTypeDefinitionExternalReferenceCode": "PUBLISHER-TYPE",
+			"name": "publisherType",
+			"required": false,
+			"state": false
+		}
+	],
+	"objectDefinitionId": "[$OBJECT_DEFINITION_ID:RequestPublisherAccount$]"
+}

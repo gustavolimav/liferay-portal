@@ -262,6 +262,17 @@ public abstract class BaseTestClassResult implements TestClassResult {
 		return true;
 	}
 
+	@Override
+	public boolean isSkipped() {
+		Status status = Status.valueOf(getStatus());
+
+		if (status == Status.SKIPPED) {
+			return true;
+		}
+
+		return false;
+	}
+
 	protected BaseTestClassResult(Build build, JSONObject suiteJSONObject) {
 		if (suiteJSONObject == null) {
 			throw new RuntimeException("Please set suiteJSONObject");

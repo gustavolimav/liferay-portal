@@ -103,6 +103,16 @@ public class MultiselectPicklistFieldPredicateProvider
 	}
 
 	@Override
+	public Predicate getIsNotEmptyPredicate(
+		String fieldName,
+		Function<String, Column<?, ?>> objectDefinitionColumnSupplier) {
+
+		return objectDefinitionColumnSupplier.apply(
+			fieldName
+		).isNotNull();
+	}
+
+	@Override
 	public Predicate getStartsWithPredicate(
 		Function<String, Column<?, ?>> objectDefinitionColumnSupplier,
 		String fieldName, Object fieldValue) {

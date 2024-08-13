@@ -42,10 +42,11 @@ export default async function installSassBinary() {
 			return sassBinaryPath;
 		}
 
-		console.error(hash);
-
 		console.error(
-			'⚠️ Redownloading Sass binary compiler because it is corrupted or outdated'
+			`
+⚠️ Redownloading Sass binary compiler because it is corrupted or outdated
+   Computed (seemingly incorrect) hash is: ${hash}
+`
 		);
 	}
 

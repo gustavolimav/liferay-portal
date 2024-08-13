@@ -123,10 +123,12 @@ import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.model.ObjectAction;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
+import com.liferay.object.model.ObjectFolder;
 import com.liferay.object.service.ObjectActionLocalService;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectEntryLocalService;
 import com.liferay.object.service.ObjectFieldLocalService;
+import com.liferay.object.service.ObjectFolderLocalService;
 import com.liferay.petra.io.StreamUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -1880,7 +1882,8 @@ public class BundleSiteInitializerTest {
 			_kbArticleLocalService.getKBArticles(
 				_group.getGroupId(), kbFolder.getKbFolderId(),
 				WorkflowConstants.STATUS_ANY, QueryUtil.ALL_POS,
-				QueryUtil.ALL_POS, new KBArticlePriorityComparator(true));
+				QueryUtil.ALL_POS,
+				KBArticlePriorityComparator.getInstance(true));
 
 		Assert.assertEquals(
 			kbFolderKBArticles.toString(), 1, kbFolderKBArticles.size());
@@ -1897,7 +1900,8 @@ public class BundleSiteInitializerTest {
 			_kbArticleLocalService.getKBArticles(
 				_group.getGroupId(), kbArticle1.getResourcePrimKey(),
 				WorkflowConstants.STATUS_ANY, QueryUtil.ALL_POS,
-				QueryUtil.ALL_POS, new KBArticlePriorityComparator(true));
+				QueryUtil.ALL_POS,
+				KBArticlePriorityComparator.getInstance(true));
 
 		Assert.assertEquals(
 			kbArticleKBArticles.toString(), 2, kbArticleKBArticles.size());
@@ -2614,6 +2618,42 @@ public class BundleSiteInitializerTest {
 			objectFieldsCount,
 			_objectFieldLocalService.getObjectFieldsCount(
 				objectDefinition.getObjectDefinitionId()));
+	}
+
+	private void _assertObjectFolders1() throws Exception {
+		ObjectFolder objectFolder =
+			_objectFolderLocalService.fetchObjectFolderByExternalReferenceCode(
+				"TESTOBJECTFOLDER1", _group.getCompanyId());
+
+		Assert.assertEquals(
+			"Test Object Folder 1",
+			objectFolder.getLabel(LocaleUtil.getSiteDefault()));
+
+		objectFolder =
+			_objectFolderLocalService.fetchObjectFolderByExternalReferenceCode(
+				"TESTOBJECTFOLDER2", _group.getCompanyId());
+
+		Assert.assertEquals(
+			"Test Object Folder 2",
+			objectFolder.getLabel(LocaleUtil.getSiteDefault()));
+	}
+
+	private void _assertObjectFolders2() throws Exception {
+		ObjectFolder objectFolder =
+			_objectFolderLocalService.fetchObjectFolderByExternalReferenceCode(
+				"TESTOBJECTFOLDER1", _group.getCompanyId());
+
+		Assert.assertEquals(
+			"Test Object Folder 1 Update",
+			objectFolder.getLabel(LocaleUtil.getSiteDefault()));
+
+		objectFolder =
+			_objectFolderLocalService.fetchObjectFolderByExternalReferenceCode(
+				"TESTOBJECTFOLDER2", _group.getCompanyId());
+
+		Assert.assertEquals(
+			"Test Object Folder 2 Update",
+			objectFolder.getLabel(LocaleUtil.getSiteDefault()));
 	}
 
 	private void _assertObjectRelationships1(
@@ -3800,6 +3840,13 @@ public class BundleSiteInitializerTest {
 				"TESTSXPBLUEPRINT2");
 
 		Assert.assertNotNull(sxpBlueprint);
+		Assert.assertFalse(
+			sxpBlueprint.toString(
+			).contains(
+				"[$TAXONOMY_CATEGORY_ID:/site-initializer/taxonomy-" +
+					"vocabularies/company/test-asset-vocabulary-1/test-asset-" +
+						"category-1.json$]"
+			));
 		_assertSearchableAssetTypes(
 			new String[] {
 				"com.liferay.document.library.kernel.model.DLFileEntry"
@@ -4240,6 +4287,7 @@ public class BundleSiteInitializerTest {
 		_assertListTypeDefinitions1();
 		_assertNotificationTemplate1();
 		_assertObjectDefinitions1();
+		_assertObjectFolders1();
 		_assertOrganizations1();
 		_assertPermissions();
 		_assertPLOEntries1();
@@ -4279,6 +4327,7 @@ public class BundleSiteInitializerTest {
 		_assertListTypeDefinitions2();
 		_assertNotificationTemplate2();
 		_assertObjectDefinitions2();
+		_assertObjectFolders2();
 		_assertOrganizations2();
 		_assertPLOEntries2();
 		_assertResourcePermission2();
@@ -4453,6 +4502,9 @@ public class BundleSiteInitializerTest {
 
 	@Inject
 	private ObjectFieldLocalService _objectFieldLocalService;
+
+	@Inject
+	private ObjectFolderLocalService _objectFolderLocalService;
 
 	@Inject
 	private ObjectRelationshipResource.Factory

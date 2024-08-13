@@ -1,5 +1,5 @@
 {
-	"@generated": "ab5842f5b15ddb1cc82fefa5efdbd3661758ecda",
+	"@generated": "1dcb3044c05bafc8330d19c12277d823b91856fd",
 	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
@@ -26,9 +26,10 @@
 			]
 		},
 		"rootDir": "../../../../../../../..",
+		"skipLibCheck": true,
 		"sourceMap": false,
 		"strict": true,
-		"target": "es2020",
+		"target": "esnext",
 		"tsBuildInfoFile": "../../../../../../../../.tsc/buildinfo/@liferay/object-js-components-web.tsbuildinfo",
 		"typeRoots": [
 			"../../../../../../../../node_modules/@types"

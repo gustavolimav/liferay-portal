@@ -9,31 +9,9 @@
 			"importStrategy": "ON_ERROR_FAIL",
 			"updateStrategy": "PARTIAL_UPDATE"
 		},
-		"taskItemDelegateName": "DEFAULT",
-		"userId": 0,
-		"version": "v1.0"
+		"taskItemDelegateName": "DEFAULT"
 	},
 	"items": [
-		{
-			"enableCategorization": true,
-			"externalReferenceCode": "L_COMMERCE_RETURN_ITEM",
-			"label": {
-				"en_US": "Commerce Return Item"
-			},
-			"modifiable": true,
-			"name": "CommerceReturnItem",
-			"panelCategoryKey": "",
-			"parameterRequired": false,
-			"pluralLabel": {
-				"en_US": "Commerce Return Items"
-			},
-			"portlet": false,
-			"scope": "company",
-			"status": {
-				"code": 2
-			},
-			"system": true
-		},
 		{
 			"enableCategorization": true,
 			"externalReferenceCode": "L_COMMERCE_RETURN",
@@ -53,6 +31,7 @@
 					"objectDefinitionExternalReferenceCode1": "L_COMMERCE_RETURN",
 					"objectDefinitionExternalReferenceCode2": "L_COMMERCE_RETURN_ITEM",
 					"objectDefinitionName2": "CommerceReturnItem",
+					"objectDefinitionSystem2": true,
 					"objectField": {
 						"DBType": "Long",
 						"businessType": "Relationship",
@@ -102,6 +81,26 @@
 			},
 			"system": true,
 			"titleObjectFieldName": "id"
+		},
+		{
+			"enableCategorization": true,
+			"externalReferenceCode": "L_COMMERCE_RETURN_ITEM",
+			"label": {
+				"en_US": "Commerce Return Item"
+			},
+			"modifiable": true,
+			"name": "CommerceReturnItem",
+			"panelCategoryKey": "",
+			"parameterRequired": false,
+			"pluralLabel": {
+				"en_US": "Commerce Return Items"
+			},
+			"portlet": false,
+			"scope": "company",
+			"status": {
+				"code": 2
+			},
+			"system": true
 		}
 	]
 }

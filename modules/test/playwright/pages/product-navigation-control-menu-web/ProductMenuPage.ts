@@ -5,6 +5,8 @@
 
 import {Locator, Page} from '@playwright/test';
 
+import {PORTLET_URLS} from '../../utils/portletUrls';
+
 export class ProductMenuPage {
 	readonly closeProductMenuButton: Locator;
 	readonly configurationButton: Locator;
@@ -19,6 +21,7 @@ export class ProductMenuPage {
 	readonly publishingButton: Locator;
 	readonly siteBuilderButton: Locator;
 	readonly siteSettingsButton: Locator;
+	readonly stagingMenuItem: Locator;
 	readonly webContentButton: Locator;
 
 	constructor(page: Page) {
@@ -55,6 +58,9 @@ export class ProductMenuPage {
 		this.siteSettingsButton = page.getByRole('menuitem', {
 			exact: true,
 			name: 'Site Settings',
+		});
+		this.stagingMenuItem = page.getByRole('menuitem', {
+			name: 'Staging',
 		});
 		this.webContentButton = page.getByRole('menuitem', {
 			name: 'Web Content',
@@ -100,6 +106,12 @@ export class ProductMenuPage {
 	async goToSiteSettings() {
 		await this.configurationButton.click();
 		await this.siteSettingsButton.click();
+	}
+
+	async goToTeams(siteUrl?: string) {
+		await this.page.goto(
+			`/group${siteUrl || '/guest'}${PORTLET_URLS.teams}`
+		);
 	}
 
 	async goToWebContent() {

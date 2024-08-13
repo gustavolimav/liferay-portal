@@ -167,7 +167,7 @@ public class DBUpgrader {
 
 			InitUtil.registerContext();
 
-			upgradeModules(false);
+			upgradeModules();
 
 			BundleContext bundleContext = SystemBundleUtil.getBundleContext();
 
@@ -230,10 +230,10 @@ public class DBUpgrader {
 		}
 	}
 
-	public static void upgradeModules(boolean autoUpgrade) {
+	public static void upgradeModules() {
 		_registerModuleServiceLifecycle("portal.initialized");
 
-		if (!autoUpgrade) {
+		if (_upgradeClient) {
 			DependencyManagerSyncUtil.sync();
 		}
 
@@ -242,7 +242,9 @@ public class DBUpgrader {
 
 		_registerModuleServiceLifecycle("portlets.initialized");
 
-		if (isUpgradeDatabaseAutoRunEnabled()) {
+		if ((_upgradeClient && isUpgradeDatabaseAutoRunEnabled()) ||
+			StartupHelperUtil.isNewRelease()) {
+
 			IndexUpdaterUtil.updateAllIndexes();
 		}
 	}

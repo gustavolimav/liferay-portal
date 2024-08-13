@@ -64,6 +64,15 @@ public class JUnitBatchTestClassGroup extends BatchTestClassGroup {
 	}
 
 	public List<JobProperty> getExcludesJobProperties() {
+		if (_jUnitTestBatch != null) {
+			List<JobProperty> testBatchJobProperties =
+				getTestSelectorExcludesJobProperties();
+
+			recordJobProperties(testBatchJobProperties);
+
+			return testBatchJobProperties;
+		}
+
 		List<JobProperty> excludesJobProperties = new ArrayList<>();
 
 		excludesJobProperties.addAll(getRequiredExcludesJobProperties());
@@ -105,6 +114,15 @@ public class JUnitBatchTestClassGroup extends BatchTestClassGroup {
 	}
 
 	public List<JobProperty> getIncludesJobProperties() {
+		if (_jUnitTestBatch != null) {
+			List<JobProperty> testBatchJobProperties =
+				getTestSelectorIncludesJobProperties();
+
+			recordJobProperties(testBatchJobProperties);
+
+			return testBatchJobProperties;
+		}
+
 		List<JobProperty> includesJobProperties = new ArrayList<>();
 
 		includesJobProperties.addAll(getRequiredIncludesJobProperties());
@@ -568,6 +586,18 @@ public class JUnitBatchTestClassGroup extends BatchTestClassGroup {
 		return includesJobProperties;
 	}
 
+	protected List<JobProperty> getTestSelectorExcludesJobProperties() {
+		JUnitTestSelector jUnitTestSelector = _jUnitTestBatch.getTestSelector();
+
+		return jUnitTestSelector.getExcludesJobProperties();
+	}
+
+	protected List<JobProperty> getTestSelectorIncludesJobProperties() {
+		JUnitTestSelector jUnitTestSelector = _jUnitTestBatch.getTestSelector();
+
+		return jUnitTestSelector.getIncludesJobProperties();
+	}
+
 	@Override
 	protected boolean ignore() {
 		return false;
@@ -715,8 +745,13 @@ public class JUnitBatchTestClassGroup extends BatchTestClassGroup {
 	}
 
 	protected void setTestClasses(JUnitTestSelector jUnitTestSelector) {
+		List<JobProperty> includesJobProperties =
+			jUnitTestSelector.getIncludesJobProperties();
+
+		recordJobProperties(includesJobProperties);
+
 		List<PathMatcher> includesPathMatchers = getPathMatchers(
-			jUnitTestSelector.getIncludesJobProperties());
+			includesJobProperties);
 
 		if (includesPathMatchers.isEmpty()) {
 			return;
@@ -726,8 +761,14 @@ public class JUnitBatchTestClassGroup extends BatchTestClassGroup {
 
 		List<PathMatcher> filterPathMatchers = getPathMatchers(
 			getFilterJobProperties());
+
+		List<JobProperty> excludesJobProperties =
+			jUnitTestSelector.getExcludesJobProperties();
+
 		List<PathMatcher> excludesPathMatchers = getPathMatchers(
-			jUnitTestSelector.getExcludesJobProperties());
+			excludesJobProperties);
+
+		recordJobProperties(excludesJobProperties);
 
 		BatchTestClassGroup batchTestClassGroup = this;
 

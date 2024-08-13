@@ -5,32 +5,50 @@
 
 import {Locator, Page, expect} from '@playwright/test';
 
+import {clickAndExpectToBeHidden} from '../../../utils/clickAndExpectToBeHidden';
 import {clickAndExpectToBeVisible} from '../../../utils/clickAndExpectToBeVisible';
 import fillAndClickOutside from '../../../utils/fillAndClickOutside';
+import getRandomString from '../../../utils/getRandomString';
 import {waitForSuccessAlert} from '../../../utils/waitForSuccessAlert';
 import {JournalPage} from './JournalPage';
 
 export class JournalEditArticlePage {
 	readonly page: Page;
 
+	readonly changesSavedIndicator: Locator;
+	readonly friendlyURLInput: Locator;
+	readonly friendlyUrlToggle: Locator;
 	readonly journalPage: JournalPage;
 	readonly propertiesTab: Locator;
 	readonly publishButton: Locator;
+	readonly redoButton: Locator;
 	readonly submitForWorkflowButton: Locator;
-	readonly titlePlaceholder: Locator;
+	readonly titleInput: Locator;
+	readonly undoButton: Locator;
 
 	constructor(page: Page) {
 		this.page = page;
 
+		this.changesSavedIndicator = page.locator(
+			'#_com_liferay_journal_web_portlet_JournalPortlet_changesSavedIndicator'
+		);
+		this.friendlyURLInput = page.locator(
+			'#_com_liferay_journal_web_portlet_JournalPortlet_friendlyURL'
+		);
+		this.friendlyUrlToggle = page.locator('#friendlyUrlToggle');
 		this.journalPage = new JournalPage(page);
 		this.propertiesTab = page.getByRole('tab', {name: 'Properties'});
-		this.publishButton = page.getByRole('button', {name: 'Publish'});
+		this.publishButton = page.locator(
+			'#_com_liferay_journal_web_portlet_JournalPortlet_publishButton'
+		);
+		this.redoButton = page.getByTitle('Redo', {exact: true});
 		this.submitForWorkflowButton = page.getByRole('button', {
 			name: 'Submit for Workflow',
 		});
-		this.titlePlaceholder = page.getByPlaceholder(
-			'Untitled Basic Web Content'
+		this.titleInput = page.locator(
+			'#_com_liferay_journal_web_portlet_JournalPortlet_titleMapAsXML'
 		);
+		this.undoButton = page.getByTitle('Undo', {exact: true});
 	}
 
 	async goto({
@@ -121,12 +139,31 @@ export class JournalEditArticlePage {
 	}
 
 	async fillContent(content: string) {
-		await this.journalPage.webContentBodyTextBox.fill(content);
-		await this.journalPage.webContentBodyTextBox.press('Backspace');
+		await this.journalPage.articleContentTextBox.fill(content);
+		await this.journalPage.articleContentTextBox.press('Backspace');
+	}
+
+	async fillFriendlyURL(friendlyURL: string) {
+		if (await this.friendlyURLInput.isHidden()) {
+			await this.friendlyUrlToggle.click();
+		}
+		await this.friendlyURLInput.fill(friendlyURL);
+	}
+
+	async createBasicArticleWithFriendlyURL(site, page, articleTitle?: string) {
+		await this.journalPage.goto(site.friendlyUrlPath);
+		await this.journalPage.goToCreateArticle(
+			articleTitle || 'Basic Web Content'
+		);
+		await this.fillFriendlyURL('test');
+		const title = getRandomString();
+		await this.titleInput.fill(title);
+		await this.publishButton.click();
+		await expect(page.getByTitle(title, {exact: true})).toBeVisible();
 	}
 
 	async fillTitle(title: string) {
-		await fillAndClickOutside(this.page, this.titlePlaceholder, title);
+		await fillAndClickOutside(this.page, this.titleInput, title);
 	}
 
 	async editAndPublishExistingBasicArticle(title: string) {
@@ -168,6 +205,36 @@ export class JournalEditArticlePage {
 		await this.openFieldSet('Related Assets', 'relatedAssets');
 		await this.page.getByLabel('Select Items').click();
 		await this.page.getByRole('menuitem', {name: assetType}).click();
+	}
+
+	async selectSpecificDisplayPage(displayPageName: string) {
+		await this.openFieldSet('Display Page', 'displayPage');
+		await this.page
+			.getByLabel('Select Display Page Type')
+			.selectOption('Specific');
+		await this.page
+			.getByRole('button', {name: 'Select Display Page'})
+			.click();
+		const selectDisplayPageModal = await this.page.frameLocator(
+			'iframe[title*="Select Display Page"]'
+		);
+
+		await this.page
+			.locator('.modal-title', {
+				hasText: 'Select Display Page',
+			})
+			.waitFor({
+				state: 'visible',
+			});
+
+		await clickAndExpectToBeHidden({
+			target: this.page.locator('.modal-title', {
+				hasText: 'Select Display Page',
+			}),
+			trigger: selectDisplayPageModal.getByLabel(
+				'Select ' + displayPageName
+			),
+		});
 	}
 
 	async scheduleArticle(

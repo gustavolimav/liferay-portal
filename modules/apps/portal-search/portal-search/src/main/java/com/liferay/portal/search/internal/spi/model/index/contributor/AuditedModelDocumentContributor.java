@@ -5,11 +5,17 @@
 
 package com.liferay.portal.search.internal.spi.model.index.contributor;
 
+import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.AuditedModel;
 import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.DocumentContributor;
 import com.liferay.portal.kernel.search.Field;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.Portal;
 
 import org.osgi.service.component.annotations.Component;
@@ -41,9 +47,38 @@ public class AuditedModelDocumentContributor
 			portal.getUserName(
 				auditedModel.getUserId(), auditedModel.getUserName()),
 			true);
+		document.addKeyword(
+			"userExternalReferenceCode",
+			_getUserExternalReferenceCode(auditedModel));
 	}
 
 	@Reference
 	protected Portal portal;
+
+	@Reference
+	protected UserLocalService userLocalService;
+
+	private String _getUserExternalReferenceCode(AuditedModel auditedModel) {
+		String userExternalReferenceCode = StringPool.BLANK;
+
+		try {
+			User user = userLocalService.getUser(auditedModel.getUserId());
+
+			userExternalReferenceCode = user.getExternalReferenceCode();
+		}
+		catch (PortalException portalException) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(
+					"Unable to get user " + auditedModel.getUserId() +
+						" while indexing document",
+					portalException);
+			}
+		}
+
+		return userExternalReferenceCode;
+	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		AuditedModelDocumentContributor.class);
 
 }

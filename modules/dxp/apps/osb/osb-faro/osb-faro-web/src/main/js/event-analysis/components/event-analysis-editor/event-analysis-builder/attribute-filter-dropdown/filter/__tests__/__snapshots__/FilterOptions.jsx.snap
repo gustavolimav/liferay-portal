@@ -93,7 +93,7 @@ exports[`FilterOptions should render 1`] = `
                 <option
                   value="notContains"
                 >
-                  not contains
+                  does not contain
                 </option>
                 <option
                   value="eq"
@@ -131,6 +131,7 @@ exports[`FilterOptions should render 1`] = `
                     autocomplete="off"
                     autocorrect="off"
                     class="form-control input-group-inset input-group-inset-after"
+                    data-testid="attribute-value-string-input"
                     id="clay-autocomplete-1"
                     role="combobox"
                     spellcheck="false"
@@ -167,7 +168,7 @@ exports[`FilterOptions should render 1`] = `
           disabled=""
           type="submit"
         >
-          Done
+          Apply
         </button>
       </div>
     </form>

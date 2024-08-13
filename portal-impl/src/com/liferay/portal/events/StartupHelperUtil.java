@@ -82,6 +82,10 @@ public class StartupHelperUtil {
 			StartupHelperUtil::_isDBWarmed);
 	}
 
+	public static boolean isNewRelease() {
+		return _newRelease;
+	}
+
 	public static boolean isUpgrading() {
 		return _upgrading;
 	}
@@ -108,6 +112,10 @@ public class StartupHelperUtil {
 
 			_dbNew = dbNew;
 		}
+	}
+
+	public static void setNewRelease(boolean newRelease) {
+		_newRelease = newRelease;
 	}
 
 	public static void setUpgrading(boolean upgrading) {
@@ -255,6 +263,7 @@ public class StartupHelperUtil {
 	private static volatile boolean _dbNew;
 	private static final DCLSingleton<Boolean> _dbWarmedSCLSingleton =
 		new DCLSingleton<>();
+	private static boolean _newRelease;
 	private static volatile ServiceRegistration<?> _serviceRegistration;
 	private static volatile boolean _upgrading;
 

@@ -17,7 +17,7 @@ export class VisualizationModesPage {
 	};
 	readonly cardsVisualizationModeContainer: Locator;
 	private readonly container: Locator;
-	private readonly dataSetPage: DataSetPage;
+	readonly dataSetPage: DataSetPage;
 	readonly fieldSelectModalContainer: Locator;
 	readonly listVisualizationModeContainer: Locator;
 	readonly page: Page;
@@ -223,5 +223,12 @@ export class VisualizationModesPage {
 		fieldName: string;
 	}) {
 		await this.checkField({dataId, expected: false, fieldName});
+	}
+
+	async unSelectSelectedFields() {
+		await this.page
+			.getByRole('dialog', {name: 'Select Field'})
+			.getByRole('button', {name: 'Deselect All'})
+			.click();
 	}
 }

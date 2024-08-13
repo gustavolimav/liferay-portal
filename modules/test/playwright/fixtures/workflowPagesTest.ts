@@ -10,12 +10,14 @@ import {ActionPage} from '../pages/portal-workflow-kaleo-designer-web/ActionPage
 import {ActionReassignmentPage} from '../pages/portal-workflow-kaleo-designer-web/ActionReassignmentPage';
 import {ConditionNode} from '../pages/portal-workflow-kaleo-designer-web/ConditionNodePage';
 import {ConfigurationTabPage} from '../pages/portal-workflow-kaleo-designer-web/ConfigurationTabPage';
+import {DefinitionInfoPage} from '../pages/portal-workflow-kaleo-designer-web/DefinitionInfoPage';
 import {DiagramViewPage} from '../pages/portal-workflow-kaleo-designer-web/DiagramViewPage';
 import {NodePropertiesSidebarPage} from '../pages/portal-workflow-kaleo-designer-web/NodePropertiesSidebarPage';
 import {NotificationSectionPage} from '../pages/portal-workflow-kaleo-designer-web/NotificationSectionPage';
 import {ProcessBuilderPage} from '../pages/portal-workflow-kaleo-designer-web/ProcessBuilderPage';
 import {SourceViewPage} from '../pages/portal-workflow-kaleo-designer-web/SourceViewPage';
 import {TimerPage} from '../pages/portal-workflow-kaleo-designer-web/TimerPage';
+import {MetricsPage} from '../pages/portal-workflow-metrics-web/MetricsPage';
 import {WorkflowTaskDetailsPage} from '../pages/portal-workflow-task-web/WorkflowTaskDetailsPage';
 import {WorkflowTasksPage} from '../pages/portal-workflow-task-web/WorkflowTasksPage';
 import {WorkflowPage} from '../pages/portal-workflow-web/WorkflowPage';
@@ -25,7 +27,9 @@ const workflowPagesTest = test.extend<{
 	actionReassignmentPage: ActionReassignmentPage;
 	conditionNode: ConditionNode;
 	configurationTabPage: ConfigurationTabPage;
+	definitionInfoPage: DefinitionInfoPage;
 	diagramViewPage: DiagramViewPage;
+	metricsPage: MetricsPage;
 	nodePropertiesSidebarPage: NodePropertiesSidebarPage;
 	notificationSectionPage: NotificationSectionPage;
 	processBuilderPage: ProcessBuilderPage;
@@ -48,8 +52,14 @@ const workflowPagesTest = test.extend<{
 	configurationTabPage: async ({page}, use) => {
 		await use(new ConfigurationTabPage(page));
 	},
+	definitionInfoPage: async ({page}, use) => {
+		await use(new DefinitionInfoPage(page));
+	},
 	diagramViewPage: async ({page}, use) => {
 		await use(new DiagramViewPage(page));
+	},
+	metricsPage: async ({page}, use) => {
+		await use(new MetricsPage(page));
 	},
 	nodePropertiesSidebarPage: async ({page}, use) => {
 		await use(new NodePropertiesSidebarPage(page));

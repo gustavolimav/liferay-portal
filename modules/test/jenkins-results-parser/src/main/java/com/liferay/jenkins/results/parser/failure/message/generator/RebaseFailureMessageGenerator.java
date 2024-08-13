@@ -16,7 +16,7 @@ import org.dom4j.Element;
 public class RebaseFailureMessageGenerator extends BaseFailureMessageGenerator {
 
 	@Override
-	public Element getMessageElement(Build build) {
+	public String getMessage(Build build) {
 		String consoleText = build.getConsoleText();
 
 		if (!consoleText.contains(_TOKEN_COULD_NOT_APPLY) ||
@@ -33,6 +33,17 @@ public class RebaseFailureMessageGenerator extends BaseFailureMessageGenerator {
 
 		end = consoleText.indexOf("\n", end);
 
+		return getConsoleTextSnippet(consoleText, false, start, end);
+	}
+
+	@Override
+	public Element getMessageElement(Build build) {
+		Element messageElement = super.getMessageElement(build);
+
+		if (messageElement == null) {
+			return null;
+		}
+
 		return Dom4JUtil.getNewElement(
 			"div", null,
 			Dom4JUtil.getNewElement(
@@ -42,7 +53,7 @@ public class RebaseFailureMessageGenerator extends BaseFailureMessageGenerator {
 				Dom4JUtil.getNewElement(
 					"strong", null,
 					getBaseBranchAnchorElement(build.getTopLevelBuild())),
-				getConsoleTextSnippetElement(consoleText, false, start, end)));
+				messageElement));
 	}
 
 	private static final String _TOKEN_COULD_NOT_APPLY = "Could not apply";

@@ -42,6 +42,7 @@ import com.liferay.object.field.builder.AttachmentObjectFieldBuilder;
 import com.liferay.object.field.builder.DateObjectFieldBuilder;
 import com.liferay.object.field.builder.DateTimeObjectFieldBuilder;
 import com.liferay.object.field.builder.DecimalObjectFieldBuilder;
+import com.liferay.object.field.builder.FormulaObjectFieldBuilder;
 import com.liferay.object.field.builder.IntegerObjectFieldBuilder;
 import com.liferay.object.field.builder.LongIntegerObjectFieldBuilder;
 import com.liferay.object.field.builder.LongTextObjectFieldBuilder;
@@ -348,6 +349,20 @@ public class DefaultObjectEntryManagerImplTest
 						RandomTestUtil.randomString())
 				).name(
 					"decimalObjectFieldName"
+				).build(),
+				new FormulaObjectFieldBuilder(
+				).labelMap(
+					LocalizedMapUtil.getLocalizedMap(
+						RandomTestUtil.randomString())
+				).name(
+					"formulaObjectFieldName"
+				).objectFieldSettings(
+					Arrays.asList(
+						_createObjectFieldSetting("output", "Decimal"),
+						_createObjectFieldSetting(
+							"script",
+							"integerObjectFieldName / " +
+								"longIntegerObjectFieldName"))
 				).build(),
 				new IntegerObjectFieldBuilder(
 				).labelMap(
@@ -1057,6 +1072,29 @@ public class DefaultObjectEntryManagerImplTest
 				dateTimeString1),
 			_objectDefinition2, 2);
 
+		// Formula field
+
+		assertEquals(
+			_defaultObjectEntryManager.addObjectEntry(
+				dtoConverterContext, _objectDefinition2,
+				new ObjectEntry() {
+					{
+						properties = HashMapBuilder.<String, Object>put(
+							"integerObjectFieldName", 3
+						).put(
+							"longIntegerObjectFieldName", 2
+						).build();
+					}
+				},
+				ObjectDefinitionConstants.SCOPE_COMPANY),
+			new ObjectEntry() {
+				{
+					properties = HashMapBuilder.<String, Object>put(
+						"formulaObjectFieldName", 1.5
+					).build();
+				}
+			});
+
 		// Picklist by list entry
 
 		ListTypeEntry listTypeEntry =
@@ -1458,6 +1496,58 @@ public class DefaultObjectEntryManagerImplTest
 
 		objectDefinitionLocalService.deleteObjectDefinition(
 			objectDefinition.getObjectDefinitionId());
+	}
+
+	@Test
+	public void testAddObjectEntryWithRichTextObjectField() throws Exception {
+		ObjectDefinition objectDefinition = _createObjectDefinition(
+			Collections.singletonList(
+				new RichTextObjectFieldBuilder(
+				).labelMap(
+					LocalizedMapUtil.getLocalizedMap(
+						RandomTestUtil.randomString())
+				).name(
+					"richTextObjectFieldName"
+				).build()),
+			ObjectDefinitionConstants.SCOPE_COMPANY);
+
+		try {
+			ObjectEntry objectEntry = _defaultObjectEntryManager.addObjectEntry(
+				_simpleDTOConverterContext, objectDefinition,
+				new ObjectEntry() {
+					{
+						properties = Collections.emptyMap();
+					}
+				},
+				null);
+
+			Assert.assertEquals(
+				MapUtil.getString(
+					objectEntry.getProperties(), "richTextObjectFieldName"),
+				StringPool.BLANK);
+
+			String value = RandomTestUtil.randomString();
+
+			objectEntry = _defaultObjectEntryManager.addObjectEntry(
+				_simpleDTOConverterContext, objectDefinition,
+				new ObjectEntry() {
+					{
+						properties = HashMapBuilder.<String, Object>put(
+							"richTextObjectFieldName", value
+						).build();
+					}
+				},
+				null);
+
+			Assert.assertEquals(
+				MapUtil.getString(
+					objectEntry.getProperties(), "richTextObjectFieldName"),
+				value);
+		}
+		finally {
+			objectDefinitionLocalService.deleteObjectDefinition(
+				objectDefinition);
+		}
 	}
 
 	@Test

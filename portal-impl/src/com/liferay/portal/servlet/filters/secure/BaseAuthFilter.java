@@ -16,8 +16,6 @@ import com.liferay.portal.kernel.security.access.control.AccessControlUtil;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.security.auth.http.HttpAuthorizationHeader;
-import com.liferay.portal.kernel.security.permission.PermissionChecker;
-import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.servlet.ProtectedServletRequest;
@@ -94,9 +92,9 @@ public abstract class BaseAuthFilter extends BasePortalFilter {
 
 		HttpSession httpSession = httpServletRequest.getSession();
 
-		User user = (User)httpSession.getAttribute(WebKeys.USER);
+		User user1 = (User)httpSession.getAttribute(WebKeys.USER);
 
-		if (user == null) {
+		if (user1 == null) {
 			long userId = 0;
 
 			try {
@@ -113,20 +111,30 @@ public abstract class BaseAuthFilter extends BasePortalFilter {
 					HttpServletRequest.BASIC_AUTH);
 			}
 			else {
-				HttpAuthorizationHeader httpAuthorizationHeader =
-					new HttpAuthorizationHeader(
-						HttpAuthorizationHeader.SCHEME_BASIC);
-
 				HttpAuthManagerUtil.generateChallenge(
 					httpServletRequest, httpServletResponse,
-					httpAuthorizationHeader);
+					new HttpAuthorizationHeader(
+						HttpAuthorizationHeader.SCHEME_BASIC));
 
 				return null;
 			}
 		}
 		else {
+			User user2 = UserLocalServiceUtil.getUser(user1.getUserId());
+
+			if (!user2.isActive()) {
+				httpSession.invalidate();
+
+				HttpAuthManagerUtil.generateChallenge(
+					httpServletRequest, httpServletResponse,
+					new HttpAuthorizationHeader(
+						HttpAuthorizationHeader.SCHEME_BASIC));
+
+				return null;
+			}
+
 			httpServletRequest = new ProtectedServletRequest(
-				httpServletRequest, String.valueOf(user.getUserId()),
+				httpServletRequest, String.valueOf(user1.getUserId()),
 				HttpServletRequest.BASIC_AUTH);
 
 			PrincipalThreadLocal.setPassword(
@@ -143,9 +151,9 @@ public abstract class BaseAuthFilter extends BasePortalFilter {
 
 		HttpSession httpSession = httpServletRequest.getSession();
 
-		User user = (User)httpSession.getAttribute(WebKeys.USER);
+		User user1 = (User)httpSession.getAttribute(WebKeys.USER);
 
-		if (user == null) {
+		if (user1 == null) {
 			long userId = 0;
 
 			try {
@@ -163,20 +171,30 @@ public abstract class BaseAuthFilter extends BasePortalFilter {
 					HttpServletRequest.DIGEST_AUTH);
 			}
 			else {
-				HttpAuthorizationHeader httpAuthorizationHeader =
-					new HttpAuthorizationHeader(
-						HttpAuthorizationHeader.SCHEME_DIGEST);
-
 				HttpAuthManagerUtil.generateChallenge(
 					httpServletRequest, httpServletResponse,
-					httpAuthorizationHeader);
+					new HttpAuthorizationHeader(
+						HttpAuthorizationHeader.SCHEME_DIGEST));
 
 				return null;
 			}
 		}
 		else {
+			User user2 = UserLocalServiceUtil.getUser(user1.getUserId());
+
+			if (!user2.isActive()) {
+				httpSession.invalidate();
+
+				HttpAuthManagerUtil.generateChallenge(
+					httpServletRequest, httpServletResponse,
+					new HttpAuthorizationHeader(
+						HttpAuthorizationHeader.SCHEME_DIGEST));
+
+				return null;
+			}
+
 			httpServletRequest = new ProtectedServletRequest(
-				httpServletRequest, String.valueOf(user.getUserId()),
+				httpServletRequest, String.valueOf(user1.getUserId()),
 				HttpServletRequest.DIGEST_AUTH);
 
 			PrincipalThreadLocal.setPassword(
@@ -189,25 +207,13 @@ public abstract class BaseAuthFilter extends BasePortalFilter {
 	protected void initThreadLocals(User user) throws Exception {
 		CompanyThreadLocal.setCompanyId(user.getCompanyId());
 
-		long userId = user.getUserId();
-
-		PrincipalThreadLocal.setName(userId);
+		PrincipalThreadLocal.setName(user.getUserId());
 
 		if (!_usePermissionChecker) {
 			return;
 		}
 
-		PermissionChecker permissionChecker =
-			PermissionThreadLocal.getPermissionChecker();
-
-		if ((permissionChecker != null) &&
-			(permissionChecker.getUserId() == userId)) {
-
-			return;
-		}
-
-		PermissionThreadLocal.setPermissionChecker(
-			PermissionCheckerFactoryUtil.create(user));
+		PermissionThreadLocal.getPermissionChecker(user, true);
 	}
 
 	@Override
@@ -341,8 +347,6 @@ public abstract class BaseAuthFilter extends BasePortalFilter {
 
 		httpServletRequest = new ProtectedServletRequest(
 			httpServletRequest, String.valueOf(user.getUserId()), authType);
-
-		httpSession.setAttribute(WebKeys.USER, user);
 
 		PrincipalThreadLocal.setPassword(
 			PortalUtil.getUserPassword(httpServletRequest));

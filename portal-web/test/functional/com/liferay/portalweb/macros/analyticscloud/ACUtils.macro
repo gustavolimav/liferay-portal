@@ -808,6 +808,8 @@ definition {
 
 		Open(value1 = ${analyticsCloudURL});
 
+		WaitForPageLoad();
+
 		if (!(isSet(emailAddress))) {
 			var emailAddress = "test@liferay.com";
 		}
@@ -837,6 +839,8 @@ definition {
 			Refresh();
 
 			WaitForPageLoad();
+
+			ACUtils.waitForLoading();
 		}
 
 		if (IsElementNotPresent(locator1 = "ACWorkspace#FARO_DEMO_WORKSPACE")) {
@@ -1106,7 +1110,9 @@ definition {
 			ABTest.terminateTest();
 		}
 
-		ABTest.deleteABTest();
+		if (IsElementNotPresent(locator1 = "ABTest#IMAGE_EMPTY_STATE")) {
+			ABTest.deleteABTest();
+		}
 	}
 
 	@summary = "Default summary"

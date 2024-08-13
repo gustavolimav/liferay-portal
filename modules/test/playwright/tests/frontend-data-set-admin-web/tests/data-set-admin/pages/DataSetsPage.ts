@@ -13,9 +13,11 @@ export class DataSetsPage {
 	readonly apiHelpers: ApiHelpers;
 	readonly applicationsMenuPage: ApplicationsMenuPage;
 	readonly basePath: string;
+	readonly dataSetsEmptyState: Locator;
 	readonly dataSetsTable: Locator;
 	readonly newDataSetButton: Locator;
 	readonly newDataSetModal: {
+		readonly cancel: Locator;
 		readonly heading: Locator;
 		readonly nameInput: Locator;
 		readonly restApplicationField: Locator;
@@ -33,9 +35,11 @@ export class DataSetsPage {
 		this.apiHelpers = new ApiHelpers(page);
 		this.applicationsMenuPage = new ApplicationsMenuPage(page);
 		this.basePath = 'data-set-manager/entries';
+		this.dataSetsEmptyState = page.locator('.c-empty-state');
 		this.dataSetsTable = page.locator('.data-set > div:nth-child(2)');
 		this.newDataSetButton = page.getByLabel('New Data Set').first();
 		this.newDataSetModal = {
+			cancel: page.getByRole('button', {name: 'Cancel'}),
 			heading: page.getByRole('heading', {name: 'New Data Set'}),
 			nameInput: page.getByLabel('NameRequired'),
 			restApplicationField: page.getByLabel('REST ApplicationRequired'),
@@ -135,5 +139,24 @@ export class DataSetsPage {
 		const deleteModal = await this.page.getByRole('dialog');
 
 		await deleteModal.getByRole('button', {name: 'Delete'}).click();
+	}
+
+	async sortBy(columnName) {
+		await this.page
+			.locator('.dnd-table > .dnd-thead > .dnd-tr')
+			.getByRole('button', {name: columnName})
+			.waitFor();
+
+		await Promise.all([
+			this.page
+				.locator('.dnd-table > .dnd-thead > .dnd-tr')
+				.getByRole('button', {name: columnName})
+				.click(),
+			this.page.waitForResponse(
+				(response) =>
+					response.status() === 200 &&
+					response.url().includes('/data-set-manager/data-sets?')
+			),
+		]);
 	}
 }

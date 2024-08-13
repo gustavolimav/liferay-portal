@@ -249,6 +249,7 @@ export default {
 	'please-review-before-submitting-once-sent-you-will-not-be-able-to-edit-any-information-until-this-submission-is-completely-reviewed-by-liferay':
 		'Please, review before submitting. Once sent, you will not be able to edit any information until this submission is completely reviewed by Liferay.',
 	'privacy-policy': 'Privacy Policy',
+	'product': 'Product',
 	'profile': 'Profile',
 	'provide-app-build': 'Provide app build',
 	'provide-company-profile-details': 'Provide company profile details',
@@ -297,7 +298,9 @@ export default {
 	'search': 'Search',
 	'select-a-file': 'Select a file',
 	'select-a-local-file-to-upload': 'Select a local file to upload',
+	'select-categories': 'Select categories',
 	'select-compatible-versions': 'Select Compatible Versions',
+	'select-tags': 'Select tags',
 	'select-the-offering-of-liferay-your-app-is-compatible-with-the-compatibility-selections-will-determine-on-what-platforms-your-app-is-tested':
 		'Select the offering of Liferay your app is compatible with. The compatibility selections will determine on what platforms your app is tested.',
 	'select-the-versions-of-liferay-that-your-app-is-compatible-with':

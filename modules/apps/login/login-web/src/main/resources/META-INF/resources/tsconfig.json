@@ -1,5 +1,5 @@
 {
-	"@generated": "79ae470a0e17ae40d5ceb4f729c5bed7f5195855",
+	"@generated": "a6b6cc08ae95bd9a4f557bae52bce949e27e56b6",
 	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
@@ -14,9 +14,10 @@
 		"paths": {
 		},
 		"rootDir": "../../../../../../../..",
+		"skipLibCheck": true,
 		"sourceMap": false,
 		"strict": true,
-		"target": "es2020",
+		"target": "esnext",
 		"tsBuildInfoFile": "../../../../../../../../.tsc/buildinfo/@liferay/login-web.tsbuildinfo",
 		"typeRoots": [
 			"../../../../../../../../node_modules/@types"

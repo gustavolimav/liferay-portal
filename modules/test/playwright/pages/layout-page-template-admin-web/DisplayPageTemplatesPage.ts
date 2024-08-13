@@ -5,6 +5,7 @@
 
 import {Locator, Page} from '@playwright/test';
 
+import {clickAndExpectToBeVisible} from '../../utils/clickAndExpectToBeVisible';
 import {PORTLET_URLS} from '../../utils/portletUrls';
 import {waitForSuccessAlert} from '../../utils/waitForSuccessAlert';
 
@@ -27,52 +28,30 @@ export class DisplayPageTemplatesPage {
 		);
 	}
 
-	async publishNewTemplate({
-		contentSubtype,
-		contentType,
-		name,
-	}: {
-		contentSubtype?: string;
-		contentType: string;
-		name: string;
-	}) {
-		await this.newButton.click();
-		await this.page.getByRole('button', {name: 'Blank'}).click();
-		await this.page.getByLabel('Name', {exact: true}).fill(name);
+	async clickMoreActions(name: string) {
 		await this.page
-			.getByLabel('Content Type')
-			.selectOption({label: contentType});
-
-		if (contentSubtype) {
-			await this.page
-				.getByLabel('Subtype')
-				.selectOption({label: contentSubtype});
-		}
-
-		await this.page.getByRole('button', {name: 'Save'}).click();
-
-		await waitForSuccessAlert(
-			this.page,
-			'Success:The display page template was created successfully.'
-		);
-
-		await this.publishButton.waitFor();
-		await this.publishButton.click();
-
-		await waitForSuccessAlert(
-			this.page,
-			'Success:The display page template was published successfully.'
-		);
-	}
-
-	private async clickMoreActions(name: string) {
-		await this.page
-			.locator(
-				'#_com_liferay_layout_page_template_admin_web_portlet_LayoutPageTemplatesPortlet_displayPagesSearchContainer .card-page-item'
-			)
+			.locator('.card-page-item')
 			.filter({hasText: name})
 			.getByLabel('More actions')
 			.click();
+	}
+
+	async delete(name: string) {
+		await this.clickMoreActions(name);
+
+		await this.page
+			.getByRole('menuitem', {
+				exact: true,
+				name: 'Delete',
+			})
+			.click();
+
+		await this.page.getByRole('button', {name: 'Delete'}).click();
+
+		await waitForSuccessAlert(
+			this.page,
+			'Success:You successfully deleted 1 display page template(s).'
+		);
 	}
 
 	async deleteAllDisplayPageTemplates() {
@@ -103,12 +82,25 @@ export class DisplayPageTemplatesPage {
 			.waitFor();
 	}
 
-	async markAsDefault(name: string) {
+	async viewUsages(name: string) {
 		await this.clickMoreActions(name);
 
+		await clickAndExpectToBeVisible({
+			target: this.page.getByRole('row').getByRole('checkbox').first(),
+
+			trigger: this.page.getByRole('menuitem', {
+				exact: true,
+				name: 'View Usages',
+			}),
+		});
+	}
+
+	async markAsDefault(name: string) {
 		this.page.once('dialog', (dialog) => {
 			dialog.accept().catch(() => {});
 		});
+
+		await this.clickMoreActions(name);
 
 		await this.page
 			.getByRole('menuitem', {
@@ -118,5 +110,66 @@ export class DisplayPageTemplatesPage {
 			.click();
 
 		await waitForSuccessAlert(this.page);
+	}
+
+	async rename(newName: string, oldName: string) {
+		await this.clickMoreActions(oldName);
+
+		await this.page
+			.getByRole('menuitem', {
+				exact: true,
+				name: 'Rename',
+			})
+			.click();
+
+		await this.page.getByLabel('Name', {exact: true}).fill(newName);
+
+		await this.page.getByRole('button', {name: 'Save'}).click();
+
+		await waitForSuccessAlert(this.page);
+	}
+
+	async createTemplate({
+		contentSubtype,
+		contentType,
+		name,
+	}: {
+		contentSubtype?: string;
+		contentType: string;
+		name: string;
+	}) {
+		await this.newButton.click();
+
+		await this.page.getByRole('button', {name: 'Blank'}).click();
+		await this.page.getByLabel('Name', {exact: true}).fill(name);
+
+		await this.page
+			.getByLabel('Content Type')
+			.selectOption({label: contentType});
+
+		if (contentSubtype) {
+			await this.page
+				.getByLabel('Subtype')
+				.selectOption({label: contentSubtype});
+		}
+
+		await this.page.getByRole('button', {name: 'Save'}).click();
+
+		await waitForSuccessAlert(
+			this.page,
+			'Success:The display page template was created successfully.'
+		);
+
+		await this.publishTemplate();
+	}
+
+	async publishTemplate() {
+		await this.publishButton.waitFor();
+		await this.publishButton.click();
+
+		await waitForSuccessAlert(
+			this.page,
+			'Success:The display page template was published successfully.'
+		);
 	}
 }

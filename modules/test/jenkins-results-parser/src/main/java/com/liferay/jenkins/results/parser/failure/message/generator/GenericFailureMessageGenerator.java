@@ -14,26 +14,26 @@ public class GenericFailureMessageGenerator
 	extends BaseFailureMessageGenerator {
 
 	@Override
-	public Element getMessageElement(String consoleText) {
-		Element message = getExceptionSnippetElement(consoleText);
+	public String getMessage(String consoleText) {
+		String message = getExceptionSnippet(consoleText);
 
 		if (message != null) {
 			return message;
 		}
 
-		message = getMergeTestResultsSnippetElement(consoleText);
+		message = getMergeTestResultsSnippet(consoleText);
 
 		if (message != null) {
 			return message;
 		}
 
-		message = getBuildFailedSnippetElement(consoleText);
+		message = getBuildFailedSnippet(consoleText);
 
 		if (message != null) {
 			return message;
 		}
 
-		return getConsoleTextSnippetElementByEnd(consoleText, true, -1);
+		return getConsoleTextSnippetByEnd(consoleText, true, -1);
 	}
 
 	@Override

@@ -49,7 +49,6 @@ import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
-import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.ImageLocalServiceUtil;
@@ -946,15 +945,8 @@ public class ServicePreAction extends Action {
 		// Permission checker
 
 		PermissionChecker permissionChecker =
-			PermissionThreadLocal.getPermissionChecker();
-
-		if ((initPermissionChecker && (permissionChecker == null)) ||
-			(permissionChecker.getUserId() != user.getUserId())) {
-
-			permissionChecker = PermissionCheckerFactoryUtil.create(user);
-
-			PermissionThreadLocal.setPermissionChecker(permissionChecker);
-		}
+			PermissionThreadLocal.getPermissionChecker(
+				user, initPermissionChecker);
 
 		// Cookie support
 
@@ -2106,7 +2098,7 @@ public class ServicePreAction extends Action {
 
 		if (addDefaultUserPrivateLayouts) {
 			hasPrivateLayouts = LayoutLocalServiceUtil.hasLayouts(
-				user, true, false);
+				user.getGroup(), true, false);
 
 			if (!hasPrivateLayouts) {
 				_addDefaultUserPrivateLayouts(user);
@@ -2134,7 +2126,7 @@ public class ServicePreAction extends Action {
 		if (deleteDefaultUserPrivateLayouts) {
 			if (hasPrivateLayouts == null) {
 				hasPrivateLayouts = LayoutLocalServiceUtil.hasLayouts(
-					user, true, false);
+					user.getGroup(), true, false);
 			}
 
 			if (hasPrivateLayouts) {
@@ -2170,7 +2162,7 @@ public class ServicePreAction extends Action {
 
 		if (addDefaultUserPublicLayouts) {
 			hasPublicLayouts = LayoutLocalServiceUtil.hasLayouts(
-				user, false, false);
+				user.getGroup(), false, false);
 
 			if (!hasPublicLayouts) {
 				_addDefaultUserPublicLayouts(user);
@@ -2198,7 +2190,7 @@ public class ServicePreAction extends Action {
 		if (deleteDefaultUserPublicLayouts) {
 			if (hasPublicLayouts == null) {
 				hasPublicLayouts = LayoutLocalServiceUtil.hasLayouts(
-					user, false, false);
+					user.getGroup(), false, false);
 			}
 
 			if (hasPublicLayouts) {

@@ -444,18 +444,22 @@ public class MiniumSiteInitializer implements SiteInitializer {
 	private ServiceContext _getServiceContext(long groupId)
 		throws PortalException {
 
-		User user = _userLocalService.getUser(PrincipalThreadLocal.getUserId());
-		Group group = _groupLocalService.getGroup(groupId);
-
-		Locale locale = LocaleUtil.getSiteDefault();
-
 		ServiceContext serviceContext = new ServiceContext();
 
 		serviceContext.setAddGroupPermissions(true);
 		serviceContext.setAddGuestPermissions(true);
+
+		Group group = _groupLocalService.getGroup(groupId);
+
 		serviceContext.setCompanyId(group.getCompanyId());
-		serviceContext.setLanguageId(_language.getLanguageId(locale));
+
+		serviceContext.setLanguageId(
+			_language.getLanguageId(LocaleUtil.getSiteDefault()));
+
 		serviceContext.setScopeGroupId(groupId);
+
+		User user = _userLocalService.getUser(PrincipalThreadLocal.getUserId());
+
 		serviceContext.setTimeZone(user.getTimeZone());
 		serviceContext.setUserId(user.getUserId());
 

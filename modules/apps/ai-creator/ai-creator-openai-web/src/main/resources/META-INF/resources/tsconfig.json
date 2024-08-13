@@ -1,5 +1,5 @@
 {
-	"@generated": "3830d1d2de258f20d29493e9e7c953becc7c8d16",
+	"@generated": "284f574cb1e1f02f2e6a278f7bff06700ae5bf08",
 	"@readonly": "** AUTO-GENERATED: DO NOT EDIT **",
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
@@ -20,9 +20,10 @@
 			]
 		},
 		"rootDir": "../../../../../../../..",
+		"skipLibCheck": true,
 		"sourceMap": false,
 		"strict": true,
-		"target": "es2020",
+		"target": "esnext",
 		"tsBuildInfoFile": "../../../../../../../../.tsc/buildinfo/@liferay/ai-creator-openai-web.tsbuildinfo",
 		"typeRoots": [
 			"../../../../../../../../node_modules/@types"

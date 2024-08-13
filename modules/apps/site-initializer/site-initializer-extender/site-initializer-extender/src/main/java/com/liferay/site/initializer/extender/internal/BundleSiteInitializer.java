@@ -108,10 +108,12 @@ import com.liferay.notification.rest.dto.v1_0.NotificationTemplate;
 import com.liferay.notification.rest.resource.v1_0.NotificationTemplateResource;
 import com.liferay.object.admin.rest.dto.v1_0.ObjectDefinition;
 import com.liferay.object.admin.rest.dto.v1_0.ObjectField;
+import com.liferay.object.admin.rest.dto.v1_0.ObjectFolder;
 import com.liferay.object.admin.rest.dto.v1_0.ObjectRelationship;
 import com.liferay.object.admin.rest.dto.v1_0.util.ObjectActionUtil;
 import com.liferay.object.admin.rest.resource.v1_0.ObjectDefinitionResource;
 import com.liferay.object.admin.rest.resource.v1_0.ObjectFieldResource;
+import com.liferay.object.admin.rest.resource.v1_0.ObjectFolderResource;
 import com.liferay.object.admin.rest.resource.v1_0.ObjectRelationshipResource;
 import com.liferay.object.rest.dto.v1_0.ObjectEntry;
 import com.liferay.object.rest.manager.v1_0.ObjectEntryManager;
@@ -122,6 +124,7 @@ import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.petra.function.UnsafeRunnable;
 import com.liferay.petra.function.transform.TransformUtil;
+import com.liferay.petra.lang.CentralizedThreadLocal;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
@@ -195,6 +198,7 @@ import com.liferay.portal.kernel.zip.ZipWriterFactory;
 import com.liferay.portal.language.override.service.PLOEntryLocalService;
 import com.liferay.portal.security.service.access.policy.model.SAPEntry;
 import com.liferay.portal.security.service.access.policy.service.SAPEntryLocalService;
+import com.liferay.portal.servlet.filters.threadlocal.ThreadLocalFilterThreadLocal;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.multipart.BinaryFile;
 import com.liferay.portal.vulcan.multipart.MultipartBody;
@@ -234,6 +238,7 @@ import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -310,6 +315,7 @@ public class BundleSiteInitializer implements SiteInitializer {
 		ObjectEntryManager objectEntryManager,
 		ObjectFieldLocalService objectFieldLocalService,
 		ObjectFieldResource.Factory objectFieldResourceFactory,
+		ObjectFolderResource.Factory objectFolderResourceFactory,
 		ObjectRelationshipLocalService objectRelationshipLocalService,
 		ObjectRelationshipResource.Factory objectRelationshipResourceFactory,
 		OrganizationLocalService organizationLocalService,
@@ -402,6 +408,7 @@ public class BundleSiteInitializer implements SiteInitializer {
 		_objectEntryManager = objectEntryManager;
 		_objectFieldLocalService = objectFieldLocalService;
 		_objectFieldResourceFactory = objectFieldResourceFactory;
+		_objectFolderResourceFactory = objectFolderResourceFactory;
 		_objectRelationshipLocalService = objectRelationshipLocalService;
 		_objectRelationshipResourceFactory = objectRelationshipResourceFactory;
 		_organizationLocalService = organizationLocalService;
@@ -440,6 +447,8 @@ public class BundleSiteInitializer implements SiteInitializer {
 
 		_classLoader = bundleWiring.getClassLoader();
 
+		_classNameIdStringUtilReplaceValues =
+			_getClassNameIdStringUtilReplaceValues();
 		_releaseInfoStringUtilReplaceValues =
 			_getReleaseInfoStringUtilReplaceValues();
 	}
@@ -481,6 +490,25 @@ public class BundleSiteInitializer implements SiteInitializer {
 					_commerceSiteInitializerSnapshot.get());
 			_log.debug(
 				"OSB site initializer " + _osbSiteInitializerSnapshot.get());
+		}
+
+		if (ThreadLocalFilterThreadLocal.isFilterInvoked()) {
+			Set<String> initializedGroupIdAndKeys =
+				_initializedGroupIdAndKeys.get();
+
+			if (!initializedGroupIdAndKeys.add(
+					StringBundler.concat(
+						groupId, StringPool.POUND, getKey()))) {
+
+				if (_log.isDebugEnabled()) {
+					_log.debug(
+						StringBundler.concat(
+							"Skip already initialized ", getKey(),
+							" for group ", groupId));
+				}
+
+				return;
+			}
 		}
 
 		long startTime = System.currentTimeMillis();
@@ -3336,6 +3364,42 @@ public class BundleSiteInitializer implements SiteInitializer {
 		}
 	}
 
+	private void _addOrUpdateObjectFolders(ServiceContext serviceContext)
+		throws Exception {
+
+		Set<String> resourcePaths = _servletContext.getResourcePaths(
+			"/site-initializer/object-folders");
+
+		if (SetUtil.isEmpty(resourcePaths)) {
+			return;
+		}
+
+		ObjectFolderResource.Builder objectFoldResourceBuilder =
+			_objectFolderResourceFactory.create();
+
+		ObjectFolderResource objectFolderResource =
+			objectFoldResourceBuilder.user(
+				serviceContext.fetchUser()
+			).build();
+
+		for (String resourcePath : resourcePaths) {
+			String json = SiteInitializerUtil.read(
+				resourcePath, _servletContext);
+
+			ObjectFolder objectFolder = ObjectFolder.toDTO(json);
+
+			if (objectFolder == null) {
+				_log.error(
+					"Unable to transform object folder from JSON: " + json);
+
+				continue;
+			}
+
+			objectFolderResource.putObjectFolderByExternalReferenceCode(
+				objectFolder.getExternalReferenceCode(), objectFolder);
+		}
+	}
+
 	private void _addOrUpdateObjectRelationships(
 			ServiceContext serviceContext,
 			Map<String, String> stringUtilReplaceValues)
@@ -3583,7 +3647,7 @@ public class BundleSiteInitializer implements SiteInitializer {
 				}
 				else {
 					role = _roleLocalService.addRole(
-						serviceContext.getUserId(), null, 0,
+						null, serviceContext.getUserId(), null, 0,
 						jsonObject.getString("name"),
 						SiteInitializerUtil.toMap(
 							jsonObject.getString("name_i18n")),
@@ -3986,7 +4050,9 @@ public class BundleSiteInitializer implements SiteInitializer {
 		}
 
 		osbSiteInitializer.addOrUpdateSXPBlueprint(
-			serviceContext, _servletContext, stringUtilReplaceValues);
+			_getClassNameIdStringUtilReplaceValues(),
+			_releaseInfoStringUtilReplaceValues, serviceContext,
+			_servletContext, stringUtilReplaceValues);
 	}
 
 	private TaxonomyCategory _addOrUpdateTaxonomyCategoryTaxonomyCategory(
@@ -5027,6 +5093,9 @@ public class BundleSiteInitializer implements SiteInitializer {
 			"addOrUpdateObjectFields",
 			() -> _addOrUpdateObjectFields(
 				serviceContext, stringUtilReplaceValues));
+		R addOrUpdateObjectFoldersR = new R(
+			"addOrUpdateObjectFolders",
+			() -> _addOrUpdateObjectFolders(serviceContext));
 		R addOrUpdateObjectRelationshipsR = new R(
 			"addOrUpdateObjectRelationships",
 			() -> _addOrUpdateObjectRelationships(
@@ -5134,7 +5203,9 @@ public class BundleSiteInitializer implements SiteInitializer {
 				addOrUpdateSXPBlueprintR)
 		).put(
 			addObjectDefinitionsR,
-			_dependsOn(addOrUpdateListTypeDefinitionsR, addUserAccountsR)
+			_dependsOn(
+				addOrUpdateListTypeDefinitionsR, addOrUpdateObjectFoldersR,
+				addUserAccountsR)
 		).put(
 			addOrUpdateAccountEntryRestrictionsR,
 			_dependsOn(publishObjectDefinitionsR)
@@ -5189,6 +5260,8 @@ public class BundleSiteInitializer implements SiteInitializer {
 			addOrUpdateObjectFieldsR,
 			_dependsOn(addOrUpdateObjectRelationshipsR)
 		).put(
+			addOrUpdateObjectFoldersR, _dependsOn()
+		).put(
 			addOrUpdateObjectRelationshipsR, _dependsOn(addObjectDefinitionsR)
 		).put(
 			addOrUpdateOrganizationsR, _dependsOn(addOrUpdateExpandoColumnsR)
@@ -5203,7 +5276,8 @@ public class BundleSiteInitializer implements SiteInitializer {
 			addOrUpdateSegmentsEntriesR,
 			_dependsOn(addOrUpdateRolesR, addUserAccountsR)
 		).put(
-			addOrUpdateSXPBlueprintR, _dependsOn()
+			addOrUpdateSXPBlueprintR,
+			_dependsOn(addOrUpdateTaxonomyVocabulariesR)
 		).put(
 			addOrUpdateTaxonomyVocabulariesR,
 			_dependsOn(addOrUpdateDDMStructuresR)
@@ -5544,20 +5618,9 @@ public class BundleSiteInitializer implements SiteInitializer {
 	private String _replace(
 		String s, Map<String, String> stringUtilReplaceValues) {
 
-		HashMap<String, String> aggregatedStringUtilReplaceValues =
-			HashMapBuilder.putAll(
-				_getClassNameIdStringUtilReplaceValues()
-			).putAll(
-				_releaseInfoStringUtilReplaceValues
-			).putAll(
-				stringUtilReplaceValues
-			).build();
-
-		s = StringUtil.replace(
-			s, "\"[#", "#]\"", aggregatedStringUtilReplaceValues);
-
-		return StringUtil.replace(
-			s, "[$", "$]", aggregatedStringUtilReplaceValues);
+		return SiteInitializerUtil.replace(
+			_classNameIdStringUtilReplaceValues,
+			_releaseInfoStringUtilReplaceValues, s, stringUtilReplaceValues);
 	}
 
 	private String _replace(String s, ServiceContext serviceContext)
@@ -5835,6 +5898,10 @@ public class BundleSiteInitializer implements SiteInitializer {
 	private static final Snapshot<CommerceSiteInitializer>
 		_commerceSiteInitializerSnapshot = new Snapshot<>(
 			BundleSiteInitializer.class, CommerceSiteInitializer.class);
+	private static final ThreadLocal<Set<String>> _initializedGroupIdAndKeys =
+		new CentralizedThreadLocal<>(
+			BundleSiteInitializer.class + "._initializedGroupIdAndKeys",
+			HashSet::new);
 	private static final ObjectMapper _objectMapper = new ObjectMapper();
 	private static final Snapshot<OSBSiteInitializer>
 		_osbSiteInitializerSnapshot = new Snapshot<>(
@@ -5857,6 +5924,7 @@ public class BundleSiteInitializer implements SiteInitializer {
 	private final Bundle _bundle;
 	private final CETManager _cetManager;
 	private final ClassLoader _classLoader;
+	private final Map<String, String> _classNameIdStringUtilReplaceValues;
 	private final ClientExtensionEntryLocalService
 		_clientExtensionEntryLocalService;
 	private final ConfigurationProvider _configurationProvider;
@@ -5908,6 +5976,7 @@ public class BundleSiteInitializer implements SiteInitializer {
 	private final ObjectEntryManager _objectEntryManager;
 	private final ObjectFieldLocalService _objectFieldLocalService;
 	private final ObjectFieldResource.Factory _objectFieldResourceFactory;
+	private final ObjectFolderResource.Factory _objectFolderResourceFactory;
 	private final ObjectRelationshipLocalService
 		_objectRelationshipLocalService;
 	private final ObjectRelationshipResource.Factory

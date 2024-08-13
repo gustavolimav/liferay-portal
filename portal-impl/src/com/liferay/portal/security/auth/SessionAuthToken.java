@@ -29,7 +29,6 @@ import com.liferay.portlet.SecurityPortletContainerWrapper;
 import javax.portlet.PortletRequest;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpSession;
 
 /**
@@ -67,7 +66,24 @@ public class SessionAuthToken implements AuthToken {
 			return;
 		}
 
+		long plid = liferayPortletURL.getPlid();
 		String portletId = liferayPortletURL.getPortletId();
+
+		String key = PortletPermissionUtil.getPrimaryKey(plid, portletId);
+
+		Object sessionAuthenticationToken = _getSessionAuthenticationToken(
+			httpServletRequest, key, false);
+
+		if (sessionAuthenticationToken == _NULL_TOKEN) {
+			return;
+		}
+
+		if (sessionAuthenticationToken instanceof String) {
+			liferayPortletURL.setParameter(
+				"p_p_auth", (String)sessionAuthenticationToken);
+
+			return;
+		}
 
 		Portlet portlet = PortletLocalServiceUtil.getPortletById(
 			PortalUtil.getCompanyId(httpServletRequest), portletId);
@@ -76,10 +92,10 @@ public class SessionAuthToken implements AuthToken {
 			AuthTokenWhitelistUtil.isPortletURLPortletInvocationWhitelisted(
 				liferayPortletURL)) {
 
+			_setNullSessionAuthenticationToken(httpServletRequest, key);
+
 			return;
 		}
-
-		long plid = liferayPortletURL.getPlid();
 
 		try {
 			Layout layout = LayoutLocalServiceUtil.getLayout(plid);
@@ -88,6 +104,8 @@ public class SessionAuthToken implements AuthToken {
 				(LayoutTypePortlet)layout.getLayoutType();
 
 			if (layoutTypePortlet.hasPortletId(portletId)) {
+				_setNullSessionAuthenticationToken(httpServletRequest, key);
+
 				return;
 			}
 		}
@@ -213,47 +231,62 @@ public class SessionAuthToken implements AuthToken {
 		HttpServletRequest httpServletRequest, String key,
 		boolean createToken) {
 
-		String sessionAuthenticationToken = null;
+		Object sessionAuthenticationToken = _getSessionAuthenticationToken(
+			httpServletRequest, key, createToken);
 
-		HttpServletRequest currentHttpServletRequest = httpServletRequest;
-		HttpSession httpSession = null;
-		String tokenKey = WebKeys.AUTHENTICATION_TOKEN.concat(key);
-
-		while (currentHttpServletRequest instanceof HttpServletRequestWrapper) {
-			httpSession = currentHttpServletRequest.getSession();
-
-			sessionAuthenticationToken = (String)httpSession.getAttribute(
-				tokenKey);
-
-			if (Validator.isNotNull(sessionAuthenticationToken)) {
-				break;
-			}
-
-			HttpServletRequestWrapper httpServletRequestWrapper =
-				(HttpServletRequestWrapper)currentHttpServletRequest;
-
-			currentHttpServletRequest =
-				(HttpServletRequest)httpServletRequestWrapper.getRequest();
+		if (sessionAuthenticationToken instanceof String) {
+			return (String)sessionAuthenticationToken;
 		}
 
-		if (Validator.isNull(sessionAuthenticationToken)) {
-			httpSession = currentHttpServletRequest.getSession();
+		return null;
+	}
 
-			sessionAuthenticationToken = (String)httpSession.getAttribute(
-				tokenKey);
-		}
+	private Object _getSessionAuthenticationToken(
+		HttpServletRequest httpServletRequest, String key,
+		boolean createToken) {
 
-		if (createToken && Validator.isNull(sessionAuthenticationToken)) {
+		HttpServletRequest originalHttpServletRequest =
+			PortalUtil.getOriginalServletRequest(httpServletRequest);
+
+		HttpSession httpSession = originalHttpServletRequest.getSession();
+
+		String authenticationTokenKey = WebKeys.AUTHENTICATION_TOKEN.concat(
+			key);
+
+		Object sessionAuthenticationToken = httpSession.getAttribute(
+			authenticationTokenKey);
+
+		if (createToken &&
+			((sessionAuthenticationToken == null) ||
+			 (sessionAuthenticationToken == _NULL_TOKEN))) {
+
 			sessionAuthenticationToken = PwdGenerator.getPassword(
 				PropsValues.AUTH_TOKEN_LENGTH);
 
-			httpSession.setAttribute(tokenKey, sessionAuthenticationToken);
+			httpSession.setAttribute(
+				authenticationTokenKey, sessionAuthenticationToken);
 		}
 
 		return sessionAuthenticationToken;
 	}
 
+	private void _setNullSessionAuthenticationToken(
+		HttpServletRequest httpServletRequest, String key) {
+
+		HttpServletRequest originalHttpServletRequest =
+			PortalUtil.getOriginalServletRequest(httpServletRequest);
+
+		HttpSession httpSession = originalHttpServletRequest.getSession();
+
+		String authenticationTokenKey = WebKeys.AUTHENTICATION_TOKEN.concat(
+			key);
+
+		httpSession.setAttribute(authenticationTokenKey, _NULL_TOKEN);
+	}
+
 	private static final String _CSRF = "#CSRF";
+
+	private static final byte[] _NULL_TOKEN = new byte[0];
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		SessionAuthToken.class);

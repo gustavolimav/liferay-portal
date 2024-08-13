@@ -1,4 +1,4 @@
-@component-name = "portal-wcm"
+@component-name = "portal-page-management"
 definition {
 
 	property ci.retries.disabled = "true";
@@ -252,6 +252,8 @@ definition {
 			DisplayPageTemplatesAdmin.gotoDisplayPage(displayPageName = "Display Page Name");
 
 			PageEditor.clickConfigurableField(fragmentName = "Collection Display");
+
+			PageEditor.gotoTab(tabName = "Browser");
 
 			var n = 1;
 

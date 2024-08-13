@@ -5,15 +5,15 @@
 
 import React, {useEffect, useMemo} from 'react';
 
+import {loadReducer} from '../../../app/actions';
 import togglePermissions from '../../../app/actions/togglePermission';
 import {config} from '../../../app/config/index';
 import {useDispatch, useSelector} from '../../../app/contexts/StoreContext';
 import selectSegmentsExperienceId from '../../../app/selectors/selectSegmentsExperienceId';
+import ExperienceReducer from '../reducers/index';
 import ExperienceSelector from './ExperienceSelector';
 
-// TODO: show how to colocate CSS with plugins (may use loaders)
-
-export default function ExperienceToolbarSection() {
+function ExperienceToolbarSection() {
 	const availableSegmentsExperiences = useSelector(
 		(state) => state.availableSegmentsExperiences
 	);
@@ -82,4 +82,26 @@ export default function ExperienceToolbarSection() {
 			/>
 		</div>
 	);
+}
+
+export default function ExperienceToolbarSectionWrapper() {
+	const dispatch = useDispatch();
+
+	const availableSegmentsExperiences = useSelector(
+		(state) => state.availableSegmentsExperiences
+	);
+
+	useEffect(() => {
+		dispatch(loadReducer(ExperienceReducer, 'ExperienceReducer'));
+	}, [dispatch]);
+
+	if (
+		!availableSegmentsExperiences ||
+		!Object.keys(availableSegmentsExperiences).length ||
+		config.singleSegmentsExperienceMode
+	) {
+		return null;
+	}
+
+	return <ExperienceToolbarSection />;
 }

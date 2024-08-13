@@ -9,7 +9,7 @@ import {apiHelpersTest} from '../../fixtures/apiHelpersTest';
 import {featureFlagsTest} from '../../fixtures/featureFlagsTest';
 import {loginTest} from '../../fixtures/loginTest';
 import {pageEditorPagesTest} from '../../fixtures/pageEditorPagesTest';
-import {wemSiteTest} from '../../fixtures/wemSiteTest';
+import {pageManagementSiteTest} from '../../fixtures/pageManagementSiteTest';
 import {clickAndExpectToBeHidden} from '../../utils/clickAndExpectToBeHidden';
 import getRandomString from '../../utils/getRandomString';
 import getContainerDefinition from './utils/getContainerDefinition';
@@ -24,14 +24,14 @@ const test = mergeTests(
 	}),
 	loginTest(),
 	pageEditorPagesTest,
-	wemSiteTest
+	pageManagementSiteTest
 );
 
-test('grid background image can be customized', async ({
+test('Grid background image can be customized', async ({
 	apiHelpers,
 	page,
 	pageEditorPage,
-	wemSite,
+	pageManagementSite,
 }) => {
 
 	// Create a grid
@@ -47,11 +47,11 @@ test('grid background image can be customized', async ({
 
 	const layout = await apiHelpers.headlessDelivery.createSitePage({
 		pageDefinition: getPageDefinition([grid]),
-		siteId: wemSite.id,
+		siteId: pageManagementSite.id,
 		title: getRandomString(),
 	});
 
-	await pageEditorPage.goto(layout, wemSite.friendlyUrlPath);
+	await pageEditorPage.goto(layout, pageManagementSite.friendlyUrlPath);
 
 	// Select background image
 
@@ -61,27 +61,31 @@ test('grid background image can be customized', async ({
 
 	await page.getByLabel('Select Image').click();
 
-	const card = await page
+	const card = page
 		.frameLocator('iframe[title="Select"]')
-		.locator('[data-title="echo-logo.png"]');
+		.locator('[data-title="liferay_logo.png"]');
 
 	await clickAndExpectToBeHidden({
 		target: page.locator('.modal-dialog'),
 		trigger: card,
 	});
 
+	await pageEditorPage.waitForChangesSaved();
+
+	// Check correct image is used for background
+
 	expect(
 		await pageEditorPage
 			.getFragment(gridId)
 			.evaluate((element) => getComputedStyle(element).background)
-	).toEqual(expect.stringContaining('echo-logo-png'));
+	).toEqual(expect.stringContaining('liferay_logo-png'));
 });
 
-test('grid content is also duplicated', async ({
+test('Grid content is also duplicated', async ({
 	apiHelpers,
 	page,
 	pageEditorPage,
-	wemSite,
+	pageManagementSite,
 }) => {
 
 	// Create a grid with a Heading in the first column
@@ -102,11 +106,11 @@ test('grid content is also duplicated', async ({
 
 	const layout = await apiHelpers.headlessDelivery.createSitePage({
 		pageDefinition: getPageDefinition([grid]),
-		siteId: wemSite.id,
+		siteId: pageManagementSite.id,
 		title: getRandomString(),
 	});
 
-	await pageEditorPage.goto(layout, wemSite.friendlyUrlPath);
+	await pageEditorPage.goto(layout, pageManagementSite.friendlyUrlPath);
 
 	// Check there's one heading
 
@@ -119,7 +123,11 @@ test('grid content is also duplicated', async ({
 	await expect(page.getByText('Heading Example')).toHaveCount(2);
 });
 
-test('can nest grids', async ({apiHelpers, pageEditorPage, wemSite}) => {
+test('Can nest grids', async ({
+	apiHelpers,
+	pageEditorPage,
+	pageManagementSite,
+}) => {
 
 	// Create a grid with another grid inside
 
@@ -136,28 +144,26 @@ test('can nest grids', async ({apiHelpers, pageEditorPage, wemSite}) => {
 
 	const layout = await apiHelpers.headlessDelivery.createSitePage({
 		pageDefinition: getPageDefinition([parentGrid]),
-		siteId: wemSite.id,
+		siteId: pageManagementSite.id,
 		title: getRandomString(),
 	});
 
-	await pageEditorPage.goto(layout, wemSite.friendlyUrlPath);
+	await pageEditorPage.goto(layout, pageManagementSite.friendlyUrlPath);
 
 	// Check nested grid is rendered properly
 
-	const parentGridTopper = await pageEditorPage.getTopper(parentGridId);
+	const parentGridTopper = pageEditorPage.getTopper(parentGridId);
 
-	const firstColumn = await parentGridTopper
-		.locator('.page-editor__col')
-		.first();
+	const firstColumn = parentGridTopper.locator('.page-editor__col').first();
 
 	await expect(firstColumn.locator('.page-editor__col')).toHaveCount(3);
 });
 
-test('can configure grid', async ({
+test('Can configure grid', async ({
 	apiHelpers,
 	page,
 	pageEditorPage,
-	wemSite,
+	pageManagementSite,
 }) => {
 
 	// Create a grid
@@ -172,11 +178,11 @@ test('can configure grid', async ({
 
 	const layout = await apiHelpers.headlessDelivery.createSitePage({
 		pageDefinition: getPageDefinition([grid]),
-		siteId: wemSite.id,
+		siteId: pageManagementSite.id,
 		title: getRandomString(),
 	});
 
-	await pageEditorPage.goto(layout, wemSite.friendlyUrlPath);
+	await pageEditorPage.goto(layout, pageManagementSite.friendlyUrlPath);
 
 	// Change grid config and check it's applied
 
@@ -197,10 +203,10 @@ test('can configure grid', async ({
 	await expect(page.locator('.page-editor__col.col-12')).toHaveCount(2);
 });
 
-test('can duplicate a grid inside a container', async ({
+test('Can duplicate a grid inside a container', async ({
 	apiHelpers,
 	pageEditorPage,
-	wemSite,
+	pageManagementSite,
 }) => {
 
 	// Create a container with a grid inside
@@ -222,26 +228,26 @@ test('can duplicate a grid inside a container', async ({
 
 	const layout = await apiHelpers.headlessDelivery.createSitePage({
 		pageDefinition: getPageDefinition([container]),
-		siteId: wemSite.id,
+		siteId: pageManagementSite.id,
 		title: getRandomString(),
 	});
 
-	await pageEditorPage.goto(layout, wemSite.friendlyUrlPath);
+	await pageEditorPage.goto(layout, pageManagementSite.friendlyUrlPath);
 
 	// Duplicate grid and check the copy is added properly inside the container
 
 	await pageEditorPage.duplicateFragment(gridId);
 
-	const containerTopper = await pageEditorPage.getTopper(containerId);
+	const containerTopper = pageEditorPage.getTopper(containerId);
 
 	await expect(containerTopper.locator('.page-editor__row')).toHaveCount(2);
 });
 
-test('can resize a grid', async ({
+test('Can resize a grid', async ({
 	apiHelpers,
 	page,
 	pageEditorPage,
-	wemSite,
+	pageManagementSite,
 }) => {
 
 	// Create a container with a grid inside
@@ -256,11 +262,11 @@ test('can resize a grid', async ({
 
 	const layout = await apiHelpers.headlessDelivery.createSitePage({
 		pageDefinition: getPageDefinition([grid]),
-		siteId: wemSite.id,
+		siteId: pageManagementSite.id,
 		title: getRandomString(),
 	});
 
-	await pageEditorPage.goto(layout, wemSite.friendlyUrlPath);
+	await pageEditorPage.goto(layout, pageManagementSite.friendlyUrlPath);
 
 	// Select grid and resize last column
 

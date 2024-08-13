@@ -52,6 +52,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 /**
@@ -273,6 +274,10 @@ public abstract class BaseTestrayCaseResultResourceImpl
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "testraySubtaskId"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "testrayTeamIds"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
@@ -338,6 +343,9 @@ public abstract class BaseTestrayCaseResultResourceImpl
 			@javax.ws.rs.QueryParam("testrayRunName")
 			String testrayRunName,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("testraySubtaskId")
+			String testraySubtaskId,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.ws.rs.QueryParam("testrayTeamIds")
 			String testrayTeamIds,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
@@ -347,6 +355,40 @@ public abstract class BaseTestrayCaseResultResourceImpl
 		throws Exception {
 
 		return Page.of(Collections.emptyList());
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/testray-rest/v1.0/testray-export-case-result/{testrayBuildId}'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "testrayBuildId"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {
+			@io.swagger.v3.oas.annotations.tags.Tag(name = "TestrayCaseResult")
+		}
+	)
+	@javax.ws.rs.GET
+	@javax.ws.rs.Path("/testray-export-case-result/{testrayBuildId}")
+	@javax.ws.rs.Produces("application/octet-stream")
+	@Override
+	public Response getTestrayExportCaseResultTestrayBuild(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("testrayBuildId")
+			Long testrayBuildId)
+		throws Exception {
+
+		Response.ResponseBuilder responseBuilder = Response.ok();
+
+		return responseBuilder.build();
 	}
 
 	@Override

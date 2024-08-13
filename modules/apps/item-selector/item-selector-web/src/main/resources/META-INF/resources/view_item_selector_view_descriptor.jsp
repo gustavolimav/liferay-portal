@@ -11,7 +11,8 @@
 ItemSelectorViewDescriptorRendererDisplayContext itemSelectorViewDescriptorRendererDisplayContext = (ItemSelectorViewDescriptorRendererDisplayContext)request.getAttribute(ItemSelectorViewDescriptorRendererDisplayContext.class.getName());
 
 ItemSelectorViewDescriptor<Object> itemSelectorViewDescriptor = itemSelectorViewDescriptorRendererDisplayContext.getItemSelectorViewDescriptor();
-
+boolean listView = Objects.equals(itemSelectorViewDescriptorRendererDisplayContext.getDisplayStyle(), "list");
+boolean multipleSelection = itemSelectorViewDescriptorRendererDisplayContext.isMultipleSelection();
 SearchContainer<Object> searchContainer = itemSelectorViewDescriptorRendererDisplayContext.getSearchContainer();
 %>
 
@@ -37,9 +38,12 @@ SearchContainer<Object> searchContainer = itemSelectorViewDescriptorRendererDisp
 		var="entriesSearch"
 	>
 		<liferay-ui:search-container-row
+			ariaLabel='<%= multipleSelection ? StringPool.BLANK : LanguageUtil.get(request, "press-enter-to-select-the-item-and-close-the-modal") %>'
 			className="Object"
+			cssClass='<%= (listView && !multipleSelection) ? "entry entry-selector" : StringPool.BLANK %>'
 			keyProperty="<%= itemSelectorViewDescriptor.getKeyProperty() %>"
 			modelVar="entry"
+			tabIndex='<%= multipleSelection ? StringPool.BLANK : "0" %>'
 		>
 
 			<%
@@ -207,5 +211,5 @@ SearchContainer<Object> searchContainer = itemSelectorViewDescriptorRendererDisp
 			"itemSelectorSelectedEvent", HtmlUtil.escapeJS(itemSelectorViewDescriptorRendererDisplayContext.getItemSelectedEventName())
 		).build()
 	%>'
-	module='<%= itemSelectorViewDescriptorRendererDisplayContext.isMultipleSelection() ? "{ViewItemSelectorViewDescriptorMultiple} from item-selector-web" : "{ViewItemSelectorViewDescriptor} from item-selector-web" %>'
+	module='<%= multipleSelection ? "{ViewItemSelectorViewDescriptorMultiple} from item-selector-web" : "{ViewItemSelectorViewDescriptor} from item-selector-web" %>'
 />

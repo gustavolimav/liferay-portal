@@ -29,7 +29,7 @@ apply plugin: "com.liferay.yarn.defaults.plugin"
 ext {
 	projectTemplateTokens = [
 		"biz.aQute.bnd.version": "6.4.0",
-		"com.liferay.ant.bnd.version": "3.2.11",
+		"com.liferay.ant.bnd.version": "3.2.12",
 		"com.liferay.css.builder.version": "3.1.4",
 		"com.liferay.gradle.plugins.css.builder.version": "5.0.9",
 		"com.liferay.gradle.plugins.theme.builder.version": "2.0.17",
@@ -44,6 +44,8 @@ ext {
 
 task portalYarnCheckFormat
 task portalYarnFormat
+task portalYarnFormatCurrentBranch
+task portalYarnFormatLocalChanges
 task portalYarnInstall
 
 Set<File> bndPrintJarFiles = null
@@ -85,6 +87,14 @@ if (FileUtil.exists(rootProject, "private/yarn.lock")) {
 
 	portalYarnFormat {
 		dependsOn ":private:packageRunFormat"
+	}
+
+	portalYarnFormatCurrentBranch {
+		dependsOn ":private:packageRunFormatCurrentBranch"
+	}
+
+	portalYarnFormatLocalChanges {
+		dependsOn ":private:packageRunFormatLocalChanges"
 	}
 
 	portalYarnInstall {
@@ -135,6 +145,14 @@ portalYarnCheckFormat {
 
 portalYarnFormat {
 	dependsOn ":packageRunFormat"
+}
+
+portalYarnFormatCurrentBranch {
+	dependsOn ":packageRunFormatCurrentBranch"
+}
+
+portalYarnFormatLocalChanges {
+	dependsOn ":packageRunFormatLocalChanges"
 }
 
 portalYarnInstall {
@@ -575,7 +593,7 @@ gradle.beforeProject {
 					jvmArgs project.properties["junit.java.add.opens"].split("\\s+")
 				}
 
-				jvmArgs "-Djava.locale.providers=JRE,COMPAT,CLDR"
+				jvmArgs "-Djava.locale.providers=CLDR"
 
 				if (project.properties["junit.java.security.manager"]) {
 					systemProperty "java.security.manager", project.properties["junit.java.security.manager"]

@@ -31,6 +31,7 @@ import com.liferay.portal.test.rule.Inject;
 
 import java.math.BigDecimal;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
@@ -220,6 +221,42 @@ public class ProductResourceTest extends BaseProductResourceTestCase {
 
 		assertValid(getProduct);
 
+		randomPatchProduct = randomProduct();
+
+		productResource.patchProductByExternalReferenceCode(
+			getProduct.getExternalReferenceCode(), randomPatchProduct);
+
+		getProduct = productResource.getProduct(postProduct.getProductId());
+
+		BaseProductResourceTestCase.BeanTestUtil.copyProperties(
+			randomPatchProduct, expectedPatchProduct);
+
+		assertEquals(expectedPatchProduct, getProduct);
+
+		assertValid(getProduct);
+
+		randomPatchProduct = randomProduct();
+
+		randomPatchProduct.setExpirationDate(RandomTestUtil.nextDate());
+		randomPatchProduct.setNeverExpire(false);
+
+		postProduct = testPostProduct_addProduct(randomPatchProduct);
+
+		randomPatchProduct.setExpirationDate((Date)null);
+		randomPatchProduct.setDisplayDate((Date)null);
+
+		productResource.patchProduct(
+			postProduct.getProductId(), randomPatchProduct);
+
+		getProduct = productResource.getProduct(postProduct.getProductId());
+
+		Assert.assertNotNull(getProduct.getDisplayDate());
+		Assert.assertEquals(
+			getProduct.getDisplayDate(), postProduct.getDisplayDate());
+		Assert.assertNotNull(getProduct.getExpirationDate());
+		Assert.assertEquals(
+			getProduct.getExpirationDate(), postProduct.getExpirationDate());
+
 		_testPatchProductWithNegativeValue("cost");
 		_testPatchProductWithNegativeValue("depth");
 		_testPatchProductWithNegativeValue("height");
@@ -233,6 +270,32 @@ public class ProductResourceTest extends BaseProductResourceTestCase {
 	@Override
 	@Test
 	public void testPatchProductByExternalReferenceCode() throws Exception {
+	}
+
+	@Override
+	@Test
+	public void testPostProduct() throws Exception {
+		super.testPostProduct();
+
+		Product randomProduct = randomProduct();
+
+		randomProduct.setCatalogExternalReferenceCode(
+			_commerceCatalog.getExternalReferenceCode());
+		randomProduct.setCatalogId((Long)null);
+
+		Product postProduct = testPostProduct_addProduct(randomProduct);
+
+		Product getProduct = productResource.getProduct(
+			postProduct.getProductId());
+
+		Product expectedPostProduct = postProduct.clone();
+
+		BaseProductResourceTestCase.BeanTestUtil.copyProperties(
+			postProduct, expectedPostProduct);
+
+		assertEquals(expectedPostProduct, getProduct);
+
+		assertValid(getProduct);
 	}
 
 	@Override

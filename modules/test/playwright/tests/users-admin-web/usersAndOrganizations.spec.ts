@@ -10,6 +10,7 @@ import {dataApiHelpersTest} from '../../fixtures/dataApiHelpersTest';
 import {loginTest} from '../../fixtures/loginTest';
 import {usersAndOrganizationsPagesTest} from '../../fixtures/usersAndOrganizationsPagesTest';
 import {getRandomInt} from '../../utils/getRandomInt';
+import {waitForSuccessAlert} from '../../utils/waitForSuccessAlert';
 
 export const test = mergeTests(
 	apiHelpersTest,
@@ -134,4 +135,263 @@ test('LPD-28908 update user information', async ({
 				)
 			)
 	).toBeVisible();
+});
+
+test('LPD-30589 Add Organization Team', async ({
+	apiHelpers,
+	editOrganizationPage,
+	page,
+	siteConfigurationDetailsPage,
+	siteSettingsPage,
+	teamsPage,
+	usersAndOrganizationsPage,
+}) => {
+	const organization = await apiHelpers.headlessAdminUser.postOrganization();
+
+	await apiHelpers.headlessAdminUser.assignUserToOrganizationByEmailAddress(
+		organization.id,
+		'test@liferay.com'
+	);
+
+	apiHelpers.data.push({
+		id: `${organization.id}_test@liferay.com`,
+		type: 'organizationUserAccountAssociation',
+	});
+
+	await usersAndOrganizationsPage.goToOrganizations();
+
+	await (
+		await usersAndOrganizationsPage.organizationActionsMenu(
+			organization.name
+		)
+	).click();
+	await editOrganizationPage.organizationEditMenuItem.click();
+	await editOrganizationPage.organizationSiteLink.click();
+	await editOrganizationPage.createSiteToggle.check();
+	await editOrganizationPage.organizationSiteSaveButton.click();
+
+	await siteSettingsPage.goToSiteSetting(
+		'Site Configuration',
+		null,
+		'/' + organization.name
+	);
+
+	await siteConfigurationDetailsPage.allowManualMembershipManagementToggle.check();
+	await siteConfigurationDetailsPage.saveButton.click();
+
+	await waitForSuccessAlert(page);
+
+	await teamsPage.goTo('/' + organization.name);
+
+	const newTeamName = 'Team' + getRandomInt();
+
+	await teamsPage.newTeamButton.click();
+	await teamsPage.nameInput.fill(newTeamName);
+	await teamsPage.saveButton.click();
+
+	await waitForSuccessAlert(page);
+
+	await expect(
+		(await teamsPage.teamsTableRow(1, newTeamName, true)).row
+	).toBeVisible();
+});
+
+test('LPD-31669 Check whether admin user is redirected to organization page after user to org assignment', async ({
+	apiHelpers,
+	assignUsersPage,
+	organizationUsersPage,
+	page,
+	usersAndOrganizationsPage,
+}) => {
+	const userName = 'Test Test';
+
+	const organization = await apiHelpers.headlessAdminUser.postOrganization();
+
+	await usersAndOrganizationsPage.goToOrganizations();
+
+	await (
+		await usersAndOrganizationsPage.organizationActionsMenu(
+			organization.name
+		)
+	).click();
+	await usersAndOrganizationsPage.assignUsersMenuItem.click();
+
+	await (await assignUsersPage.usersTableRowCheckbox(userName)).check();
+	await assignUsersPage.doneButton.click();
+
+	await waitForSuccessAlert(page);
+
+	await expect(
+		await organizationUsersPage.usersTableRowLink(userName)
+	).toBeVisible();
+});
+
+test('LPD-31978 Remove member', async ({
+	apiHelpers,
+	organizationUsersPage,
+	usersAndOrganizationsPage,
+}) => {
+	const userAccount = await apiHelpers.headlessAdminUser.postUserAccount();
+
+	const organization = await apiHelpers.headlessAdminUser.postOrganization();
+
+	await apiHelpers.headlessAdminUser.assignUserToOrganizationByEmailAddress(
+		organization.id,
+		userAccount.emailAddress
+	);
+
+	apiHelpers.data.push({
+		id: `${organization.id}_test@liferay.com`,
+		type: 'organizationUserAccountAssociation',
+	});
+
+	await usersAndOrganizationsPage.goToOrganizations();
+	await (
+		await usersAndOrganizationsPage.organizationsTableRowLink(
+			organization.name
+		)
+	).click();
+
+	await expect(
+		await organizationUsersPage.usersTableRowLink(
+			userAccount.givenName + ' ' + userAccount.familyName
+		)
+	).toBeVisible();
+
+	await (
+		await organizationUsersPage.usersTableRowActions(
+			userAccount.givenName + ' ' + userAccount.familyName
+		)
+	).click();
+	await organizationUsersPage.removeMenuItem.click();
+
+	await usersAndOrganizationsPage.goToOrganizations();
+	await (
+		await usersAndOrganizationsPage.organizationsTableRowLink(
+			organization.name
+		)
+	).click();
+
+	await expect(organizationUsersPage.filterButton).toBeVisible();
+	await expect(
+		await organizationUsersPage.screenName(
+			userAccount.givenName + ' ' + userAccount.familyName
+		)
+	).toHaveCount(0);
+});
+
+test('LPD-31020 Assign User', async ({
+	apiHelpers,
+	usersAndOrganizationsPage,
+}) => {
+	const user = await apiHelpers.headlessAdminUser.postUserAccount();
+	const organization = await apiHelpers.headlessAdminUser.postOrganization();
+
+	await usersAndOrganizationsPage.goToOrganizations();
+
+	await (
+		await usersAndOrganizationsPage.organizationActionsMenu(
+			organization.name
+		)
+	).click();
+
+	await usersAndOrganizationsPage.assignUsersMenuItem.click();
+
+	await (
+		await usersAndOrganizationsPage.assignUsersCheckbox(user.name)
+	).check();
+
+	await usersAndOrganizationsPage.assignUsersDoneButton.click();
+
+	apiHelpers.data.push({
+		id: `${organization.id}_${user.emailAddress}`,
+		type: 'organizationUserAccountAssociation',
+	});
+
+	await usersAndOrganizationsPage.goToOrganizations();
+
+	await (
+		await usersAndOrganizationsPage.organizationsTableRowLink(
+			organization.name
+		)
+	).click();
+
+	await expect(
+		(
+			await usersAndOrganizationsPage.organizationUsersTableRow(
+				1,
+				user.name,
+				true
+			)
+		).row
+	).toBeVisible();
+});
+
+test('LPD-31645 Search by Organizations when setting a users organization roles', async ({
+	apiHelpers,
+	editUserPage,
+	page,
+	usersAndOrganizationsPage,
+}) => {
+	const user = await apiHelpers.headlessAdminUser.postUserAccount();
+
+	const organization1 = await apiHelpers.headlessAdminUser.postOrganization();
+
+	await apiHelpers.headlessAdminUser.assignUserToOrganizationByEmailAddress(
+		organization1.id,
+		user.emailAddress
+	);
+
+	apiHelpers.data.push({
+		id: `${organization1.id}_${user.emailAddress}`,
+		type: 'organizationUserAccountAssociation',
+	});
+
+	const organization2 = await apiHelpers.headlessAdminUser.postOrganization();
+
+	await apiHelpers.headlessAdminUser.assignUserToOrganizationByEmailAddress(
+		organization2.id,
+		user.emailAddress
+	);
+
+	apiHelpers.data.push({
+		id: `${organization2.id}_${user.emailAddress}`,
+		type: 'organizationUserAccountAssociation',
+	});
+
+	await usersAndOrganizationsPage.goToUsers();
+	await (
+		await usersAndOrganizationsPage.usersTableRowLink(user.alternateName)
+	).click();
+
+	await editUserPage.rolesLink.click();
+	await editUserPage.selectOrganizationRolesButton.click();
+
+	await page.waitForTimeout(500);
+
+	expect(
+		(await editUserPage.selectOrganizationRolesTable.getByRole('row').all())
+			.length
+	).toEqual(3);
+
+	await editUserPage.selectOrganizationRolesSearchBar.fill(
+		organization1.name
+	);
+	await editUserPage.selectOrganizationRolesSearchBarButton.click();
+
+	await page.waitForTimeout(500);
+
+	await expect(
+		(
+			await editUserPage.selectOrganizationRolesTableRow(
+				0,
+				organization1.name,
+				true
+			)
+		).row
+	).toBeVisible();
+	expect(
+		(await editUserPage.selectOrganizationRolesTable.getByRole('row').all())
+			.length
+	).toEqual(2);
 });

@@ -134,18 +134,14 @@ public class SiteNavigationMenuItemSelectorViewDescriptor
 			orderByAsc = true;
 		}
 
-		OrderByComparator<SiteNavigationMenu> orderByComparator = null;
-
 		if (orderByCol.equals("modified-date")) {
-			orderByComparator = new SiteNavigationMenuModifiedDateComparator(
-				orderByAsc);
+			return new SiteNavigationMenuModifiedDateComparator(orderByAsc);
 		}
 		else if (orderByCol.equals("name")) {
-			orderByComparator = new SiteNavigationMenuNameComparator(
-				orderByAsc);
+			return new SiteNavigationMenuNameComparator(orderByAsc);
 		}
 
-		return orderByComparator;
+		return null;
 	}
 
 	private final HttpServletRequest _httpServletRequest;

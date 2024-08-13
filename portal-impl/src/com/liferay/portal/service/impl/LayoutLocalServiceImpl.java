@@ -249,7 +249,11 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 		String name = nameMap.get(LocaleUtil.getSiteDefault());
 
 		if (system &&
-			(Objects.equals(type, LayoutConstants.TYPE_COLLECTION) ||
+			((Objects.equals(type, LayoutConstants.TYPE_ASSET_DISPLAY) &&
+			  (classPK > 0) &&
+			  (classNameId == _classNameLocalService.getClassNameId(
+				  Layout.class.getName()))) ||
+			 Objects.equals(type, LayoutConstants.TYPE_COLLECTION) ||
 			 Objects.equals(type, LayoutConstants.TYPE_CONTENT) ||
 			 Objects.equals(type, LayoutConstants.TYPE_UTILITY))) {
 
@@ -2220,7 +2224,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 		if (nextLayoutId == 1) {
 			Layout layout = layoutPersistence.fetchByG_P_First(
-				groupId, privateLayout, new LayoutComparator());
+				groupId, privateLayout, LayoutComparator.getInstance(false));
 
 			if (layout != null) {
 				nextLayoutId = layout.getLayoutId() + 1;
@@ -2522,12 +2526,7 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 			User user, boolean privateLayout, boolean includeUserGroups)
 		throws PortalException {
 
-		Group group = _groupPersistence.findByC_C_C(
-			user.getCompanyId(),
-			_classNameLocalService.getClassNameId(User.class),
-			user.getUserId());
-
-		return hasLayouts(group, privateLayout, includeUserGroups);
+		return hasLayouts(user.getGroup(), privateLayout, includeUserGroups);
 	}
 
 	@Override

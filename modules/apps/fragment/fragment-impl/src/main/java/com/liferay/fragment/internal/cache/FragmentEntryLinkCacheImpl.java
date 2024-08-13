@@ -12,6 +12,7 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.cache.MultiVMPool;
 import com.liferay.portal.kernel.cache.PortalCache;
+import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.language.Language;
 
 import java.util.Locale;
@@ -19,6 +20,7 @@ import java.util.Set;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -46,6 +48,10 @@ public class FragmentEntryLinkCacheImpl implements FragmentEntryLinkCache {
 	public void removeFragmentEntryLinkCache(
 		FragmentEntryLink fragmentEntryLink) {
 
+		if (!CTCollectionThreadLocal.isProductionMode()) {
+			return;
+		}
+
 		Set<Locale> availableLocales = _language.getAvailableLocales(
 			fragmentEntryLink.getGroupId());
 
@@ -65,6 +71,11 @@ public class FragmentEntryLinkCacheImpl implements FragmentEntryLinkCache {
 	protected void activate() {
 		_portalCache = (PortalCache<String, String>)_multiVMPool.getPortalCache(
 			FragmentEntryLink.class.getName());
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		_multiVMPool.removePortalCache(FragmentEntryLink.class.getName());
 	}
 
 	private String _getPortalCacheKey(

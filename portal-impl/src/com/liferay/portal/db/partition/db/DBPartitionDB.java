@@ -12,6 +12,9 @@ import com.liferay.portal.kernel.dao.db.DBInspector;
 import java.sql.Connection;
 import java.sql.SQLException;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * @author Alberto Chaparro
  */
@@ -29,6 +32,12 @@ public interface DBPartitionDB {
 	public String getCreatePartitionSQL(
 			Connection connection, String partitionName)
 		throws SQLException;
+
+	public default List<String> getCreateRulesSQL(String partitionName)
+		throws SQLException {
+
+		return new ArrayList<>();
+	}
 
 	public default String getCreateTableSQL(
 		String fromPartitionName, String toPartitionName, String tableName) {
