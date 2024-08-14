@@ -1420,6 +1420,9 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 
 		// Indexer
 
+		System.out.println("UserLocalServiceImpl.addUserWithWorkflow()");
+		System.out.println("user: " + user.getFullName());
+
 		if ((serviceContext == null) || serviceContext.isIndexingEnabled()) {
 			reindex(user);
 		}
