@@ -160,6 +160,7 @@ import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
+import com.liferay.portal.kernel.util.PortalRunMode;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
@@ -6614,6 +6615,27 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 	protected void reindex(User user) throws SearchException {
 		Indexer<User> indexer = IndexerRegistryUtil.nullSafeGetIndexer(
 			User.class);
+
+		if (PortalRunMode.isTestMode()) {
+			for (int i = 0; i < 10; i++) {
+				String className = indexer.getClassName();
+
+				if (className.equals(User.class.getName())) {
+					_log.info("Found indexer after " + i + " tries");
+
+					break;
+				}
+
+				try {
+					Thread.sleep(1000);
+				}
+				catch (Exception exception) {
+					_log.error(exception);
+				}
+
+				indexer = IndexerRegistryUtil.nullSafeGetIndexer(User.class);
+			}
+		}
 
 		indexer.reindex(user);
 	}
