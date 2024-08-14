@@ -6616,7 +6616,7 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 		Indexer<User> indexer = IndexerRegistryUtil.nullSafeGetIndexer(
 			User.class);
 
-		if (PortalRunMode.isTestMode()) {
+		if (PortalUtil.isOmniadmin(user)) {
 			for (int i = 0; i < 10; i++) {
 				String className = indexer.getClassName();
 
