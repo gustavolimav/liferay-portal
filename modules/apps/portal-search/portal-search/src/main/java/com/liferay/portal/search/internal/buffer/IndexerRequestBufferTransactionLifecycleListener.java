@@ -12,6 +12,8 @@ import com.liferay.portal.search.internal.buffer.util.IndexerRequestBufferExecut
 
 import org.osgi.service.component.annotations.Component;
 
+import java.util.Collection;
+
 /**
  * @author Michael C. Han
  */
