@@ -15,6 +15,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    env:
+      ANT_OPTS: "-Xmx2560m"
+
     steps:
       - uses: actions/checkout@v4
       
