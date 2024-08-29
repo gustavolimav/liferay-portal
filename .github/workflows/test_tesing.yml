@@ -28,10 +28,12 @@ jobs:
           distribution: 'zulu'
           architecture: x64
           
-      - name: Build Liferay
-        run: ant all
+      # - name: Build Liferay
+      #   run: ant all
+      - name: Set up SDS
+        run: ant setup-sdk
         
       - name: Run Tests
         run: |
           cd modules/apps/portal-search/portal-search-test
-          gw test
+          ../../../.././gradlew test
